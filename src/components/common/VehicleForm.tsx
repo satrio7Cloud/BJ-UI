@@ -1,11 +1,19 @@
 import { useState } from "react";
 import { createWhatsappLink } from "../../utils/whatsaap";
 
+const CURRENT_YEAR = new Date().getFullYear();
+
+const vehicleYears = Array.from(
+  { length: CURRENT_YEAR - 1999 + 1 },
+  (_, i) => CURRENT_YEAR - i,
+);
+
 export default function VehicleForm() {
   const [form, setForm] = useState({
     serviceType: "stnk",
     duration: "",
     ownerType: "",
+    platCode: "B",
     plateNumber: "",
     vehicleYear: "",
     samsatFrom: "",
@@ -37,8 +45,19 @@ export default function VehicleForm() {
     return priceMap[`${form.plateDigit}_${form.plateSuffix}`];
   }
 
+  function isValidPlateBody(value: string) {
+    // 1234 XYZ
+    const regex = /^\d{1,4}\s[A-Z]{1,3}$/;
+    return regex.test(value.trim().toUpperCase());
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!isValidPlateBody(form.plateNumber)) {
+      alert("Format plat tidak valid. Contoh: 1234 XYZ");
+      return;
+    }
 
     let message = `Halo, saya ingin mengurus kendaraan:\n`;
     message += `- Layanan: ${labelService(form.serviceType)}\n`;
@@ -52,7 +71,8 @@ export default function VehicleForm() {
     }
 
     if (form.plateNumber) {
-      message += `- Plat Kendaraan: ${form.plateNumber}\n`;
+      const fullPlate = `B ${form.plateNumber.toUpperCase()}`;
+      message += `- Plat Kendaraan: ${fullPlate}\n`;
     }
 
     if (form.vehicleYear) {
@@ -216,24 +236,44 @@ export default function VehicleForm() {
 
       {/* DATA KENDARAAN UMUM */}
       <div>
-        <label className="text-sm font-medium">Nomor Plat Kendaraan</label>
-        <input
-          name="plateNumber"
-          placeholder="Contoh: B 1234 XYZ"
-          onChange={handleChange}
-          className="w-full border rounded-lg p-2"
-        />
+        <label className="text-sm font-medium">
+          Nomor Plat Kendaraan (Depok)
+        </label>
+
+        <div className="flex">
+          {/* FIXED PLATE */}
+          <span className="inline-flex items-center px-4 border border-r-0 rounded-l-lg bg-gray-100 text-gray-700 font-semibold">
+            B
+          </span>
+
+          {/* USER INPUT */}
+          <input
+            name="plateNumber"
+            placeholder="1234 XYZ"
+            onChange={handleChange}
+            className="flex-1 border rounded-r-lg p-2 uppercase"
+          />
+        </div>
+
+        <p className="text-xs text-blue-600 mt-1">
+          * Khusus wilayah Depok (Plat B – Jawa Barat)
+        </p>
       </div>
 
       <div>
         <label className="text-sm font-medium">Tahun Kendaraan</label>
-        <input
+        <select
           name="vehicleYear"
-          type="number"
-          placeholder="Contoh: 2020"
           onChange={handleChange}
           className="w-full border rounded-lg p-2"
-        />
+        >
+          <option value="">Pilih Tahun</option>
+          {vehicleYears.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
       </div>
 
       <button

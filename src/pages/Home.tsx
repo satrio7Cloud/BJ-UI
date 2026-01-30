@@ -6,6 +6,7 @@ import About from "../components/sections/About";
 import Excellence from "../components/sections/Excellence";
 import Hero from "../components/sections/Hero";
 import Services from "../components/sections/Service";
+import Testimonials from "../components/sections/Testimonial";
 
 export default function Home() {
   return (
@@ -26,6 +27,9 @@ export default function Home() {
 
         {/* CTA FORM */}
         <CtaForm />
+
+        {/* TESTIMONIAL */}
+        <Testimonials />
 
         <Contact />
 

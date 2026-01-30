@@ -62,7 +62,7 @@ const item = {
 
 export default function Services() {
   return (
-    <section id="layanan" className="py-20 bg-gray-50">
+    <section id="layanan" className="py-20 ">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <motion.div

@@ -3,7 +3,7 @@ import { createWhatsappLink } from "../../utils/whatsaap";
 
 const Contact: React.FC = () => {
   return (
-    <section id="kontak" className="bg-blue-50 py-20 px-4">
+    <section id="kontak" className=" py-20 px-4">
       <div className="max-w-5xl mx-auto text-center">
         {/* Title */}
         <h2 className="text-3xl md:text-4xl font-bold text-blue-900">
@@ -22,7 +22,7 @@ const Contact: React.FC = () => {
             <div className="text-3xl mb-3">📞</div>
             <h4 className="font-semibold text-blue-900">WhatsApp</h4>
             <p className="text-blue-700 mt-1">Respon cepat & ramah</p>
-            <p className="text-blue-500 text-sm mt-1">08xxxxxxxxxx</p>
+            <p className="text-blue-500 text-sm mt-1">0851-5641-9062</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-md p-6 text-left">

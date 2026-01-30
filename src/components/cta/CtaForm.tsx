@@ -7,9 +7,9 @@ export default function CtaForm() {
   const [open, setOpen] = useState(false);
 
   return (
-    <section className="bg-blue-700 py-20 px-4">
+    <section className="py-20 px-4">
       <div className="max-w-5xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-10 text-center">
+        <div className="bg-white rounded-2xl p-10 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-blue-900">
             Siap Memulai Pengurusan Kendaraan Anda?
           </h2>

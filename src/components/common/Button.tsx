@@ -16,7 +16,7 @@ export default function Button({
       className={`
         rounded-lg
         bg-blue-600
-        py-3
+        py-2
         px-4
         text-white
         font-semibold

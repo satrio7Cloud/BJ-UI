@@ -1,26 +1,17 @@
-// type Props = {
-//     title: string
-//     description: string
-// }
+type Props = {
+  title: string;
+  description: string;
+  price: string;
+};
 
-// export default function ServiceCard({ title, description }: Props) {
-//     return (
-//         <div className="group border rounded-2xl p-6 hover:shadow-md transition cursor-pointer bg-white">
+export default function ServiceCard({ title, description, price }: Props) {
+  return (
+    <div className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition">
+      <h3 className="text-lg font-semibold text-blue-900">{title}</h3>
+      <p className="mt-2 text-blue-700 text-sm">{description}</p>
 
-//             <div className="text-3xl mb-4">🚗</div>
-
-//             <h3 className="font-semibold text-gray-800 group-hover:text-blue-600 transition">
-//                 {title}
-//             </h3>
-
-//             <p className="text-sm text-gray-500 mt-2">
-//                 {description}
-//             </p>
-
-//             <span className="inline-block mt-4 text-sm font-semibold text-blue-600">
-//                 Lihat Detail →
-//             </span>
-
-//         </div>
-//     )
-// }
+      {/* PRICE */}
+      <p className="mt-4 font-semibold text-blue-600">{price}</p>
+    </div>
+  );
+}
