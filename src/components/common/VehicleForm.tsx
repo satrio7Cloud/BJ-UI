@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createWhatsappLink } from "../../utils/whatsaap";
+import toast from "react-hot-toast";
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -55,7 +56,7 @@ export default function VehicleForm() {
     e.preventDefault();
 
     if (!isValidPlateBody(form.plateNumber)) {
-      alert("Format plat tidak valid. Contoh: 1234 XYZ");
+      toast.error("Format plat tidak benar. Contoh yang benar: 1234 XYZ");
       return;
     }
 
