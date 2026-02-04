@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "../pages/Home";
-import Services from "../components/sections/Service";
-import Form from "../pages/Form";
-import Dashboard from "../pages/Dashboard";
+import Home from "../features/home/HomePage";
+import Services from "../features/home/sections/Service";
+import Form from "../features/home/FormPage";
+import Dashboard from "../features/dashboard/DashboardPage";
 import Invoices from "../pages/Invoices";
 
 export default function AppRouter() {

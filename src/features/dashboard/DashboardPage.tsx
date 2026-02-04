@@ -1,12 +1,12 @@
-import StatCard from "../components/dashboard/StatCard";
-import LineChart from "../components/dashboard/LineChart";
-import HorizontalBarChart from "../components/dashboard/HorizontalBarChart";
-import DocumentItem from "../components/dashboard/DocumentItem";
-import DocumentDetail from "../components/dashboard/DocumentDetail";
+import StatCard from "./components/StatCard";
+import LineChart from "./components/LineChart";
+import HorizontalBarChart from "./components/HorizontalBarChart";
+import DocumentItem from "./components/DocumentItem";
+import DocumentDetail from "./components/DocumentDetail";
 import { useState } from "react";
 import { FileText, Clock, CheckCircle, TrendingUp } from "lucide-react";
-import { documents } from "../data/document";
-import InvoiceTable from "../components/dashboard/InvoiceTable";
+import { documents } from "../../data/document";
+import InvoiceTable from "./components/InvoiceTable";
 
 export default function Dashboard() {
   const [activeDoc, setActiveDoc] = useState<any | null>(null);
@@ -18,7 +18,7 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold">Dashboard Analytics</h1>
 
           {/* KPI */}
-          <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               title="Total Pengajuan"
               value={120}

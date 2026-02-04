@@ -1,11 +1,11 @@
 import InvoiceStatusBadge from "./InvoiceStatusBadge";
-import Pagination from "../common/Pagination";
-import Button from "../common/Button";
+import Pagination from "../../../shared/components/Pagination";
+import Button from "../../../shared/components/Button";
 import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { invoices } from "../../data/invoices";
+import { invoices } from "../../../data/invoices";
 
 const formatRupiah = (value: number) => "Rp " + value.toLocaleString("id-ID");
 const ITEMS_PER_PAGE = 5;
@@ -22,7 +22,7 @@ export default function InvoiceTable() {
         <h2 className="text-lg font-semibold">Riwayat Invoice</h2>
         <Button
           onClick={() => navigate("/invoice")}
-          className="px-4 py-2 border border-blue-500 text-blue-600 rounded-lg text-sm hover:bg-blue-50"
+          className="px-4 py-2 border border-blue-500 text-blue-600 rounded-lg text-sm hover:bg-blue-50 cursor-pointer"
         >
           Lihat Semua
         </Button>

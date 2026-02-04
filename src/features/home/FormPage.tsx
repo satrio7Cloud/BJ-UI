@@ -1,4 +1,4 @@
-import VehicleServiceForm from "../components/services/VehicleServiceForm";
+import VehicleServiceForm from "../../components/services/VehicleServiceForm";
 
 export default function FormPage() {
   return (

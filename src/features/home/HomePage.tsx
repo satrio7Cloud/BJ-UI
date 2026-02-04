@@ -1,12 +1,12 @@
-import Contact from "../components/sections/Contact";
-import CtaForm from "../components/cta/CtaForm";
-import Footer from "../components/layout/Footer";
-import Header from "../components/layout/Header";
-import About from "../components/sections/About";
-import Excellence from "../components/sections/Excellence";
-import Hero from "../components/sections/Hero";
-import Services from "../components/sections/Service";
-import Testimonials from "../components/sections/Testimonial";
+import Contact from "./sections/Contact";
+import CtaForm from "../../components/cta/CtaForm";
+import About from "./sections/About";
+import Excellence from "./sections/Excellence";
+import Hero from "./sections/Hero";
+import Services from "./sections/Service";
+import Testimonials from "./sections/Testimonial";
+import Header from "../../shared/layout/Header";
+import Footer from "../../shared/layout/Footer";
 
 export default function Home() {
   return (
