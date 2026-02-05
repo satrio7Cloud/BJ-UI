@@ -47,7 +47,6 @@ export default function VehicleForm() {
   }
 
   function isValidPlateBody(value: string) {
-    // 1234 XYZ
     const regex = /^\d{1,4}\s[A-Z]{1,3}$/;
     return regex.test(value.trim().toUpperCase());
   }

@@ -7,8 +7,12 @@ import Services from "./sections/Service";
 import Testimonials from "./sections/Testimonial";
 import Header from "../../shared/layout/Header";
 import Footer from "../../shared/layout/Footer";
+import { useState } from "react";
+import ServicesModal from "../services/services/ServicesModal";
+import ServicePrice from "./sections/ServicePrice";
 
 export default function Home() {
+  const [openServices, setOpenServices] = useState(false);
   return (
     <>
       <Header />
@@ -18,6 +22,7 @@ export default function Home() {
 
         {/* LAYANAN */}
         <Services />
+        <ServicePrice onOpenServices={() => setOpenServices(true)} />
 
         {/* TENTANG KAMI */}
         <About />
@@ -36,6 +41,7 @@ export default function Home() {
         {/* FOOTER */}
         <Footer />
       </main>
+      {openServices && <ServicesModal onClose={() => setOpenServices(false)} />}
     </>
   );
 }
