@@ -10,11 +10,11 @@ import {
   FileX,
   MoreHorizontal,
 } from "lucide-react";
-import StatCard from "../features/dashboard/components/StatCard";
-import InvoiceFilter from "../features/dashboard/components/InvoiceFilter";
-import { invoices } from "../data/invoices";
-import InvoiceStatusBadge from "../features/dashboard/components/InvoiceStatusBadge";
-import InvoiceDetailPanel from "../features/dashboard/components/InvoiceDetailPanel";
+import StatCard from "../dashboard/components/StatCard";
+import InvoiceFilter from "../dashboard/components/InvoiceFilter";
+import { invoices } from "../../data/invoices";
+import InvoiceStatusBadge from "../dashboard/components/InvoiceStatusBadge";
+import InvoiceDetailPanel from "../dashboard/components/InvoiceDetailPanel";
 
 export default function Invoices() {
   const navigate = useNavigate();

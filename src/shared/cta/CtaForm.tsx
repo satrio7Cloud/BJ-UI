@@ -1,6 +1,6 @@
 import { useState } from "react";
-import Modal from "../../shared/components/Modal";
-import VehicleForm from "../../shared/components/VehicleForm";
+import Modal from "../components/Modal";
+import VehicleForm from "../components/VehicleForm";
 import { createWhatsappLink } from "../../utils/whatsaap";
 
 export default function CtaForm() {

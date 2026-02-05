@@ -1,5 +1,5 @@
 import Contact from "./sections/Contact";
-import CtaForm from "../../components/cta/CtaForm";
+import CtaForm from "../../shared/cta/CtaForm";
 import About from "./sections/About";
 import Excellence from "./sections/Excellence";
 import Hero from "./sections/Hero";

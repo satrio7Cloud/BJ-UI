@@ -1,8 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "../features/home/HomePage";
-import Form from "../features/home/FormPage";
+import Form from "../features/form/FormPage";
 import Dashboard from "../features/dashboard/DashboardPage";
-import Invoices from "../pages/Invoices";
+import Invoices from "../features/invoice/Invoices";
 
 export default function AppRoutes() {
   return (
