@@ -8,8 +8,8 @@ import Testimonials from "./sections/Testimonial";
 import Header from "../../shared/layout/Header";
 import Footer from "../../shared/layout/Footer";
 import { useState } from "react";
-import ServicesModal from "../services/services/ServicesModal";
-import ServicePrice from "./sections/ServicePrice";
+import ServicesModal from "../services/components/ServicesModal";
+import ServicePrice from "../services/ServicePrice";
 
 export default function Home() {
   const [openServices, setOpenServices] = useState(false);

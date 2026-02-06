@@ -12,9 +12,9 @@ export default function ServiceCard({ service }: Props) {
   const totalPrice = service.basePrice + selectedOption.extraPrice;
 
   return (
-    <div className="group border rounded-2xl p-6 bg-white shadow-sm hover:shadow-md transition">
+    <div className="group border rounded-2xl p-6 bg-gray-100 shadow-sm hover:shadow-md transition">
       {/* CATEGORY */}
-      <span className="inline-block text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded-full">
+      <span className="inline-block text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
         {service.category}
       </span>
 
@@ -31,7 +31,7 @@ export default function ServiceCard({ service }: Props) {
           <button
             key={opt.type}
             onClick={() => setSelectedOption(opt)}
-            className={`flex-1 border rounded-lg py-2 text-sm transition ${
+            className={`flex-1 border rounded-lg py-2 text-sm transition cursor-pointer ${
               selectedOption.type === opt.type
                 ? "border-blue-600 bg-blue-50 text-blue-600"
                 : "border-gray-200 hover:border-blue-300"
@@ -51,7 +51,7 @@ export default function ServiceCard({ service }: Props) {
       {/* PRICE */}
       <div className="mt-4 flex items-end justify-between">
         <div>
-          <p className="text-xs text-gray-400">Mulai dari</p>
+          {/* <p className="text-xs text-gray-400">Mulai dari</p> */}
           <p className="text-blue-600 text-xl font-bold">
             Rp {totalPrice.toLocaleString("id-ID")}
           </p>
@@ -66,7 +66,7 @@ export default function ServiceCard({ service }: Props) {
       </div>
 
       {/* BUTTON */}
-      <button className="mt-5 w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition text-white py-2 rounded-xl flex items-center justify-center gap-2">
+      <button className="mt-5 w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition text-white py-2 rounded-xl flex items-center justify-center gap-2 cursor-pointer">
         <ShoppingCart size={16} />
         Pesan Sekarang
       </button>
