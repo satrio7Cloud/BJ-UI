@@ -1,5 +1,5 @@
 import React from "react";
-import { createWhatsappLink } from "../../../utils/whatsaap";
+import { createWhatsappLink } from "../../../shared/utils/whatsaap";
 
 const Contact: React.FC = () => {
   return (

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createWhatsappLink } from "../../utils/whatsaap";
+import { createWhatsappLink } from "../utils/whatsaap";
 import toast from "react-hot-toast";
 
 const CURRENT_YEAR = new Date().getFullYear();
