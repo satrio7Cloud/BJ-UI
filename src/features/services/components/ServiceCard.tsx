@@ -1,20 +1,21 @@
 import { ShoppingCart, Clock, Zap } from "lucide-react";
 import { useState } from "react";
 import type { Service } from "../../../data/services";
+import Button from "../../../shared/components/Button";
 
 interface Props {
   service: Service;
+  onSelect: (service: Service) => void;
 }
 
-export default function ServiceCard({ service }: Props) {
+export default function ServiceCard({ service, onSelect }: Props) {
   const [selectedOption, setSelectedOption] = useState(service.options[0]);
-
   const totalPrice = service.basePrice + selectedOption.extraPrice;
 
   return (
-    <div className="group border rounded-2xl p-6 bg-gray-100 shadow-sm hover:shadow-md transition">
+    <div className="border rounded-2xl p-4 sm:p-5 bg-gray-100 shadow-sm hover:shadow-md transition flex flex-col">
       {/* CATEGORY */}
-      <span className="inline-block text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
+      <span className="inline-block w-fit text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
         {service.category}
       </span>
 
@@ -26,7 +27,7 @@ export default function ServiceCard({ service }: Props) {
       )}
 
       {/* OPTION BUTTONS */}
-      <div className="flex gap-2 mt-4">
+      <div className="grid grid-cols-2 gap-2 mt-4">
         {service.options.map((opt) => (
           <button
             key={opt.type}
@@ -49,7 +50,7 @@ export default function ServiceCard({ service }: Props) {
       </div>
 
       {/* PRICE */}
-      <div className="mt-4 flex items-end justify-between">
+      <div className="mt-4 flex items-center justify-between">
         <div>
           {/* <p className="text-xs text-gray-400">Mulai dari</p> */}
           <p className="text-blue-600 text-xl font-bold">
@@ -66,10 +67,22 @@ export default function ServiceCard({ service }: Props) {
       </div>
 
       {/* BUTTON */}
-      <button className="mt-5 w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition text-white py-2 rounded-xl flex items-center justify-center gap-2 cursor-pointer">
+      <Button
+        className="
+      mt-5 w-full
+      bg-blue-600 hover:bg-blue-700
+      active:scale-[0.98]
+      transition
+      text-white py-3
+      rounded-xl
+      flex items-center justify-center gap-2
+      cursor-pointer
+      "
+        onClick={() => onSelect(service)}
+      >
         <ShoppingCart size={16} />
         Pesan Sekarang
-      </button>
+      </Button>
     </div>
   );
 }

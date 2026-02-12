@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
 import type { ServiceCategory } from "../../../data/services";
+import { useState, useMemo } from "react";
 import { servicesprice } from "../../../data/services";
 
 

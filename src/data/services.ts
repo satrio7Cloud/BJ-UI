@@ -50,13 +50,13 @@ export const servicesprice: Service[] = [
     {
       type: "regular",
       label: "Reguler",
-      duration: "5–7 Hari Kerja",
+      duration: "5 - 7 Hari Kerja",
       extraPrice: 0,
     },
     {
       type: "express",
       label: "Express",
-      duration: "2–4 Hari Kerja",
+      duration: "2 - 4 Hari Kerja",
       extraPrice: 300000,
     },
   ],
@@ -72,13 +72,13 @@ export const servicesprice: Service[] = [
     {
       type: "regular",
       label: "Reguler",
-      duration: "7–10 Hari Kerja",
+      duration: "7 - 10 Hari Kerja",
       extraPrice: 0,
     },
     {
       type: "express",
       label: "Express",
-      duration: "3–5 Hari Kerja",
+      duration: "3 - 5 Hari Kerja",
       extraPrice: 400000,
     },
   ],
@@ -94,13 +94,13 @@ export const servicesprice: Service[] = [
     {
       type: "regular",
       label: "Reguler",
-      duration: "10–20 Hari Kerja",
+      duration: "10 - 20 Hari Kerja",
       extraPrice: 0,
     },
     {
       type: "express",
       label: "Express",
-      duration: "5–10 Hari Kerja",
+      duration: "5 - 10 Hari Kerja",
       extraPrice: 500000,
     },
   ],
@@ -116,13 +116,13 @@ export const servicesprice: Service[] = [
     {
       type: "regular",
       label: "Reguler",
-      duration: "10–20 Hari Kerja",
+      duration: "10 - 20 Hari Kerja",
       extraPrice: 0,
     },
     {
       type: "express",
       label: "Express",
-      duration: "5–10 Hari Kerja",
+      duration: "5 - 10 Hari Kerja",
       extraPrice: 600000,
     },
   ],
@@ -138,13 +138,13 @@ export const servicesprice: Service[] = [
     {
       type: "regular",
       label: "Reguler",
-      duration: "7–14 Hari Kerja",
+      duration: "7 - 14 Hari Kerja",
       extraPrice: 0,
     },
     {
       type: "express",
       label: "Express",
-      duration: "2–4 Hari Kerja",
+      duration: "2 - 4 Hari Kerja",
       extraPrice: 300000,
     },
   ],
@@ -160,13 +160,13 @@ export const servicesprice: Service[] = [
     {
       type: "regular",
       label: "Reguler",
-      duration: "7–14 Hari Kerja",
+      duration: "7 - 14 Hari Kerja",
       extraPrice: 0,
     },
     {
       type: "express",
       label: "Express",
-      duration: "2–4 Hari Kerja",
+      duration: "2 - 4 Hari Kerja",
       extraPrice: 300000,
     },
   ],
@@ -182,13 +182,13 @@ export const servicesprice: Service[] = [
     {
       type: "regular",
       label: "Reguler",
-      duration: "5–7 Hari Kerja",
+      duration: "5 - 7 Hari Kerja",
       extraPrice: 0,
     },
     {
       type: "express",
       label: "Express",
-      duration: "2–3 Hari Kerja",
+      duration: "2 - 3 Hari Kerja",
       extraPrice: 250000,
     },
   ],
@@ -204,13 +204,13 @@ export const servicesprice: Service[] = [
     {
       type: "regular",
       label: "Reguler",
-      duration: "5–7 Hari Kerja",
+      duration: "5 - 7 Hari Kerja",
       extraPrice: 0,
     },
     {
       type: "express",
       label: "Express",
-      duration: "2–3 Hari Kerja",
+      duration: "2 - 3 Hari Kerja",
       extraPrice: 350000,
     },
   ],
@@ -226,7 +226,7 @@ export const servicesprice: Service[] = [
     {
       type: "regular",
       label: "Reguler",
-      duration: "1–2 Hari Kerja",
+      duration: "1 - 2 Hari Kerja",
       extraPrice: 0,
     },
     {
@@ -248,7 +248,7 @@ export const servicesprice: Service[] = [
     {
       type: "regular",
       label: "Reguler",
-      duration: "1–2 Hari Kerja",
+      duration: "1 - 2 Hari Kerja",
       extraPrice: 0,
     },
     {
@@ -266,20 +266,20 @@ export const servicesprice: Service[] = [
   id: "balik-nama-bpkb-mobil",
   title: "Balik Nama BPKB (Mobil)",
   description: "Pengurusan balik nama BPKB mobil",
-  duration: "14–21 Hari Kerja",
+  duration: "14 – 21 Hari Kerja",
   basePrice: 1200000,
   category: "BPKB",
   options: [
     {
       type: "regular",
       label: "Reguler",
-      duration: "14–21 Hari Kerja",
+      duration: "14 - 21 Hari Kerja",
       extraPrice: 0,
     },
     {
       type: "express",
       label: "Express",
-      duration: "2–4 Hari Kerja",
+      duration: "2 - 4 Hari Kerja",
       extraPrice: 300000,
     },
   ]
@@ -288,20 +288,20 @@ export const servicesprice: Service[] = [
   id: "balik-nama-bpkb-motor",
   title: "Balik Nama BPKB (Motor)",
   description: "Pengurusan balik nama BPKB motor",
-  duration: "10–14 Hari Kerja",
+  duration: "10 – 14 Hari Kerja",
   basePrice: 1000000,
   category: "BPKB",
   options: [
     {
       type: "regular",
       label: "Reguler",
-      duration: "10–14 Hari Kerja",
+      duration: "10 - 14 Hari Kerja",
       extraPrice: 0,
     },
     {
       type: "express",
       label: "Express",
-      duration: "2–4 Hari Kerja",
+      duration: "2 - 4 Hari Kerja",
       extraPrice: 300000,
     },
   ]
@@ -310,86 +310,86 @@ export const servicesprice: Service[] = [
   id: "bpkb-hilang-mobil",
   title: "BPKB Hilang (Mobil)",
   description: "Pengurusan BPKB hilang mobil",
-  duration: "21–30 Hari Kerja",
+  duration: "21 – 30 Hari Kerja",
   basePrice: 1500000,
   category: "BPKB",
   options: [
     {
       type: "regular",
       label: "Reguler",
-      duration: "21–30 Hari Kerja",
+      duration: "21 – 30 Hari Kerja",
       extraPrice: 0,
     },
     {
       type: "express",
       label: "Express",
-      duration: "2–4 Hari Kerja",
+      duration: "2 - 4 Hari Kerja",
       extraPrice: 300000,
     },
   ]
 },
 {
-  id: "bpkb-hilang-motor",
+  id: "bpkb hilang motor",
   title: "BPKB Hilang (Motor)",
   description: "Pengurusan BPKB hilang motor",
-  duration: "14–21 Hari Kerja",
+  duration: "14 – 21 Hari Kerja",
   basePrice: 1200000,
   category: "BPKB",
   options: [
     {
       type: "regular",
       label: "Reguler",
-      duration: "14–21 Hari Kerja",
+      duration: "14 - 21 Hari Kerja",
       extraPrice: 0,
     },
     {
       type: "express",
       label: "Express",
-      duration: "2–4 Hari Kerja",
+      duration: "2 - 4 Hari Kerja",
       extraPrice: 300000,
     },
   ]
 },
 {
-  id: "cabut-berkas-bpkb-mobil",
+  id: "cabutberkas-bpkb-mobil",
   title: "Cabut Berkas + BPKB (Mobil)",
   description: "Cabut berkas sekaligus BPKB mobil",
-  duration: "14–21 Hari Kerja",
+  duration: "14 – 21 Hari Kerja",
   basePrice: 1800000,
   category: "BPKB",
   options: [
     {
       type: "regular",
       label: "Reguler",
-      duration: "14–21 Hari Kerja",
+      duration: "14 - 21 Hari Kerja",
       extraPrice: 0,
     },
     {
       type: "express",
       label: "Express",
-      duration: "2–4 Hari Kerja",
+      duration: "2 - 4 Hari Kerja",
       extraPrice: 300000,
     },
   ]
 },
 {
-  id: "cabut-berkas-bpkb-motor",
+  id: "cabutberkas-bpkb-motor",
   title: "Cabut Berkas + BPKB (Motor)",
   description: "Cabut berkas sekaligus BPKB motor",
-  duration: "10–14 Hari Kerja",
+  duration: "10 – 14 Hari Kerja",
   basePrice: 1600000,
   category: "BPKB",
   options: [
     {
       type: "regular",
       label: "Reguler",
-      duration: "10–14 Hari Kerja",
+      duration: "10 - 14 Hari Kerja",
       extraPrice: 0,
     },
     {
       type: "express",
       label: "Express",
-      duration: "2–4 Hari Kerja",
+      duration: "2 - 4 Hari Kerja",
       extraPrice: 300000,
     },
   ]
@@ -398,43 +398,43 @@ export const servicesprice: Service[] = [
 
   // ================= MUTASI =================
   {
-    id: "cabut-berkas-mobil",
+    id: "cabutberkas-mobil",
     title: "Cabut Berkas Kendaraan (Mobil)",
-    duration: "7–14 Hari Kerja",
+    duration: "7 – 14 Hari Kerja",
     basePrice: 1500000,
     category: "Mutasi",
     options: [
       {
         type: "regular",
         label: "Reguler",
-        duration: "7–14 Hari Kerja",
+        duration: "7 - 14 Hari Kerja",
         extraPrice: 0,
       },
       {
         type: "express",
         label: "Express",
-        duration: "2–4 Hari Kerja",
+        duration: "2 - 4 Hari Kerja",
         extraPrice: 300000,
       },
     ]
   },
   {
-    id: "cabut-berkas-motor",
+    id: "cabutberkas-motor",
     title: "Cabut Berkas Kendaraan (Motor)",
-    duration: "7–14 Hari Kerja",
+    duration: "7 – 14 Hari Kerja",
     basePrice: 1400000,
     category: "Mutasi",
     options: [
       {
         type: "regular",
         label: "Reguler",
-        duration: "7–14 Hari Kerja",
+        duration: "7 - 14 Hari Kerja",
         extraPrice: 0,
       },
       {
         type: "express",
         label: "Express",
-        duration: "2–4 Hari Kerja",
+        duration: "2 - 4 Hari Kerja",
         extraPrice: 300000,
       },
     ]
@@ -444,20 +444,20 @@ export const servicesprice: Service[] = [
   {
     id: "sim-mobil",
     title: "Pembuatan SIM Mobil",
-    duration: "1–3 Hari Kerja",
+    duration: "1 - 3 Hari Kerja",
     basePrice: 800000,
     category: "SIM",
     options: [
       {
         type: "regular",
         label: "Reguler",
-        duration: "1–3 Hari Kerja",
+        duration: "1 - 3 Hari Kerja",
         extraPrice: 0,
       },
       {
         type: "express",
         label: "Express",
-        duration: "2–4 Hari Kerja",
+        duration: "2 - 4 Hari Kerja",
         extraPrice: 300000,
       },
     ]
@@ -465,20 +465,20 @@ export const servicesprice: Service[] = [
   {
     id: "sim-motor",
     title: "Pembuatan SIM Motor",
-    duration: "1–3 Hari Kerja",
+    duration: "1 - 3 Hari Kerja",
     basePrice: 600000,
     category: "SIM",
     options: [
       {
         type: "regular",
         label: "Reguler",
-        duration: "1–3 Hari Kerja",
+        duration: "1 - 3 Hari Kerja",
         extraPrice: 0,
       },
       {
         type: "express",
         label: "Express",
-        duration: "2–4 Hari Kerja",
+        duration: "2 - 4 Hari Kerja",
         extraPrice: 300000,
       },
     ]
@@ -489,20 +489,20 @@ export const servicesprice: Service[] = [
     id: "plat-1-no",
     title: "Plat Nomor 1 Angka (Tanpa Huruf)",
     description: "Plat nomor 1 angka tanpa huruf",
-    duration: "7–14 Hari Kerja",
+    duration: "7 - 14 Hari Kerja",
     basePrice: 20000000,
     category: "Plat Nomor",
     options: [
       {
         type: "regular",
         label: "Reguler",
-        duration: "7–14 Hari Kerja",
+        duration: "7 - 14 Hari Kerja",
         extraPrice: 0,
       },
       {
         type: "express",
         label: "Express",
-        duration: "2–4 Hari Kerja",
+        duration: "2 - 4 Hari Kerja",
         extraPrice: 300000,
       },
     ]
@@ -511,20 +511,20 @@ export const servicesprice: Service[] = [
     id: "plat-1-yes",
     title: "Plat Nomor 1 Angka (Dengan Huruf)",
     description: "Plat nomor 1 angka dengan huruf",
-    duration: "7–14 Hari Kerja",
+    duration: "7 - 14 Hari Kerja",
     basePrice: 15000000,
     category: "Plat Nomor",
     options: [
       {
         type: "regular",
         label: "Reguler",
-        duration: "7–14 Hari Kerja",
+        duration: "7 - 14 Hari Kerja",
         extraPrice: 0,
       },
       {
         type: "express",
         label: "Express",
-        duration: "2–4 Hari Kerja",
+        duration: "2 - 4 Hari Kerja",
         extraPrice: 300000,
       },
     ]
@@ -533,20 +533,20 @@ export const servicesprice: Service[] = [
     id: "plat-2-no",
     title: "Plat Nomor 2 Angka (Tanpa Huruf)",
     description: "Plat nomor 2 angka tanpa huruf",
-    duration: "7–14 Hari Kerja",
+    duration: "7 - 14 Hari Kerja",
     basePrice: 15000000,
     category: "Plat Nomor",
     options: [
       {
         type: "regular",
         label: "Reguler",
-        duration: "7–14 Hari Kerja",
+        duration: "7 - 14 Hari Kerja",
         extraPrice: 0,
       },
       {
         type: "express",
         label: "Express",
-        duration: "2–4 Hari Kerja",
+        duration: "2 - 4 Hari Kerja",
         extraPrice: 300000,
       },
     ]
@@ -555,20 +555,20 @@ export const servicesprice: Service[] = [
     id: "plat-2-yes",
     title: "Plat Nomor 2 Angka (Dengan Huruf)",
     description: "Plat nomor 2 angka dengan huruf",
-    duration: "7–14 Hari Kerja",
+    duration: "7 - 14 Hari Kerja",
     basePrice: 10000000,
     category: "Plat Nomor",
     options: [
       {
         type: "regular",
         label: "Reguler",
-        duration: "7–14 Hari Kerja",
+        duration: "7 - 14 Hari Kerja",
         extraPrice: 0,
       },
       {
         type: "express",
         label: "Express",
-        duration: "2–4 Hari Kerja",
+        duration: "2 - 4 Hari Kerja",
         extraPrice: 300000,
       },
     ]
@@ -577,20 +577,20 @@ export const servicesprice: Service[] = [
     id: "plat-3-no",
     title: "Plat Nomor 3 Angka (Tanpa Huruf)",
     description: "Plat nomor 3 angka tanpa huruf",
-    duration: "7–14 Hari Kerja",
+    duration: "7 - 14 Hari Kerja",
     basePrice: 10000000,
     category: "Plat Nomor",
     options: [
       {
         type: "regular",
         label: "Reguler",
-        duration: "7–14 Hari Kerja",
+        duration: "7 - 14 Hari Kerja",
         extraPrice: 0,
       },
       {
         type: "express",
         label: "Express",
-        duration: "2–4 Hari Kerja",
+        duration: "2 - 4 Hari Kerja",
         extraPrice: 300000,
       },
     ]
@@ -599,20 +599,20 @@ export const servicesprice: Service[] = [
     id: "plat-3-yes",
     title: "Plat Nomor 3 Angka (Dengan Huruf)",
     description: "Plat nomor 3 angka dengan huruf",
-    duration: "7–14 Hari Kerja",
+    duration: "7 - 14 Hari Kerja",
     basePrice: 7500000,
     category: "Plat Nomor",
     options: [
       {
         type: "regular",
         label: "Reguler",
-        duration: "7–14 Hari Kerja",
+        duration: "7 - 14 Hari Kerja",
         extraPrice: 0,
       },
       {
         type: "express",
         label: "Express",
-        duration: "2–4 Hari Kerja",
+        duration: "2 - 4 Hari Kerja",
         extraPrice: 300000,
       },
     ]
@@ -621,20 +621,20 @@ export const servicesprice: Service[] = [
     id: "plat-4-no",
     title: "Plat Nomor 4 Angka (Tanpa Huruf)",
     description: "Plat nomor 4 angka tanpa huruf",
-    duration: "7–14 Hari Kerja",
+    duration: "7 - 14 Hari Kerja",
     basePrice: 7500000,
     category: "Plat Nomor",
     options: [
       {
         type: "regular",
         label: "Reguler",
-        duration: "7–14 Hari Kerja",
+        duration: "7 - 14 Hari Kerja",
         extraPrice: 0,
       },
       {
         type: "express",
         label: "Express",
-        duration: "2–4 Hari Kerja",
+        duration: "2 - 4 Hari Kerja",
         extraPrice: 300000,
       },
     ]
@@ -643,20 +643,20 @@ export const servicesprice: Service[] = [
     id: "plat-4-yes",
     title: "Plat Nomor 4 Angka (Dengan Huruf)",
     description: "Plat nomor 4 angka dengan huruf",
-    duration: "7–14 Hari Kerja",
+    duration: "7 - 14 Hari Kerja",
     basePrice: 5000000,
     category: "Plat Nomor",
     options: [
       {
         type: "regular",
         label: "Reguler",
-        duration: "7–14 Hari Kerja",
+        duration: "7 - 14 Hari Kerja",
         extraPrice: 0,
       },
       {
         type: "express",
         label: "Express",
-        duration: "2–4 Hari Kerja",
+        duration: "2 - 4 Hari Kerja",
         extraPrice: 300000,
       },
     ]

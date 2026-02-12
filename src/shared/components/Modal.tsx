@@ -1,59 +1,43 @@
 import type { ReactNode } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ModalProps {
   open: boolean;
   onClose: () => void;
-  title?: string;
   children: ReactNode;
 }
 
-export default function Modal({ open, onClose, title, children }: ModalProps) {
-  if (!open) return null;
-
+export default function Modal({ open, onClose, children }: ModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay */}
-      <div
-        onClick={onClose}
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-      />
-
-      {/* Modal Box */}
-      <div
-        className="
-          relative
-          bg-white
-          text-gray-800
-          w-full
-          sm:max-w-md
-          md:max-w-lg
-          lg:max-w-xl
-          max-h-[90vh]
-          overflow-y-auto
-          rounded-2xl
-          sm:rounded-2xl
-          shadow-xl
-          p-6
-          animate-slideUp
-        "
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          {title && (
-            <h3 className="text-lg font-bold text-gray-800">{title}</h3>
-          )}
-
-          <button
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          {/* Overlay */}
+          <motion.div
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-xl"
-          >
-            ✕
-          </button>
-        </div>
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          />
 
-        {/* Content */}
-        {children}
-      </div>
-    </div>
+          {/* CONTENT */}
+          <motion.div
+            className="relative w-full h-full pointer-events-auto flex items-center justify-center"
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 40, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 24 }}
+          >
+            {children}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
