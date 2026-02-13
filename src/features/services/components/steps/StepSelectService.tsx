@@ -22,7 +22,12 @@ const categories: ServiceCategory[] = [
 
 interface Props {
   onClose: () => void;
-  onNext: (service: Service) => void;
+  // onNext: (service: Service) => void;
+  onNext: (
+    service: Service,
+    option: Service["options"][0],
+    totalPrice: number,
+  ) => void;
 }
 
 export default function StepSelectService({ onClose, onNext }: Props) {
@@ -73,7 +78,13 @@ export default function StepSelectService({ onClose, onNext }: Props) {
         <div className="flex-1 overflow-y-auto overflow-x-hidden mt-4 min-h-0">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {servicesprice.map((s) => (
-              <ServiceCard key={s.id} service={s} onSelect={onNext} />
+              <ServiceCard
+                key={s.id}
+                service={s}
+                onSelect={(service, option, price) =>
+                  onNext(service, option, price)
+                }
+              />
             ))}
           </div>
         </div>

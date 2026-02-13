@@ -5,7 +5,11 @@ import Button from "../../../shared/components/Button";
 
 interface Props {
   service: Service;
-  onSelect: (service: Service) => void;
+  onSelect: (
+    service: Service,
+    option: Service["options"][0],
+    totalPrice: number,
+  ) => void;
 }
 
 export default function ServiceCard({ service, onSelect }: Props) {
@@ -78,7 +82,7 @@ export default function ServiceCard({ service, onSelect }: Props) {
       flex items-center justify-center gap-2
       cursor-pointer
       "
-        onClick={() => onSelect(service)}
+        onClick={() => onSelect(service, selectedOption, totalPrice)}
       >
         <ShoppingCart size={16} />
         Pesan Sekarang

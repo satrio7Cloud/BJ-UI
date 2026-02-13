@@ -6,9 +6,12 @@ import ShippingOption from "../ShippingOption";
 import Badge from "../Badge";
 
 import { useShipping, type Method } from "../../hooks/useShipping";
+// import { useState } from "react";
 
 interface Props {
   service: Service;
+  selectedOption: Service["options"][0];
+  price: number;
   onNext: (method: Method) => void;
   onBack: () => void;
 }
@@ -19,8 +22,17 @@ const iconMap = {
   ojol: Bike,
 };
 
-export default function StepShipping({ service, onNext, onBack }: Props) {
+export default function StepShipping({
+  service,
+  onNext,
+  onBack,
+  selectedOption,
+  price,
+}: Props) {
   const { method, setMethod, shippingMethods, shippingDetails } = useShipping();
+  // const [selectedOption, setSelectedOption] = useState(service.options[0]);
+
+  // const totalPrice = service.basePrice + selectedOption.extraPrice
 
   return (
     <div className="flex flex-col h-[90vh] max-w-3xl w-full bg-white rounded-2xl">
@@ -46,12 +58,12 @@ export default function StepShipping({ service, onNext, onBack }: Props) {
             <div className="flex gap-4 mt-3 text-sm">
               <div className="flex items-center gap-1 text-blue-600 font-semibold">
                 <Wallet size={14} />
-                Rp {service.basePrice.toLocaleString("id-ID")}
+                Rp {price.toLocaleString("id-ID")}
               </div>
 
               <div className="flex items-center gap-1 text-gray-500">
                 <Clock size={14} />
-                {service.options[0].duration}
+                {selectedOption.duration}
               </div>
             </div>
           </div>
@@ -68,6 +80,7 @@ export default function StepShipping({ service, onNext, onBack }: Props) {
                 active={method === m.id}
                 icon={<Icon size={18} />}
                 title={m.title}
+                // extra={"Test"}
                 subtitle={m.subtitle}
                 onClick={() => setMethod(m.id)}
               />
