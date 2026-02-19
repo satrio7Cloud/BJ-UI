@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import ServiceCard from "../ServiceCard";
-import { type Service } from "../../../../data/services";
+import type { Service } from "../../../../data/services";
 import { useServices } from "../../hooks/useServices";
 
 export type ServiceCategory =
@@ -22,7 +22,6 @@ const categories: ServiceCategory[] = [
 
 interface Props {
   onClose: () => void;
-  // onNext: (service: Service) => void;
   onNext: (
     service: Service,
     option: Service["options"][0],

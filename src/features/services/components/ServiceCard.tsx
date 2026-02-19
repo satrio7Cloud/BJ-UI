@@ -73,15 +73,15 @@ export default function ServiceCard({ service, onSelect }: Props) {
       {/* BUTTON */}
       <Button
         className="
-      mt-5 w-full
-      bg-blue-600 hover:bg-blue-700
-      active:scale-[0.98]
-      transition
-      text-white py-3
-      rounded-xl
-      flex items-center justify-center gap-2
-      cursor-pointer
-      "
+        mt-5 w-full
+        bg-blue-600 hover:bg-blue-700
+        active:scale-[0.98]
+        transition
+        text-white py-3
+        rounded-xl
+        flex items-center justify-center gap-2
+        cursor-pointer
+        "
         onClick={() => onSelect(service, selectedOption, totalPrice)}
       >
         <ShoppingCart size={16} />

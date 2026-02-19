@@ -117,7 +117,22 @@ export default function VehicleForm() {
   const isPlate = form.serviceType === "request_plat";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 text-gray-800">
+    <form
+      onSubmit={handleSubmit}
+      onClick={(e) => e.stopPropagation()}
+      className="relative space-y-5 text-gray-800 bg-white rounded-2xl shadow-xl px-8 py-7 w-[95%] sm:w-[90%] md:w-[720px] lg:w-[820px] mx-auto max-h-[90vh] overflow-y-auto"
+    >
+      {/* TITLE */}
+      <div className="text-center mb-2">
+        <h2 className="text-xl font-bold text-blue-900">
+          Form Pengurusan Kendaraan
+        </h2>
+
+        <p className="text-sm text-gray-500 mt-1">
+          Silakan lengkapi data kendaraan Anda
+        </p>
+      </div>
+
       {/* JENIS LAYANAN */}
       <div>
         <label className="text-sm font-medium">Jenis Layanan</label>

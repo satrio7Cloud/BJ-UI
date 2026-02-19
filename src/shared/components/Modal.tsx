@@ -28,7 +28,7 @@ export default function Modal({ open, onClose, children }: ModalProps) {
 
           {/* CONTENT */}
           <motion.div
-            className="relative w-full h-full pointer-events-auto flex items-center justify-center"
+            className="relative pointer-events-auto"
             initial={{ y: 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 40, opacity: 0 }}

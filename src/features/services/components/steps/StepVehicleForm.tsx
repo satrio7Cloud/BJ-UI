@@ -30,9 +30,6 @@ export default function StepShipping({
   price,
 }: Props) {
   const { method, setMethod, shippingMethods, shippingDetails } = useShipping();
-  // const [selectedOption, setSelectedOption] = useState(service.options[0]);
-
-  // const totalPrice = service.basePrice + selectedOption.extraPrice
 
   return (
     <div className="flex flex-col h-[90vh] max-w-3xl w-full bg-white rounded-2xl">

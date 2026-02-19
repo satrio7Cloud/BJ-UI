@@ -15,3 +15,7 @@
 .animate-slideUp {
     animation: slideUp 0.25s ease-out;
 }
+
+html {
+  overflow-y: scroll;
+}
