@@ -35,7 +35,7 @@ export default function StepSelectService({ onClose, onNext }: Props) {
 
   return (
     <div className="flex flex-col h-[90vh] max-w-5xl w-full bg-white rounded-2xl">
-      {/* HEADER */}
+      {/* HEADERR */}
       <div className="flex justify-between p-5 border-b">
         <div>
           <h2 className="text-lg sm:text-xl font-semibold">
