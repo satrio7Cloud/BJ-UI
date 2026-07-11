@@ -12,18 +12,30 @@ import {
 } from "lucide-react";
 import StatCard from "../dashboard/components/StatCard";
 import InvoiceFilter from "../dashboard/components/InvoiceFilter";
-import { invoices } from "../../data/invoices";
+import { useOrder } from "../../context/OrderContext";
 import InvoiceStatusBadge from "../dashboard/components/InvoiceStatusBadge";
 import InvoiceDetailPanel from "../dashboard/components/InvoiceDetailPanel";
 
 export default function Invoices() {
   const navigate = useNavigate();
+  const { invoices } = useOrder();
   const [status, setStatus] = useState("all");
   const [search, setSearch] = useState("");
   const [openAction, setOpenAction] = useState<string | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
 
   const actionRef = useRef<HTMLTableCellElement>(null);
+
+  const totalAmount = invoices.reduce((sum, inv) => sum + inv.amount, 0);
+  const paidAmount = invoices
+    .filter((inv) => inv.status === "lunas")
+    .reduce((sum, inv) => sum + inv.amount, 0);
+  const pendingAmount = invoices
+    .filter((inv) => inv.status === "menunggu")
+    .reduce((sum, inv) => sum + inv.amount, 0);
+  const overdueAmount = invoices
+    .filter((inv) => inv.status === "terlambat")
+    .reduce((sum, inv) => sum + inv.amount, 0);
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchSearch =
@@ -73,22 +85,22 @@ export default function Invoices() {
 
         {/* SUMMARY */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Total Invoice" value="Rp 9.850.000" />
+          <StatCard title="Total Invoice" value={`Rp ${totalAmount.toLocaleString("id-ID")}`} />
           <StatCard
             title="Sudah Dibayar"
-            value="Rp 4.800.000"
+            value={`Rp ${paidAmount.toLocaleString("id-ID")}`}
             variant="success"
             icon={CheckCircle}
           />
           <StatCard
             title="Menunggu"
-            value="Rp 4.300.000"
+            value={`Rp ${pendingAmount.toLocaleString("id-ID")}`}
             variant="warning"
             icon={Clock}
           />
           <StatCard
             title="Terlambat"
-            value="Rp 750.000"
+            value={`Rp ${overdueAmount.toLocaleString("id-ID")}`}
             variant="danger"
             icon={AlertCircle}
           />

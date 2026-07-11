@@ -5,10 +5,11 @@ import DocumentItem from "./components/DocumentItem";
 import DocumentDetail from "./components/DocumentDetail";
 import { useState } from "react";
 import { FileText, Clock, CheckCircle, TrendingUp } from "lucide-react";
-import { documents } from "../../data/document";
+import { useOrder } from "../../context/OrderContext";
 import InvoiceTable from "./components/InvoiceTable";
 
 export default function Dashboard() {
+  const { documents } = useOrder();
   const [activeDoc, setActiveDoc] = useState<any | null>(null);
 
   return (

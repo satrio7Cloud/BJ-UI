@@ -4,14 +4,14 @@ import Button from "../../../shared/components/Button";
 import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import { invoices } from "../../../data/invoices";
+import { useOrder } from "../../../context/OrderContext";
 
 const formatRupiah = (value: number) => "Rp " + value.toLocaleString("id-ID");
 const ITEMS_PER_PAGE = 5;
 
 export default function InvoiceTable() {
   const navigate = useNavigate();
+  const { invoices } = useOrder();
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(invoices.length / ITEMS_PER_PAGE);
 

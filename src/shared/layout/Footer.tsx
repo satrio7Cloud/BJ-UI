@@ -1,4 +1,4 @@
-import { createWhatsappLink } from "../utils/whatsaap";
+import { createWhatsappLink } from "../utils/whatsapp";
 
 export default function Footer() {
   return (
