@@ -9,25 +9,18 @@ import {
   Clock,
 } from "lucide-react";
 
-type Invoice = {
-  id: string;
-  date: string;
-  customer: string;
-  email: string;
-  service: string;
-  amount: number;
-  status: string;
-};
+import { type InvoiceData } from "../../../api/invoice";
 
 interface Props {
-  invoice: Invoice | null;
+  invoice: InvoiceData | null;
   onClose: () => void;
 }
 
 export default function InvoiceDetailPanel({ invoice, onClose }: Props) {
   if (!invoice) return null;
 
-  const isPending = invoice.status === "menunggu";
+  const mappedStatus: string = invoice.payment_status?.toLowerCase() === "paid" ? "lunas" : "menunggu";
+  const isPending = mappedStatus === "menunggu";
 
   return (
     <AnimatePresence>
@@ -48,16 +41,16 @@ export default function InvoiceDetailPanel({ invoice, onClose }: Props) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white z-50 shadow-xl flex flex-col"
+            className="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 z-50 shadow-xl flex flex-col transition-colors"
           >
             {/* HEADER */}
-            <div className="p-4 border-b flex justify-between items-start">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-start transition-colors">
               <div>
                 <h2 className="font-semibold text-lg">Detail Invoice</h2>
-                <p className="text-sm text-gray-400">{invoice.id}</p>
+                <p className="text-sm text-slate-400 dark:text-slate-500">{invoice.invoice_number}</p>
               </div>
 
-              <button onClick={onClose}>
+              <button onClick={onClose} className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
                 <X size={20} />
               </button>
             </div>
@@ -68,17 +61,17 @@ export default function InvoiceDetailPanel({ invoice, onClose }: Props) {
               {/* STATUS + AMOUNT */}
               <div className="flex justify-between items-center">
                 <span
-                  className={`px-3 py-1 rounded-full text-xs capitalize
-                ${invoice.status === "menunggu" && "Menunggu" && "bg-yellow-100 text-yellow-700"}
-                ${invoice.status === "lunas" && "Lunas" && "bg-green-100 text-green-700"}
-                ${invoice.status === "terlambat" && "Terlambat" && "bg-red-100 text-red-700"}
+                  className={`px-3 py-1 rounded-full text-xs capitalize transition-colors
+                ${mappedStatus === "menunggu" && "Menunggu" && "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"}
+                ${mappedStatus === "lunas" && "Lunas" && "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"}
+                ${mappedStatus === "terlambat" && "Terlambat" && "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"}
             `}
                 >
-                  {invoice.status}
+                  {mappedStatus}
                 </span>
 
                 <p className="text-xl font-bold">
-                  Rp {invoice.amount.toLocaleString("id-ID")}
+                  Rp {(invoice.total_cost || 0).toLocaleString("id-ID")}
                 </p>
               </div>
 
@@ -89,57 +82,57 @@ export default function InvoiceDetailPanel({ invoice, onClose }: Props) {
                 <h3 className="font-semibold">Informasi Pelanggan</h3>
 
                 <div className="flex gap-3">
-                  <User size={18} />
+                  <User size={18} className="text-slate-500 dark:text-slate-400" />
                   <div>
-                    <p className="text-gray-400 text-xs">Nama</p>
-                    <p>{invoice.customer}</p>
+                    <p className="text-slate-400 dark:text-slate-500 text-xs transition-colors">Nama</p>
+                    <p>{invoice.customer_name || "-"}</p>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                  <Mail size={18} />
+                  <Mail size={18} className="text-slate-500 dark:text-slate-400" />
                   <div>
-                    <p className="text-gray-400 text-xs">Email</p>
-                    <p>{invoice.email}</p>
+                    <p className="text-slate-400 dark:text-slate-500 text-xs transition-colors">Email</p>
+                    <p>{invoice.customer_email || "-"}</p>
                   </div>
                 </div>
               </section>
 
-              <hr />
+              <hr className="border-slate-200 dark:border-slate-800 transition-colors" />
 
               {/* SERVICE */}
               <section className="space-y-3">
                 <h3 className="font-semibold">Detail Layanan</h3>
 
                 <div className="flex gap-3">
-                  <FileText size={18} />
+                  <FileText size={18} className="text-slate-500 dark:text-slate-400" />
                   <div>
-                    <p className="text-gray-400 text-xs">Layanan</p>
-                    <p>{invoice.service}</p>
+                    <p className="text-slate-400 dark:text-slate-500 text-xs transition-colors">Layanan</p>
+                    <p>{invoice.service_name || "-"}</p>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                  <Calendar size={18} />
+                  <Calendar size={18} className="text-slate-500 dark:text-slate-400" />
                   <div>
-                    <p className="text-gray-400 text-xs">Tanggal Invoice</p>
-                    <p>{invoice.date}</p>
+                    <p className="text-slate-400 dark:text-slate-500 text-xs transition-colors">Tanggal Invoice</p>
+                    <p>{new Date(invoice.issue_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                  <Clock size={18} />
+                  <Clock size={18} className="text-slate-500 dark:text-slate-400" />
                   <div>
-                    <p className="text-gray-400 text-xs">Jatuh Tempo</p>
-                    <p>15 Feb 2024</p>
+                    <p className="text-slate-400 dark:text-slate-500 text-xs transition-colors">Jatuh Tempo</p>
+                    <p>{new Date(invoice.due_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                   </div>
                 </div>
               </section>
             </div>
 
             {/* FOOTER */}
-            <div className="p-4 border-t space-y-3">
-              <button className="w-full border rounded-lg py-2 flex items-center justify-center gap-2">
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-3 transition-colors">
+              <button className="w-full border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg py-2 flex items-center justify-center gap-2 transition-colors">
                 <Download size={16} />
                 Download PDF
               </button>

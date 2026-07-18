@@ -1,41 +1,59 @@
 import { useState } from "react";
 import { MessageCircle } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const location = useLocation();
 
   const menu = [
     { label: "Beranda", href: "#beranda" },
     { label: "Layanan", href: "#layanan" },
     { label: "Tentang", href: "#tentang" },
     { label: "Keunggulan", href: "#keunggulan" },
+    { label: "Garasi Saya", href: "/my-vehicles" },
     { label: "Kontak", href: "#kontak" },
   ];
+
+  const getHref = (href: string) => {
+    if (href.startsWith("#")) {
+      return location.pathname === "/" ? href : `/${href}`;
+    }
+    return href;
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b bg-white shadow-sm transform-gpu">
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
         {/* Logo */}
-        <a href="#beranda" className="flex flex-col leading-tight">
+        <Link to="/" className="flex flex-col leading-tight">
           <span className="text-lg font-bold text-blue-600">
             Urus Kendaraan
           </span>
           <span className="text-xs text-gray-400">
             Cepat • Legal • Transparan
           </span>
-        </a>
+        </Link>
 
         {/* Desktop Menu */}
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
-          {menu.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              className="relative text-gray-600 hover:text-blue-600 transition after:absolute after:-bottom-2 after:left-0 after:h-[2px] after:w-0 after:bg-blue-600 after:transition-all hover:after:w-full"
-            >
-              {item.label}
-            </a>
-          ))}
+          {menu.map((item) => {
+            const isHash = item.href.startsWith("#");
+            const className = "relative text-gray-600 hover:text-blue-600 transition after:absolute after:-bottom-2 after:left-0 after:h-[2px] after:w-0 after:bg-blue-600 after:transition-all hover:after:w-full";
+            
+            if (isHash) {
+              return (
+                <a key={item.label} href={getHref(item.href)} className={className}>
+                  {item.label}
+                </a>
+              );
+            }
+            return (
+              <Link key={item.label} to={item.href} className={className}>
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Desktop CTA */}
@@ -60,16 +78,33 @@ export default function Header() {
       {open && (
         <div className="md:hidden px-6 pb-4">
           <div className="bg-white rounded-2xl shadow-xl p-4 space-y-4">
-            {menu.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className="block text-gray-700 hover:text-blue-600"
-              >
-                {item.label}
-              </a>
-            ))}
+            {menu.map((item) => {
+              const isHash = item.href.startsWith("#");
+              const className = "block text-gray-700 hover:text-blue-600 font-medium py-1";
+              
+              if (isHash) {
+                return (
+                  <a
+                    key={item.label}
+                    href={getHref(item.href)}
+                    onClick={() => setOpen(false)}
+                    className={className}
+                  >
+                    {item.label}
+                  </a>
+                );
+              }
+              return (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  onClick={() => setOpen(false)}
+                  className={className}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
 
             <a
               href="#kontak"

@@ -26,7 +26,7 @@ export default function ProgressTimeline({ steps }: { steps: Step[] }) {
             ? "bg-red-500"
             : isActive
               ? "bg-blue-500"
-              : "bg-gray-300";
+              : "bg-slate-300 dark:bg-slate-700 transition-colors";
 
         const circleColor = isDone
           ? "bg-green-500 text-white"
@@ -34,7 +34,7 @@ export default function ProgressTimeline({ steps }: { steps: Step[] }) {
             ? "bg-red-500 text-white animate-pulse"
             : isActive
               ? "bg-blue-500 text-white animate-pulse"
-              : "bg-gray-100 text-gray-400";
+              : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 transition-colors";
 
         return (
           <div key={index} className="flex gap-6">
@@ -59,23 +59,23 @@ export default function ProgressTimeline({ steps }: { steps: Step[] }) {
               <div className="flex justify-between items-start">
                 <div>
                   <p
-                    className={`font-semibold ${
+                    className={`font-semibold transition-colors ${
                       isDone
-                        ? "text-gray-900"
+                        ? "text-slate-900 dark:text-white"
                         : isWarning
-                          ? "text-red-600"
+                          ? "text-red-600 dark:text-red-400"
                           : isActive
-                            ? "text-gray-900"
-                            : "text-gray-500"
+                            ? "text-slate-900 dark:text-white"
+                            : "text-slate-500 dark:text-slate-400"
                     }`}
                   >
                     {step.title}
                   </p>
-                  <p className="text-sm text-gray-500">{step.description}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 transition-colors">{step.description}</p>
                 </div>
 
                 {step.date && (
-                  <span className="text-xs text-gray-400">{step.date}</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500 transition-colors">{step.date}</span>
                 )}
               </div>
             </div>

@@ -30,7 +30,7 @@ interface Props {
 }
 
 export default function StepSelectService({ onClose, onNext }: Props) {
-  const { servicesprice, category, setCategory, search, setSearch } =
+  const { servicesprice, category, setCategory, search, setSearch, isLoading, error } =
     useServices();
 
   return (
@@ -75,17 +75,33 @@ export default function StepSelectService({ onClose, onNext }: Props) {
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden mt-4 min-h-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {servicesprice.map((s) => (
-              <ServiceCard
-                key={s.id}
-                service={s}
-                onSelect={(service, option, price) =>
-                  onNext(service, option, price)
-                }
-              />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex flex-col justify-center items-center h-64 text-slate-500">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+              <p className="text-xs">Memuat layanan...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col justify-center items-center h-64 text-red-500 text-center px-4">
+              <p className="text-sm font-semibold">Gagal memuat layanan</p>
+              <p className="text-xs text-slate-400 mt-1">{error}</p>
+            </div>
+          ) : servicesprice.length === 0 ? (
+            <div className="flex flex-col justify-center items-center h-64 text-slate-400">
+              <p className="text-sm font-medium">Layanan tidak ditemukan</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {servicesprice.map((s) => (
+                <ServiceCard
+                  key={s.id}
+                  service={s}
+                  onSelect={(service, option, price) =>
+                    onNext(service, option, price)
+                  }
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
