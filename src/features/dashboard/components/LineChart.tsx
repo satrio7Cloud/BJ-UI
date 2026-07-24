@@ -25,7 +25,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 shadow-lg text-sm">
       <p className="font-semibold text-slate-700 dark:text-slate-300 mb-1">{label}</p>
       {payload.map((p: any) => (
-        <p key={p.dataKey} style={{ color: p.stroke }}>
+        <p 
+          key={p.dataKey} 
+          className={p.dataKey === "revenue" ? "text-emerald-500" : "text-blue-600"}
+        >
           {p.name}: {p.dataKey === "revenue" ? formatRupiah(p.value) : p.value}
         </p>
       ))}
@@ -36,7 +39,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export default function LineChart({ data }: Props) {
   if (!data || data.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[300px] text-slate-400 dark:text-slate-500">
+      <div className="flex flex-col items-center justify-center h-75 text-slate-400 dark:text-slate-500">
         <TrendingUp size={36} className="mb-2" />
         <p className="text-sm">Tidak ada data grafik transaksi</p>
       </div>

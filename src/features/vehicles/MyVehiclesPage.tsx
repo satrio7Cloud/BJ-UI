@@ -1,12 +1,11 @@
-import { useState, useEffect } from "react";
+import { AlertCircle, ArrowLeft, Car, ChevronRight, Key, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { Car, Key, Plus, ChevronRight, AlertCircle, ArrowLeft } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { createCustomerVehicle, getCustomerVehicles, type CustomerVehicle } from "../../api/customerVehicle";
 import { getBrands, getModels, type Brand, type VehicleModel } from "../../api/vehicle";
-import { getCustomerVehicles, createCustomerVehicle, type CustomerVehicle } from "../../api/customerVehicle";
 
 export default function MyVehiclesPage() {
-  const navigate = useNavigate();
   const [customerId, setCustomerId] = useState("");
   const [isGarageOpen, setIsGarageOpen] = useState(false);
   const [myVehicles, setMyVehicles] = useState<CustomerVehicle[]>([]);
@@ -64,7 +63,7 @@ export default function MyVehiclesPage() {
   const handleRegisterVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedModelId) {
-      toast.error("Silakan pilih model kendaraan");
+      toast.error("Silakan pilih Merek Kendaraan");
       return;
     }
     if (!plateNumber.trim()) {
@@ -244,7 +243,7 @@ export default function MyVehiclesPage() {
                   {/* Model Selector */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                      Model Kendaraan
+                     Merek Kendaraan
                     </label>
                     <select
                       value={selectedModelId}

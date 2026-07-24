@@ -1,10 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, FileText, LayoutDashboard, LogOut, Moon, Settings, Sun, User, Database } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, LayoutDashboard, LogOut, Settings, User, Database, Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getAdminProfile, logoutAdmin } from "../../../api/auth";
-import { useTheme } from "../../../context/ThemeContext";
+import { getDashboardSummary } from "../../../api/dashboard";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -14,11 +14,11 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
   const [profile, setProfile] = useState<{ email: string; role: string } | null>(null);
+  const [pendingNotifs, setPendingNotifs] = useState(0);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       try {
         const res = await getAdminProfile();
         if (res?.data) {
@@ -28,10 +28,23 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         console.error("Failed to load profile", err);
         localStorage.removeItem('adminToken');
         navigate('/admin', { replace: true });
+        return;
+      }
+
+      try {
+        const summary = await getDashboardSummary();
+        if (summary?.pending_actions) {
+          const totalPending = 
+            (summary.pending_actions.unverified_documents || 0) + 
+            (summary.pending_actions.stuck_orders || 0);
+          setPendingNotifs(totalPending);
+        }
+      } catch (err) {
+        console.error("Failed to fetch notifications", err);
       }
     };
-    fetchProfile();
-  }, []);
+    fetchData();
+  }, [navigate]);
 
   const handleLogout = async () => {
     try {
@@ -123,20 +136,28 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-4 shrink-0">
           <button
-            onClick={toggleTheme}
+            onClick={() => {
+              if (pendingNotifs > 0) {
+                toast(`Ada ${pendingNotifs} Peringatan: Dokumen belum diverifikasi / pesanan stuck!`, { icon: '⚠️' });
+              } else {
+                toast('Tidak ada notifikasi baru', { icon: '🔔' });
+              }
+            }}
             className={`flex items-center space-x-3 px-4 py-3 w-full text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors font-medium ${!isOpen ? "justify-center px-0" : ""}`}
-            title={!isOpen ? "Toggle Theme" : undefined}
+            title={!isOpen ? "Notifikasi" : undefined}
           >
-            {theme === 'dark' ? (
-              <Sun className="w-6 h-6 shrink-0" />
-            ) : (
-              <Moon className="w-6 h-6 shrink-0" />
-            )}
+            <div className="relative shrink-0">
+              <Bell className="w-6 h-6" />
+              {/* Red dot indicator */}
+              {pendingNotifs > 0 && (
+                <span className="absolute top-0 right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+              )}
+            </div>
             <motion.span 
               animate={{ opacity: isOpen ? 1 : 0, width: isOpen ? "auto" : 0 }}
               className="whitespace-nowrap overflow-hidden"
             >
-              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+              Notifikasi {pendingNotifs > 0 && `(${pendingNotifs})`}
             </motion.span>
           </button>
           

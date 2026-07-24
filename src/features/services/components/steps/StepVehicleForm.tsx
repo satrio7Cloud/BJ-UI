@@ -1,13 +1,17 @@
-import { useState } from "react";
-import { ArrowLeft, MapPin, Calculator, Loader2 } from "lucide-react";
+import { ArrowLeft, Calculator, Loader2, MapPin } from "lucide-react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
+import { createCustomer } from "../../../../api/customer";
+import { createCustomerVehicle } from "../../../../api/customerVehicle";
+import { getModels, type VehicleModel } from "../../../../api/vehicle";
 import type { Service } from "../../../../data/services";
-import type { Method } from "../../hooks/useShipping";
+import Button from "../../../../shared/components/Button";
 import { Input } from "../../../../shared/components/Input";
 import { Select } from "../../../../shared/components/Select";
-import Button from "../../../../shared/components/Button";
 import { getDistance } from "../../../../shared/services/mapsService";
+import type { Method } from "../../hooks/useShipping";
+import Stepper from "../Stepper";
 
 interface Props {
   service: Service;
@@ -54,18 +58,20 @@ export default function StepVehicleForm({
   })();
 
   const autoPlateDigit = (() => {
+    const titleLower = service.title.toLowerCase();
     const idLower = service.id.toLowerCase();
-    if (idLower.includes("plat-1")) return "1";
-    if (idLower.includes("plat-2")) return "2";
-    if (idLower.includes("plat-3")) return "3";
-    if (idLower.includes("plat-4")) return "4";
+    if (idLower.includes("plat-1") || titleLower.includes("1 angka")) return "1";
+    if (idLower.includes("plat-2") || titleLower.includes("2 angka")) return "2";
+    if (idLower.includes("plat-3") || titleLower.includes("3 angka")) return "3";
+    if (idLower.includes("plat-4") || titleLower.includes("4 angka")) return "4";
     return null;
   })();
 
   const autoPlateSuffix = (() => {
+    const titleLower = service.title.toLowerCase();
     const idLower = service.id.toLowerCase();
-    if (idLower.includes("-no")) return "no";
-    if (idLower.includes("-yes")) return "yes";
+    if (idLower.includes("-no") || titleLower.includes("tanpa huruf")) return "no";
+    if (idLower.includes("-yes") || titleLower.includes("dengan huruf")) return "yes";
     return null;
   })();
 
@@ -83,13 +89,36 @@ export default function StepVehicleForm({
     plateDigit: autoPlateDigit || "",
     plateSuffix: autoPlateSuffix || "",
     simType: autoSimType || "SIM A",
+    email: "",
+    nik: "",
+    modelId: "",
   });
+
+  const [ktpFile, setKtpFile] = useState<File | null>(null);
+  const [stnkFile, setStnkFile] = useState<File | null>(null);
+  const [bpkbFile, setBpkbFile] = useState<File | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<File | null>>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setter(e.target.files[0]);
+    } else {
+      setter(null);
+    }
+  };
+
+  const [models, setModels] = useState<VehicleModel[]>([]);
+  useEffect(() => {
+    getModels()
+      .then(res => setModels(res.data || []))
+      .catch(console.error);
+  }, []);
 
   // Distance Calculation State
   const [checkingDistance, setCheckingDistance] = useState(false);
   const [distance, setDistance] = useState<number | null>(null);
   const [shippingFee, setShippingFee] = useState<number>(0);
   const [distanceChecked, setDistanceChecked] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -144,6 +173,27 @@ export default function StepVehicleForm({
       return;
     }
 
+    if (!formData.email.trim()) {
+      toast.error("Email wajib diisi");
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      toast.error("Format email tidak valid");
+      return;
+    }
+    if (!formData.nik.trim()) {
+      toast.error("NIK wajib diisi");
+      return;
+    }
+    if (formData.nik.trim().length !== 16) {
+      toast.error("NIK harus 16 digit");
+      return;
+    }
+    if (!formData.address.trim()) {
+      toast.error("Alamat lengkap wajib diisi");
+      return;
+    }
+
     if (shippingMethod === "kurir") {
       if (!formData.address.trim()) {
         toast.error("Alamat penjemputan wajib diisi");
@@ -167,15 +217,16 @@ export default function StepVehicleForm({
       }
     }
 
-    if (service.category === "Mutasi" || service.category === "BPKB") {
-      // BPKB/Mutasi cabut berkas needs plate number
-      if (service.id.includes("cabutberkas") || service.id.includes("balik-nama")) {
-        if (!formData.plateNumber.trim()) {
-          toast.error("Nomor plat kendaraan wajib diisi");
-          return;
-        }
+    const isMutasiService = service.category === "Mutasi" || service.title.toLowerCase().includes("mutasi") || service.title.toLowerCase().includes("cabut berkas");
+    const isBpkbService = service.category === "BPKB" || service.title.toLowerCase().includes("bpkb") || service.title.toLowerCase().includes("balik nama");
+
+    if (isMutasiService || isBpkbService) {
+      // BPKB/Mutasi/Balik Nama needs plate number
+      if (!formData.plateNumber.trim()) {
+        toast.error("Nomor plat kendaraan wajib diisi");
+        return;
       }
-      if (service.id.includes("cabutberkas") || service.id.includes("mutasi")) {
+      if (isMutasiService) {
         if (!formData.samsatFrom.trim()) {
           toast.error("Samsat Asal wajib diisi");
           return;
@@ -198,13 +249,59 @@ export default function StepVehicleForm({
       }
     }
 
-    // Pass data forward
-    onNext(
+    // Call customer API first
+    setIsSubmitting(true);
+    toast.promise(
+      createCustomer({
+        fullname: formData.name,
+        email: formData.email,
+        phone_number: formData.whatsapp,
+        address: formData.address,
+        nik: formData.nik,
+      }).then(async (res) => {
+        let vehicleId = undefined;
+        // Create Vehicle if it's not SIM service
+        if (service.category !== "SIM" && res.data?.id) {
+           if (!formData.modelId) {
+             throw new Error("Merek Kendaraan wajib dipilih");
+           }
+           const vRes = await createCustomerVehicle({
+             customer_id: res.data.id,
+             model_id: formData.modelId,
+             plate_number: formData.plateNumber,
+             year: parseInt(formData.vehicleYear) || new Date().getFullYear(),
+           });
+           vehicleId = vRes.data?.id;
+        }
+        return { customerId: res.data?.id, vehicleId };
+      }),
       {
-        ...formData,
-        distance,
-      },
-      shippingFee
+        loading: "Menyimpan data pelanggan...",
+        success: (res) => {
+          setIsSubmitting(false);
+          // Pass data forward (include customerId and vehicleId for next step if needed)
+          onNext(
+            {
+              ...formData,
+              distance,
+              customerId: res.customerId,
+              vehicleId: res.vehicleId,
+              documents: {
+                ktp: ktpFile,
+                stnk: stnkFile,
+                bpkb: bpkbFile,
+              }
+            },
+            shippingFee
+          );
+          return "Data berhasil disimpan!";
+        },
+        error: (err) => {
+          setIsSubmitting(false);
+          console.error("Gagal menyimpan data:", err);
+          return err.message || "Gagal menyimpan data. Silakan coba lagi.";
+        },
+      }
     );
   };
 
@@ -214,7 +311,7 @@ export default function StepVehicleForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col h-[90vh] max-w-3xl w-full bg-white rounded-2xl"
+      className="flex flex-col w-full bg-white"
     >
       {/* HEADER */}
       <div className="flex items-center gap-3 p-5 border-b">
@@ -225,11 +322,13 @@ export default function StepVehicleForm({
         </div>
       </div>
 
+      <Stepper currentStep={3} />
+
       {/* BODY */}
       <div className="flex-1 overflow-y-auto p-5 space-y-5">
         {/* DATA PENGIRIM */}
         <div className="space-y-4">
-          <h3 className="font-semibold text-blue-900 text-sm border-b pb-1">Data Kontak</h3>
+          <h3 className="font-semibold text-blue-900 text-sm border-b pb-1">Data Kontak & Berkas Pelanggan</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-medium text-gray-700 mb-1 block">Nama Lengkap</label>
@@ -249,7 +348,40 @@ export default function StepVehicleForm({
                 onChange={handleChange}
               />
             </div>
+            <div>
+              <label className="text-xs font-medium text-gray-700 mb-1 block">Email</label>
+              <Input
+                name="email"
+                type="email"
+                placeholder="Contoh: budi.santoso@gmail.com"
+                value={formData.email}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-700 mb-1 block">NIK (Nomor Induk Kependudukan)</label>
+              <Input
+                name="nik"
+                placeholder="Contoh: 3171012345670001"
+                value={formData.nik}
+                onChange={handleChange}
+                maxLength={16}
+              />
+            </div>
           </div>
+          {shippingMethod !== "kurir" && (
+            <div>
+              <label className="text-xs font-medium text-gray-700 mb-1 block">Alamat Lengkap</label>
+              <textarea
+                name="address"
+                placeholder="Masukkan alamat lengkap sesuai KTP (Jalan, No, RT/RW, Kelurahan, Kecamatan, Kota)"
+                value={formData.address}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                rows={3}
+              />
+            </div>
+          )}
         </div>
 
         {/* ALAMAT PENJEMPUTAN (JIKA KURIR) */}
@@ -313,7 +445,7 @@ export default function StepVehicleForm({
           {hasDetectedInfo && (
             <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-xl">
               <span className="text-[11px] text-gray-400 font-semibold w-full uppercase tracking-wider mb-0.5">
-                Detail Layanan Terdeteksi:
+                Detail Layanan yang Dipilih:
               </span>
               {autoVehicleType && (
                 <span className="bg-blue-50 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-md border border-blue-100 capitalize">
@@ -381,6 +513,22 @@ export default function StepVehicleForm({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
+                  <label className="text-xs font-medium text-gray-700 mb-1 block">Merek Kendaraanx</label>
+                  <Select
+                    name="modelId"
+                    value={formData.modelId}
+                    onChange={handleChange}
+                  >
+                    <option value="">Pilih Merek Kendaraan</option>
+                    {models
+                      .filter(m => !formData.vehicleType || m.vehicle_type === formData.vehicleType)
+                      .map(model => (
+                        <option key={model.id} value={model.id}>{model.model_name}</option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div>
                   <label className="text-xs font-medium text-gray-700 mb-1 block">Nomor Plat Kendaraan</label>
                   <div className="flex">
                     <span className="inline-flex items-center px-4 border border-r-0 rounded-l-lg bg-gray-100 text-gray-700 font-semibold border-gray-300">
@@ -395,7 +543,9 @@ export default function StepVehicleForm({
                     />
                   </div>
                 </div>
+              </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-medium text-gray-700 mb-1 block">Tahun Kendaraan</label>
                   <Select
@@ -419,24 +569,42 @@ export default function StepVehicleForm({
           {(service.category === "Mutasi" || service.category === "BPKB") && (
             <div className="space-y-4">
               {/* Only show plate number field if it is not a pure SIM or document loss (wait, BPKB/Mutasi generally needs plate number) */}
-              <div>
-                <label className="text-xs font-medium text-gray-700 mb-1 block">Nomor Plat Kendaraan</label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-4 border border-r-0 rounded-l-lg bg-gray-100 text-gray-700 font-semibold border-gray-300">
-                    B
-                  </span>
-                  <Input
-                    name="plateNumber"
-                    placeholder="1234 XYZ"
-                    value={formData.plateNumber}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-gray-700 mb-1 block">Merek Kendaraan</label>
+                  <Select
+                    name="modelId"
+                    value={formData.modelId}
                     onChange={handleChange}
-                    className="rounded-l-none uppercase"
-                  />
+                  >
+                    <option value="">Pilih Merek Kendaraan</option>
+                    {models
+                      .filter(m => !formData.vehicleType || m.vehicle_type === formData.vehicleType)
+                      .map(model => (
+                        <option key={model.id} value={model.id}>{model.model_name}</option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-gray-700 mb-1 block">Nomor Plat Kendaraan</label>
+                  <div className="flex">
+                    <span className="inline-flex items-center px-4 border border-r-0 rounded-l-lg bg-gray-100 text-gray-700 font-semibold border-gray-300">
+                      B
+                    </span>
+                    <Input
+                      name="plateNumber"
+                      placeholder="1234 XYZ"
+                      value={formData.plateNumber}
+                      onChange={handleChange}
+                      className="rounded-l-none uppercase"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Show Samsat inputs for Mutasi / Cabut Berkas */}
-              {(service.id.includes("cabutberkas") || service.id.includes("mutasi")) && (
+              {(service.category === "Mutasi" || service.title.toLowerCase().includes("mutasi") || service.title.toLowerCase().includes("cabut berkas")) && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-medium text-gray-700 mb-1 block">Samsat Asal</label>
@@ -514,15 +682,42 @@ export default function StepVehicleForm({
             </div>
           )}
         </div>
+
+        {/* UNGGAH DOKUMEN (OPSIONAL) */}
+        <div className="space-y-4 pt-2">
+          <h3 className="font-semibold text-blue-900 text-sm border-b pb-1">Unggah Dokumen (Opsional)</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="text-xs font-medium text-gray-700 mb-1 block">Foto KTP (Opsional)</label>
+              <input type="file" accept="image/*,.pdf" onChange={(e) => handleFileChange(e, setKtpFile)} className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-700 mb-1 block">Foto STNK (Opsional)</label>
+              <input type="file" accept="image/*,.pdf" onChange={(e) => handleFileChange(e, setStnkFile)} className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-700 mb-1 block">Foto BPKB (Opsional)</label>
+              <input type="file" accept="image/*,.pdf" onChange={(e) => handleFileChange(e, setBpkbFile)} className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" />
+            </div>
+          </div>
+        </div>
+
       </div>
 
       {/* FOOTER */}
       <div className="p-5 border-t">
         <Button
           type="submit"
-          className="w-full bg-blue-600 text-white py-3 rounded-xl"
+          disabled={isSubmitting}
+          className="w-full bg-blue-600 text-white py-3 rounded-xl flex items-center justify-center gap-2"
         >
-          Lanjutkan
+          {isSubmitting ? (
+            <>
+              <Loader2 className="animate-spin" size={18} /> Memproses...
+            </>
+          ) : (
+            "Lanjutkan"
+          )}
         </Button>
       </div>
     </form>

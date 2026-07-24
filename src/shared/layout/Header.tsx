@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { MessageCircle } from "lucide-react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 export default function Header() {
@@ -39,7 +39,7 @@ export default function Header() {
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
           {menu.map((item) => {
             const isHash = item.href.startsWith("#");
-            const className = "relative text-gray-600 hover:text-blue-600 transition after:absolute after:-bottom-2 after:left-0 after:h-[2px] after:w-0 after:bg-blue-600 after:transition-all hover:after:w-full";
+            const className = "relative text-gray-600 hover:text-blue-600 transition after:absolute after:-bottom-2 after:left-0 after:h-0.5 after:w-0 after:bg-blue-600 after:transition-all hover:after:w-full";
             
             if (isHash) {
               return (

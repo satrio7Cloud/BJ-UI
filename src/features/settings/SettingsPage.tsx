@@ -1,6 +1,6 @@
+import { Bell, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import { useTheme } from "../../context/ThemeContext";
-import { Sun, Moon, Bell } from "lucide-react";
 
 export default function SettingsPage() {
   const { theme, toggleTheme } = useTheme();
@@ -25,7 +25,7 @@ export default function SettingsPage() {
               <Sun size={20} />
             </div>
             <div>
-              <h2 className="font-semibold text-slate-900 dark:text-white">Tema Antarmuka</h2>
+              <h2 className="font-semibold text-slate-900 dark:text-white">Tema</h2>
               <p className="text-xs text-slate-400 dark:text-slate-500">Sesuaikan tampilan visual aplikasi Anda.</p>
             </div>
           </div>

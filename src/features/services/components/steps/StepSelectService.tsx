@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import ServiceCard from "../ServiceCard";
 import type { Service } from "../../../../data/services";
 import { useServices } from "../../hooks/useServices";
+import Stepper from "../Stepper";
 
 export type ServiceCategory =
   | "Semua"
@@ -34,7 +35,7 @@ export default function StepSelectService({ onClose, onNext }: Props) {
     useServices();
 
   return (
-    <div className="flex flex-col h-[90vh] max-w-5xl w-full bg-white rounded-2xl">
+    <div className="flex flex-col w-full bg-white">
       {/* HEADERR */}
       <div className="flex justify-between p-5 border-b">
         <div>
@@ -49,6 +50,8 @@ export default function StepSelectService({ onClose, onNext }: Props) {
 
         <X onClick={onClose} className="cursor-pointer" />
       </div>
+
+      <Stepper currentStep={1} />
 
       <div className="p-5 flex flex-col flex-1 overflow-hidden min-h-0">
         <input

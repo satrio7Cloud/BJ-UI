@@ -37,7 +37,7 @@ export const getCustomerVehicles = async (): Promise<{ data: CustomerVehicle[]; 
   return response.json();
 };
 
-export const createCustomerVehicle = async (data: CreateCustomerVehicleRequest): Promise<{ message: string; status: string }> => {
+export const createCustomerVehicle = async (data: CreateCustomerVehicleRequest): Promise<{ message: string; status: string; data?: { id: string } }> => {
   const response = await fetch(`${API_BASE_URL}/vehicles`, {
     method: 'POST',
     headers: getAuthHeaders(),

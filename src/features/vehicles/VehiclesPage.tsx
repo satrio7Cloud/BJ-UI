@@ -25,8 +25,9 @@ export default function VehiclesPage() {
   const [services, setServices] = useState<ApiService[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(false);
   const [serviceName, setServiceName] = useState("");
-  const [serviceCategory, setServiceCategory] = useState("STNK");
+  const [serviceCategory, setServiceCategory] = useState("");
   const [serviceFee, setServiceFee] = useState("");
+  const [serviceExpressFee, setServiceExpressFee] = useState("");
   const [serviceDescription, setServiceDescription] = useState("");
   const [isSubmittingService, setIsSubmittingService] = useState(false);
 
@@ -111,9 +112,11 @@ export default function VehiclesPage() {
 
     try {
       setIsSubmittingModel(true);
+      const brand = brands.find((b) => b.id === selectedBrandId);
       const res = await createModel({
         brand_id: selectedBrandId,
         model_name: newModelName.trim(),
+        brand_name: brand ? brand.brand_name : "",
         vehicle_type: vehicleType,
       });
       toast.success(res.message || "Model berhasil ditambahkan");
@@ -134,8 +137,16 @@ export default function VehiclesPage() {
       toast.error("Nama layanan tidak boleh kosong");
       return;
     }
+    if (!serviceCategory.trim()) {
+      toast.error("Kategori layanan tidak boleh kosong");
+      return;
+    }
     if (!serviceFee.trim() || isNaN(Number(serviceFee))) {
-      toast.error("Biaya layanan harus berupa angka");
+      toast.error("Biaya layanan reguler harus berupa angka");
+      return;
+    }
+    if (!serviceExpressFee.trim() || isNaN(Number(serviceExpressFee))) {
+      toast.error("Biaya layanan express harus berupa angka");
       return;
     }
 
@@ -143,14 +154,17 @@ export default function VehiclesPage() {
       setIsSubmittingService(true);
       const res = await createService({
         service_name: serviceName.trim(),
-        category: serviceCategory,
+        category: serviceCategory.trim(),
         service_fee: Number(serviceFee),
+        express_fee: Number(serviceExpressFee),
         description: serviceDescription.trim(),
       });
 
       toast.success(res.message || "Layanan berhasil ditambahkan!");
       setServiceName("");
+      setServiceCategory("");
       setServiceFee("");
+      setServiceExpressFee("");
       setServiceDescription("");
       fetchServicesData(); // Refresh list
     } catch (err: any) {
@@ -174,7 +188,7 @@ export default function VehiclesPage() {
             Data Master
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Kelola data merek, model kendaraan, dan jenis layanan yang aktif di sistem.
+            Kelola data merek, Merek Kendaraan, dan jenis layanan yang aktif di sistem.
           </p>
         </div>
         <button
@@ -195,29 +209,29 @@ export default function VehiclesPage() {
       <div className="flex border-b border-slate-200 dark:border-slate-800 transition-colors">
         <button
           onClick={() => setActiveTab("brands")}
-          className={`flex items-center gap-2 py-3 px-4 font-medium text-sm border-b-2 transition-all -mb-[2px] ${
+          className={`flex items-center gap-2 py-3 px-4 font-medium text-sm border-b-2 transition-all -mb-0.5 ${
             activeTab === "brands"
               ? "border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400"
               : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
           }`}
         >
           <Shield size={16} />
-          Merek Kendaraan
+          Brand
         </button>
         <button
           onClick={() => setActiveTab("models")}
-          className={`flex items-center gap-2 py-3 px-4 font-medium text-sm border-b-2 transition-all -mb-[2px] ${
+          className={`flex items-center gap-2 py-3 px-4 font-medium text-sm border-b-2 transition-all -mb-0.5 ${
             activeTab === "models"
               ? "border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400"
               : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
           }`}
         >
           <Car size={16} />
-          Model Kendaraan
+          Merek Kendaraan
         </button>
         <button
           onClick={() => setActiveTab("services")}
-          className={`flex items-center gap-2 py-3 px-4 font-medium text-sm border-b-2 transition-all -mb-[2px] ${
+          className={`flex items-center gap-2 py-3 px-4 font-medium text-sm border-b-2 transition-all -mb-0.5 ${
             activeTab === "services"
               ? "border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400"
               : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
@@ -282,7 +296,7 @@ export default function VehiclesPage() {
                   Belum ada merek terdaftar.
                 </div>
               ) : (
-                <div className="flex flex-wrap gap-2 overflow-y-auto max-h-[400px] pr-2">
+                <div className="flex flex-wrap gap-2 overflow-y-auto max-h-100 pr-2">
                   {brands.map((b) => (
                     <div
                       key={b.id}
@@ -301,7 +315,7 @@ export default function VehiclesPage() {
             {/* Form Add Model */}
             <div className="space-y-4 lg:col-span-1">
               <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
-                Tambah Model Kendaraan Baru
+                Tambah Merek Kendaraan Baru
               </h2>
               <form onSubmit={handleAddModel} className="space-y-5">
                 {/* Brand Dropdown */}
@@ -326,7 +340,7 @@ export default function VehiclesPage() {
                 {/* Model Name Input */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                    Nama Model Kendaraan
+                    Nama Merek Kendaraan
                   </label>
                   <input
                     type="text"
@@ -463,28 +477,37 @@ export default function VehiclesPage() {
                   <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                     Kategori Layanan
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={serviceCategory}
                     onChange={(e) => setServiceCategory(e.target.value)}
+                    placeholder="Contoh: STNK, BPKB, SIM, Plat Nomor, dll."
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                  >
-                    <option value="STNK">STNK</option>
-                    <option value="BPKB">BPKB</option>
-                    <option value="SIM">SIM</option>
-                    <option value="Plat Nomor">Plat Nomor</option>
-                    <option value="Mutasi">Mutasi</option>
-                  </select>
+                  />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                    Biaya Jasa Dasar (Rupiah)
+                    Biaya Jasa Dasar / Reguler (Rupiah)
                   </label>
                   <input
                     type="text"
                     value={serviceFee}
                     onChange={(e) => setServiceFee(e.target.value)}
                     placeholder="Contoh: 300000"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Biaya Tambahan Express (Rupiah)
+                  </label>
+                  <input
+                    type="text"
+                    value={serviceExpressFee}
+                    onChange={(e) => setServiceExpressFee(e.target.value)}
+                    placeholder="Contoh: 150000"
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                   />
                 </div>
@@ -541,31 +564,48 @@ export default function VehiclesPage() {
                         <th className="px-4 py-3">No.</th>
                         <th className="px-4 py-3">Nama Layanan</th>
                         <th className="px-4 py-3">Kategori</th>
-                        <th className="px-4 py-3">Biaya</th>
+                        <th className="px-4 py-3">Biaya Reguler</th>
+                        <th className="px-4 py-3">Biaya Express</th>
+                        <th className="px-4 py-3">Tanggal Dibuat</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {services.map((service, idx) => (
-                        <tr key={service.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                          <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
-                            {idx + 1}
-                          </td>
-                          <td className="px-4 py-3">
-                            <p className="font-semibold text-slate-900 dark:text-white">{service.service_name}</p>
-                            <p className="text-xs text-slate-450 dark:text-slate-500 truncate max-w-[200px]" title={service.description}>
-                              {service.description}
-                            </p>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400">
-                              {service.category}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">
-                            Rp {(service.service_fee || 0).toLocaleString("id-ID")}
-                          </td>
-                        </tr>
-                      ))}
+                      {services.map((service, idx) => {
+                        const displayDate = service.created_at
+                          ? new Date(service.created_at).toLocaleDateString("id-ID", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : "-";
+                        return (
+                          <tr key={service.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                            <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
+                              {idx + 1}
+                            </td>
+                            <td className="px-4 py-3">
+                              <p className="font-semibold text-slate-900 dark:text-white">{service.service_name}</p>
+                              <p className="text-xs text-slate-450 dark:text-slate-500 truncate max-h-100" title={service.description}>
+                                {service.description}
+                              </p>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400">
+                                {service.category}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">
+                              Rp {(service.service_fee || 0).toLocaleString("id-ID")}
+                            </td>
+                            <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">
+                              Rp {(service.express_fee || 0).toLocaleString("id-ID")}
+                            </td>
+                            <td className="px-4 py-3 text-slate-500 text-xs">
+                              {displayDate}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

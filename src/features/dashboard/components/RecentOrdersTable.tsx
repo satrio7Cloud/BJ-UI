@@ -1,9 +1,12 @@
+import { AlertCircle, ChevronDown, ChevronUp, Clock, Zap } from 'lucide-react';
+import { useState } from 'react';
 import { type DashboardOrder } from '../../../api/dashboard';
-import { Clock, Zap, MoreHorizontal, AlertCircle } from 'lucide-react';
+import OrderActivityLog from './OrderActivityLog';
 
 interface Props {
   orders: DashboardOrder[];
   isLoading: boolean;
+  onOrderUpdate?: () => void;
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -14,7 +17,10 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   Cancelled:  { label: 'Dibatalkan',className: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' },
 };
 
-export default function RecentOrdersTable({ orders, isLoading }: Props) {
+export default function RecentOrdersTable({ orders, isLoading, onOrderUpdate }: Props) {
+  orders = orders || [];
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-transparent dark:border-slate-800 transition-colors">
       <div className="flex items-center justify-between mb-4">
@@ -62,12 +68,13 @@ export default function RecentOrdersTable({ orders, isLoading }: Props) {
                 const isExpress = order.service_level === 'EXPRESS';
 
                 return (
+                  <>
                   <tr key={order.order_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="py-3.5 pr-4">
                       <p className="font-medium text-slate-900 dark:text-white">{order.customer_name}</p>
                       <p className="text-xs text-slate-400 dark:text-slate-500">{date}</p>
                     </td>
-                    <td className="py-3.5 pr-4 max-w-[160px] truncate" title={order.service_name}>
+                    <td className="py-3.5 pr-4  max-w-40 truncate" title={order.service_name}>
                       {order.service_name}
                     </td>
                     <td className="py-3.5 pr-4">
@@ -90,11 +97,27 @@ export default function RecentOrdersTable({ orders, isLoading }: Props) {
                       </span>
                     </td>
                     <td className="py-3.5 text-right">
-                      <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 dark:text-slate-500 transition-colors cursor-pointer">
-                        <MoreHorizontal size={16} />
+                      <button 
+                        onClick={() => setExpandedOrderId(expandedOrderId === order.order_id ? null : order.order_id)}
+                        className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                          expandedOrderId === order.order_id 
+                            ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' 
+                            : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500'
+                        }`}
+                        title="Update Status"
+                      >
+                        {expandedOrderId === order.order_id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
                     </td>
                   </tr>
+                  {expandedOrderId === order.order_id && (
+                    <tr className="bg-slate-50/50 dark:bg-slate-800/20">
+                      <td colSpan={7} className="p-4 border-t border-slate-100 dark:border-slate-800">
+                        <OrderActivityLog orderId={order.order_id} onStatusChange={onOrderUpdate} />
+                      </td>
+                    </tr>
+                  )}
+                </>
                 );
               })
             )}

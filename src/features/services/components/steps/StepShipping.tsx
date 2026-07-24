@@ -6,6 +6,7 @@ import ShippingOption from "../ShippingOption";
 import Badge from "../Badge";
 
 import { useShipping, type Method } from "../../hooks/useShipping";
+import Stepper from "../Stepper";
 
 interface Props {
   service: Service;
@@ -31,7 +32,7 @@ export default function StepShipping({
   const { method, setMethod, shippingMethods, shippingDetails } = useShipping();
 
   return (
-    <div className="flex flex-col h-[90vh] max-w-3xl w-full bg-white rounded-2xl">
+    <div className="flex flex-col w-full bg-white">
       {/* HEADER */}
       <div className="flex items-center gap-3 p-5 border-b">
         <ArrowLeft onClick={onBack} className="cursor-pointer" />
@@ -41,6 +42,8 @@ export default function StepShipping({
           <p className="text-sm text-gray-500">{service.title}</p>
         </div>
       </div>
+
+      <Stepper currentStep={2} />
 
       {/* BODY */}
       <div className="flex-1 overflow-y-auto p-5 space-y-4">

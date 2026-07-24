@@ -3,6 +3,7 @@ import { ArrowLeft, QrCode, Building2, Smartphone, Wallet, Check } from "lucide-
 import Button from "../../../../shared/components/Button";
 import { Input } from "../../../../shared/components/Input";
 import toast from "react-hot-toast";
+import Stepper from "../Stepper";
 
 interface Props {
   price: number;
@@ -60,6 +61,8 @@ export default function StepPaymentMethod({ price, onBack, onNext }: Props) {
           <p className="text-sm text-gray-500">Jumlah tagihan: Rp {price.toLocaleString("id-ID")}</p>
         </div>
       </div>
+
+      <Stepper currentStep={4} />
 
       {/* BODY */}
       <div className="flex-1 overflow-y-auto p-5 space-y-4">

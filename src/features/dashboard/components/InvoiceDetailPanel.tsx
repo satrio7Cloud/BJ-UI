@@ -1,12 +1,12 @@
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  X,
-  Download,
-  User,
-  Mail,
-  FileText,
-  Calendar,
-  Clock,
+    Calendar,
+    Clock,
+    Download,
+    FileText,
+    Mail,
+    User,
+    X,
 } from "lucide-react";
 
 import { type InvoiceData } from "../../../api/invoice";
@@ -21,6 +21,8 @@ export default function InvoiceDetailPanel({ invoice, onClose }: Props) {
 
   const mappedStatus: string = invoice.payment_status?.toLowerCase() === "paid" ? "lunas" : "menunggu";
   const isPending = mappedStatus === "menunggu";
+
+
 
   return (
     <AnimatePresence>
@@ -41,7 +43,7 @@ export default function InvoiceDetailPanel({ invoice, onClose }: Props) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 z-50 shadow-xl flex flex-col transition-colors"
+            className="fixed top-0 right-0 h-full w-full sm:w-105 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 z-50 shadow-xl flex flex-col transition-colors"
           >
             {/* HEADER */}
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-start transition-colors">

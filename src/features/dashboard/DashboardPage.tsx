@@ -1,7 +1,7 @@
 import { AlertTriangle, CheckCircle, Clock, FileText, TrendingUp, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getDashboardSummary, getDashboardOrders, getDashboardChart } from "../../api/dashboard";
-import type { DashboardSummary, DashboardOrder, DashboardChartData } from "../../api/dashboard";
+import type { DashboardChartData, DashboardOrder, DashboardSummary } from "../../api/dashboard";
+import { getDashboardChart, getDashboardOrders, getDashboardSummary } from "../../api/dashboard";
 import HorizontalBarChart from "./components/HorizontalBarChart";
 import InvoiceTable from "./components/InvoiceTable";
 import LineChart from "./components/LineChart";
@@ -36,21 +36,22 @@ export default function Dashboard() {
     fetch();
   }, []);
 
+  const fetchOrders = async () => {
+    try {
+      setIsLoadingOrders(true);
+      setErrorOrders(null);
+      const data = await getDashboardOrders();
+      setOrders(data);
+    } catch (err: any) {
+      console.error("Failed to fetch dashboard orders", err);
+      setErrorOrders(err.message || "Gagal mengambil data pesanan terkini");
+    } finally {
+      setIsLoadingOrders(false);
+    }
+  };
+
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        setIsLoadingOrders(true);
-        setErrorOrders(null);
-        const data = await getDashboardOrders();
-        setOrders(data);
-      } catch (err: any) {
-        console.error("Failed to fetch dashboard orders", err);
-        setErrorOrders(err.message || "Gagal mengambil data pesanan terkini");
-      } finally {
-        setIsLoadingOrders(false);
-      }
-    };
-    fetch();
+    fetchOrders();
   }, []);
 
   useEffect(() => {
@@ -183,7 +184,7 @@ export default function Dashboard() {
         <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
           <h2 className="font-semibold mb-4 text-slate-800 dark:text-white">Pengajuan & Pendapatan Harian</h2>
           {isLoadingChart ? (
-            <div className="flex justify-center items-center h-[300px]">
+            <div className="flex justify-center items-center h-75">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
             </div>
           ) : (
@@ -193,7 +194,7 @@ export default function Dashboard() {
         <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
           <h2 className="font-semibold mb-4 text-slate-800 dark:text-white">Layanan Terpopuler</h2>
           {isLoadingSummary ? (
-            <div className="flex justify-center items-center h-[300px]">
+            <div className="flex justify-center items-center h-75">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
             </div>
           ) : (
@@ -203,7 +204,7 @@ export default function Dashboard() {
       </div>
 
       {/* RECENT ORDERS TABLE */}
-      <RecentOrdersTable orders={orders} isLoading={isLoadingOrders} />
+      <RecentOrdersTable orders={orders} isLoading={isLoadingOrders} onOrderUpdate={fetchOrders} />
 
       {/* INVOICE TABLE */}
       <div className="pt-6 border-t border-slate-200 dark:border-slate-800 transition-colors">

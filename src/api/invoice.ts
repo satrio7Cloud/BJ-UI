@@ -50,3 +50,19 @@ export const getInvoices = async (page: number = 1, limit: number = 10): Promise
 
   return response.json();
 };
+
+export const getInvoiceByOrderId = async (orderId: string): Promise<{ data: InvoiceData; status: string }> => {
+  const response = await fetch(`${API_BASE_URL}/invoices/order/${orderId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || errorData.error || 'Failed to fetch invoice for this order');
+  }
+
+  return response.json();
+};

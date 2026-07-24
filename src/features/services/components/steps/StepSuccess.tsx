@@ -9,7 +9,7 @@ interface Props {
 
 export default function StepSuccess({ shippingMethod, onClose }: Props) {
   return (
-    <div className="flex flex-col max-w-xl w-full bg-white rounded-2xl p-6 sm:p-8 text-center justify-center items-center my-auto min-h-[480px]">
+    <div className="flex flex-col w-full bg-white text-center justify-center items-center p-6 sm:p-12 min-h-[60vh]">
       
       {/* SUCCESS ANIMATED ICON */}
       <div className="relative mb-6">

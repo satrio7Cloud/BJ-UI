@@ -21,7 +21,7 @@ interface Props {
 export default function HorizontalBarChart({ data }: Props) {
   if (!data || data.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[300px] text-slate-400 dark:text-slate-500">
+      <div className="flex flex-col items-center justify-center h-75 text-slate-400 dark:text-slate-500">
         <BarChart3 size={36} className="mb-2" />
         <p className="text-sm">Tidak ada data layanan terpopuler</p>
       </div>
