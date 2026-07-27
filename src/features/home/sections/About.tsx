@@ -1,6 +1,6 @@
 export default function About() {
   return (
-    <section id="tentang" className="bg-linear-gradient from-white to-blue-50">
+    <section id="tentang" className="py-20">
       <div className="max-w-6xl mx-auto px-4 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-14 items-center">
           {/* TEXT */}

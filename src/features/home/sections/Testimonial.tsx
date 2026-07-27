@@ -79,7 +79,7 @@ export default function Testimonials() {
   }, [totalSlides]);
 
   return (
-    <section className="bg-gray-50 py-20 px-4 overflow-hidden">
+    <section className="py-20 px-4 overflow-hidden">
       <div className="max-w-6xl mx-auto">
         {/* Heading */}
         <div className="text-center mb-12">
