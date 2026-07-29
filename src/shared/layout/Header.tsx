@@ -1,5 +1,5 @@
-import { Phone, Menu, X, ShieldCheck } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Menu, Phone, ShieldCheck, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 export default function Header() {
@@ -39,7 +39,7 @@ export default function Header() {
           </div>
           <div className="flex flex-col leading-tight">
             <span className="text-xl font-bold text-slate-800 tracking-tight">
-              Biro Jasa Prima
+              {/* Biro Jasa Prima */} X
             </span>
           </div>
         </Link>

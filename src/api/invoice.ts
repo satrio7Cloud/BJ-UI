@@ -17,6 +17,8 @@ export interface InvoiceData {
   issue_date: string;
   due_date: string;
   payment_status: string;
+  payment_token: string | null;
+  payment_url: string | null;
   qris_payload: string | null;
   qris_amount: number | null;
   customer_name: string;
@@ -62,6 +64,25 @@ export const getInvoiceByOrderId = async (orderId: string): Promise<{ data: Invo
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || errorData.error || 'Failed to fetch invoice for this order');
+  }
+
+  return response.json();
+};
+
+export const generateInvoiceApi = async (orderId: string): Promise<{ data: InvoiceData; status: string }> => {
+  const token = localStorage.getItem('adminToken');
+  const response = await fetch(`${API_BASE_URL}/invoices`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify({ order_id: orderId }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || errorData.error || 'Failed to generate invoice');
   }
 
   return response.json();

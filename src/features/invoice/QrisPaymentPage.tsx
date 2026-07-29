@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { CheckCircle2, AlertCircle, RefreshCw, PhoneCall, Receipt, Building2 } from "lucide-react";
+import { CheckCircle2, AlertCircle, RefreshCw, PhoneCall, Receipt, Building2, Zap } from "lucide-react";
 import toast from "react-hot-toast";
 import { getInvoiceByOrderId, type InvoiceData } from "../../api/invoice";
 import OrderTracking from "./OrderTracking";
+
+declare global {
+  interface Window {
+    snap: any;
+  }
+}
 
 export default function QrisPaymentPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -36,6 +42,30 @@ export default function QrisPaymentPage() {
       setIsLoading(false);
       setIsChecking(false);
     }
+  };
+
+  const handleBayarSekarang = () => {
+    if (!invoice || !invoice.payment_token) {
+      toast.error("Token pembayaran tidak ditemukan.");
+      return;
+    }
+
+    window.snap.pay(invoice.payment_token, {
+      onSuccess: function () {
+        toast.success("Pembayaran berhasil!");
+        fetchInvoiceDetails(true);
+      },
+      onPending: function () {
+        toast.error("Menunggu pembayaran Anda!");
+        fetchInvoiceDetails(true);
+      },
+      onError: function () {
+        toast.error("Pembayaran gagal atau kedaluwarsa!");
+      },
+      onClose: function () {
+        toast.error("Anda menutup pop-up sebelum menyelesaikan pembayaran");
+      },
+    });
   };
 
   useEffect(() => {
@@ -139,15 +169,15 @@ export default function QrisPaymentPage() {
               <div className="absolute bottom-2 left-2 w-8 h-8 border-b-[5px] border-l-[5px] border-red-600 rounded-bl-lg"></div>
               <div className="absolute bottom-2 right-2 w-8 h-8 border-b-[5px] border-r-[5px] border-red-600 rounded-br-lg"></div>
 
-              {invoice.qris_payload ? (
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(invoice.qris_payload)}`}
-                  alt="QRIS QR Code"
-                  className="w-56 h-56 z-10"
-                />
+              {invoice.payment_token ? (
+                <div className="w-56 h-56 bg-slate-50 flex flex-col items-center justify-center text-slate-500 z-10 p-4 text-center rounded-xl border-2 border-dashed border-slate-300">
+                  <Zap size={32} className="text-blue-500 mb-2" />
+                  <p className="text-xs font-bold text-slate-700">Pembayaran Tersedia</p>
+                  <p className="text-[10px] text-slate-500 mt-1">Klik tombol 'Bayar Sekarang' di bawah untuk memunculkan QRIS / VA dari Midtrans.</p>
+                </div>
               ) : (
                 <div className="w-56 h-56 bg-slate-100 flex items-center justify-center text-slate-400 z-10">
-                  QR Code error
+                  Token Midtrans Tidak Tersedia
                 </div>
               )}
             </div>
@@ -164,27 +194,38 @@ export default function QrisPaymentPage() {
 
           {/* ACTION BUTTONS */}
           {!isPaid && (
-            <div className="w-full grid grid-cols-2 gap-3 pt-2">
+            <div className="w-full flex flex-col gap-3 pt-2">
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => fetchInvoiceDetails(true)}
+                  disabled={isChecking}
+                  className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl border border-slate-300 hover:bg-slate-50 font-bold text-slate-700 text-xs transition cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw size={14} className={isChecking ? "animate-spin" : ""} />
+                  Cek Pembayaran
+                </button>
+                <a
+                  href={`https://wa.me/628123456789?text=${encodeURIComponent(
+                    `Halo, saya ingin mengonfirmasi pembayaran untuk nomor invoice ${invoice.invoice_number} atas nama ${invoice.customer_name}.`
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-xs transition text-center cursor-pointer"
+                >
+                  <PhoneCall size={14} />
+                  Hubungi Admin
+                </a>
+              </div>
+              {/* NATIVE MIDTRANS PAY BUTTON */}
               <button
                 type="button"
-                onClick={() => fetchInvoiceDetails(true)}
-                disabled={isChecking}
-                className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl border border-slate-300 hover:bg-slate-50 font-bold text-slate-700 text-xs transition cursor-pointer disabled:opacity-50"
+                onClick={handleBayarSekarang}
+                className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition shadow-lg hover:shadow-blue-600/30 cursor-pointer mt-1"
               >
-                <RefreshCw size={14} className={isChecking ? "animate-spin" : ""} />
-                Cek Pembayaran
+                <Zap size={16} />
+                Bayar Sekarang
               </button>
-              <a
-                href={`https://wa.me/628123456789?text=${encodeURIComponent(
-                  `Halo, saya ingin mengonfirmasi pembayaran untuk nomor invoice ${invoice.invoice_number} atas nama ${invoice.customer_name}.`
-                )}`}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-xs transition text-center cursor-pointer"
-              >
-                <PhoneCall size={14} />
-                Hubungi Admin
-              </a>
             </div>
           )}
         </div>

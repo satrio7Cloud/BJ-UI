@@ -19,5 +19,9 @@
 }
 
 html {
-  overflow-y: scroll;
+    overflow-y: scroll;
+    /* Membuat semua elemen Tailwind (margin, padding, text, spacing) 
+     mengecil secara proporsional sekitar 15-20% (mendekati zoom 80-85%).
+     Hal ini karena semua utility class Tailwind menggunakan satuan 'rem'. */
+    font-size: 78%;
 }

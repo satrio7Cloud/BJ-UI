@@ -1,9 +1,16 @@
 import { ArrowLeft, Send } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
+import { generateInvoiceApi } from "../../../../api/invoice";
 import { createOrderApi, uploadCustomerDocument, type CreateOrderRequest } from "../../../../api/order";
 import type { Service } from "../../../../data/services";
 import Button from "../../../../shared/components/Button";
+
+declare global {
+  interface Window {
+    snap: any;
+  }
+}
 import { createWhatsappLink } from "../../../../shared/utils/whatsapp";
 import type { Method } from "../../hooks/useShipping";
 import Stepper from "../Stepper";
@@ -40,77 +47,9 @@ export default function StepSummary({
   const servicePrice = service.basePrice + selectedOption.extraPrice;
   const totalPrice = servicePrice + shippingFee;
 
-  // QRIS Countdown Timer State
-  const [timer, setTimer] = useState(900); // 15 minutes in seconds
-
-  useEffect(() => {
-    if (paymentMethod !== "qris") return;
-    const interval = setInterval(() => {
-      setTimer((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [paymentMethod]);
-
-  const formatTime = (secs: number) => {
-    const minutes = Math.floor(secs / 60);
-    const seconds = secs % 60;
-    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  };
-
-  // Bank Virtual Account Mock Generation
-  const mockVA = useMemo(() => {
-    const bankPrefix: Record<string, string> = {
-      BCA: "88012",
-      MANDIRI: "89012",
-      BNI: "82012",
-      BRI: "85012",
-    };
-    const prefix = bankPrefix[paymentDetail?.name] || "88012";
-    // Generate a pseudo-random string of 11 digits
-    const seed = ((formData && formData.whatsapp) || "08123456789").replace(/[^0-9]/g, "");
-    const randomSuffix = seed.length >= 10 ? seed.slice(-10) : "1234567890";
-    const nameSeed = (formData && formData.name) || "";
-    const filler = Math.abs(hashCode(nameSeed + service.id)).toString().slice(0, 2);
-    const rawNumber = (randomSuffix + filler).slice(0, 11);
-    
-    return `${prefix} ${rawNumber.slice(0, 4)} ${rawNumber.slice(4, 8)} ${rawNumber.slice(8)}`;
-  }, [paymentDetail, formData, service.id]);
-
-  function hashCode(str: string) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return hash;
-  }
-
-  const handleCopyVA = () => {
-    const rawVA = mockVA.replace(/\s/g, "");
-    navigator.clipboard.writeText(rawVA);
-    toast.success("Nomor Virtual Account berhasil disalin!");
-  };
-
-  // E-Wallet loader simulation
-  const [ewalletPaid, setEwalletPaid] = useState(false);
-  useEffect(() => {
-    if (paymentMethod !== "ewallet") return;
-    setEwalletPaid(false);
-    const timeout = setTimeout(() => {
-      setEwalletPaid(true);
-      toast.success(`Konfirmasi pembayaran ${paymentDetail?.name || ""} berhasil!`);
-    }, 3500);
-    return () => clearTimeout(timeout);
-  }, [paymentMethod, paymentDetail]);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = () => {
-    // Check if e-wallet is still loading
-    if (paymentMethod === "ewallet" && !ewalletPaid) {
-      toast.error(`Harap tunggu konfirmasi push notification di ponsel Anda.`);
-      return;
-    }
-
     if (!formData.customerId) {
       toast.error("Data pelanggan tidak ditemukan. Silakan kembali ke form sebelumnya.");
       return;
@@ -164,6 +103,29 @@ export default function StepSummary({
           }
         }
 
+        // Trigger Midtrans Snap
+        if (docId !== "N/A") {
+          try {
+            const invoiceRes = await generateInvoiceApi(docId);
+            if (invoiceRes.data?.payment_token) {
+              window.snap.pay(invoiceRes.data.payment_token, {
+                onSuccess: function () {
+                  toast.success("Pembayaran berhasil diselesaikan!");
+                },
+                onPending: function () {
+                  toast.success("Menunggu pembayaran Anda!");
+                },
+                onError: function () {
+                  toast.error("Pembayaran gagal atau dibatalkan!");
+                }
+              });
+            }
+          } catch (err) {
+            console.error("Gagal mendapatkan token pembayaran Midtrans", err);
+            toast.error("Gagal memuat pop-up pembayaran otomatis.");
+          }
+        }
+
         // Generate WhatsApp message
         let message = `Halo Birosaja, saya ingin memesan layanan berikut:\n\n`;
 
@@ -208,20 +170,16 @@ export default function StepSummary({
     }
     message += `\n`;
 
-    message += `💳 *METODE PEMBAYARAN*\n`;
+    message += `💳 *METODE PEMBAYARAN TERPILIH*\n`;
     if (paymentMethod === "qris") {
       message += `- Metode: QRIS (E-Wallet / m-Banking)\n`;
-      message += `- Status: LUNAS (Sudah Di-scan)\n`;
     } else if (paymentMethod === "bank") {
       message += `- Metode: Bank Virtual Account (${paymentDetail?.name || ""})\n`;
-      message += `- No. VA: ${mockVA.replace(/\s/g, "")}\n`;
-      message += `- Status: LUNAS / Sedang Ditransfer\n`;
     } else if (paymentMethod === "ewallet") {
       message += `- Metode: E-Wallet (${paymentDetail?.name || ""})\n`;
       message += `- No. HP: ${paymentDetail?.phone || ""}\n`;
-      message += `- Status: LUNAS (Push Notification Sukses)\n`;
     }
-    message += `\n`;
+    message += `- Pembayaran akan diproses via Midtrans Gateway.\n\n`;
 
     message += `💰 *RINCIAN BIAYA*\n`;
     message += `- Biaya Jasa: Rp ${servicePrice.toLocaleString("id-ID")}\n`;
@@ -271,111 +229,37 @@ export default function StepSummary({
       {/* BODY */}
       <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm text-gray-700">
         
-        {/* PAYMENT CHECKOUT WIDGET (MOCK GATEWAY) */}
+        {/* WIDGET INSTRUKSI PEMBAYARAN MIDTRANS */}
         <div className="border border-blue-200 rounded-xl p-4 bg-blue-50/10 space-y-3">
           <p className="text-xs text-blue-700 font-bold uppercase tracking-wider">
             💳 INSTRUKSI PEMBAYARAN ({paymentMethod === "qris" ? "QRIS" : paymentMethod === "bank" ? `VA ${paymentDetail?.name || ""}` : `E-Wallet ${paymentDetail?.name || ""}`})
           </p>
 
-          {/* CASE 1: QRIS */}
-          {paymentMethod === "qris" && (
-            <div className="flex flex-col items-center justify-center py-4 space-y-4">
-              {/* Merchant Banner */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-center max-w-xs w-full space-y-1">
-                <p className="font-bold text-slate-800 text-sm">DTerazz</p>
-                <p className="text-[10px] text-slate-500 leading-tight">
-                  Jl. Hasan Saban No.59a, Rangkapan Jaya, Kec. Pancoran Mas, Kota Depok, Jawa Barat 16435
-                </p>
-                <span className="inline-block text-[9px] font-bold text-slate-600 bg-slate-200 px-2.5 py-0.5 rounded-full mt-1">
-                  NMID: ID1025378878645
-                </span>
-              </div>
-
-              {/* Styled QR Code Box with Red Corners */}
-              <div className="relative p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center">
-                {/* Decorative Red Corners */}
-                <div className="absolute top-1.5 left-1.5 w-6 h-6 border-t-4 border-l-4 border-red-600 rounded-tl-md"></div>
-                <div className="absolute top-1.5 right-1.5 w-6 h-6 border-t-4 border-r-4 border-red-600 rounded-tr-md"></div>
-                <div className="absolute bottom-1.5 left-1.5 w-6 h-6 border-b-4 border-l-4 border-red-600 rounded-bl-md"></div>
-                <div className="absolute bottom-1.5 right-1.5 w-6 h-6 border-b-4 border-r-4 border-red-600 rounded-br-md"></div>
-
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://birosaja.com/pay/qris?amount=${totalPrice}`}
-                  alt="QRIS QR Code"
-                  className="w-40 h-40 z-10"
-                />
-              </div>
-
-              <div className="text-center space-y-1">
-                <div className="flex flex-col items-center">
-                  <span className="text-xs font-black tracking-widest text-slate-900">QRIS</span>
-                  <div className="h-0.5 w-8 bg-slate-900 mt-0.5"></div>
-                </div>
-                <div className="pt-2">
-                  <span className="text-xs font-semibold text-red-600 bg-red-50 border border-red-100 rounded-md px-2.5 py-1 inline-block">
-                    ⏳ Batas Waktu: {formatTime(timer)}
-                  </span>
-                </div>
+          <div className="bg-white border border-gray-200 p-4 rounded-xl text-center space-y-3 shadow-sm">
+            <div className="flex justify-center">
+              <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-2xl">
+                {paymentMethod === "qris" ? "📱" : paymentMethod === "bank" ? "🏦" : "📲"}
               </div>
             </div>
-          )}
-
-          {/* CASE 2: VIRTUAL ACCOUNT */}
-          {paymentMethod === "bank" && (
-            <div className="space-y-3 pt-1">
-              <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                <div>
-                  <span className="text-[10px] text-gray-400 font-bold block uppercase tracking-wider">Nomor Virtual Account</span>
-                  <span className="font-mono text-base font-bold text-gray-900 tracking-wider">
-                    {mockVA}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleCopyVA}
-                  className="text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg border border-blue-200 transition cursor-pointer"
-                >
-                  Salin
-                </button>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 text-xs text-gray-600 space-y-1">
-                <p className="font-semibold text-gray-800">Petunjuk Transfer:</p>
-                <ol className="list-decimal pl-4 space-y-1">
-                  <li>Pilih menu <b>Transfer ➔ Virtual Account</b> di m-banking Anda.</li>
-                  <li>Masukkan nomor VA di atas.</li>
-                  <li>Pastikan nominal transfer sesuai: <b>Rp {totalPrice.toLocaleString("id-ID")}</b>.</li>
-                  <li>Konfirmasi transaksi Anda.</li>
-                </ol>
-              </div>
-            </div>
-          )}
-
-          {/* CASE 3: E-WALLET */}
-          {paymentMethod === "ewallet" && (
-            <div className="space-y-3 py-1">
-              <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-lg font-bold text-blue-700 shrink-0">
-                  📱
-                </div>
-                <div>
-                  <span className="text-[10px] text-gray-400 font-bold block uppercase tracking-wider">Kirim Notifikasi Ke</span>
-                  <span className="font-semibold text-gray-900">{paymentDetail?.name || ""} ({paymentDetail?.phone || ""})</span>
-                </div>
-              </div>
-              
-              {ewalletPaid ? (
-                <div className="bg-green-50 text-green-800 text-xs p-3 rounded-lg border border-green-200 text-center font-medium">
-                  ✅ Konfirmasi push notifikasi berhasil! Pembayaran disimulasikan LUNAS.
-                </div>
-              ) : (
-                <div className="bg-orange-50 text-orange-800 text-xs p-3 rounded-lg border border-orange-200 flex items-center justify-center gap-2">
-                  <div className="animate-spin border-2 border-orange-600 border-t-transparent rounded-full w-4 h-4"></div>
-                  <span>Menunggu pembayaran di aplikasi {paymentDetail.name} ponsel Anda...</span>
-                </div>
-              )}
-            </div>
-          )}
-
+            
+            <h4 className="font-bold text-gray-900">
+              {paymentMethod === "qris" 
+                ? "Scan QRIS via Midtrans" 
+                : paymentMethod === "bank" 
+                  ? `Transfer Virtual Account ${paymentDetail?.name || ""}` 
+                  : `Bayar via ${paymentDetail?.name || ""}`}
+            </h4>
+            
+            <p className="text-xs text-gray-500 leading-relaxed max-w-xs mx-auto">
+              Sistem Midtrans akan memunculkan pop-up resmi berisi 
+              {paymentMethod === "qris" 
+                ? " kode QR QRIS yang siap Anda scan" 
+                : paymentMethod === "bank" 
+                  ? " Nomor Virtual Account (VA) untuk Anda transfer" 
+                  : " instruksi pembayaran"} 
+              <b> SECARA OTOMATIS</b> sesaat setelah Anda menekan tombol <b>Konfirmasi</b> di bawah ini.
+            </p>
+          </div>
         </div>
 
         {/* LAYANAN CARD */}
@@ -507,9 +391,9 @@ export default function StepSummary({
       <div className="p-5 border-t">
         <Button
           onClick={handleSubmit}
-          disabled={(paymentMethod === "ewallet" && !ewalletPaid) || isSubmitting}
+          disabled={isSubmitting}
           className={`w-full text-white py-3 rounded-xl flex items-center justify-center gap-2 ${
-            (paymentMethod === "ewallet" && !ewalletPaid) || isSubmitting
+            isSubmitting
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-green-600 hover:bg-green-700"
           }`}
