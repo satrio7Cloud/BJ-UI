@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { CheckCircle2, AlertCircle, RefreshCw, PhoneCall, Receipt, Building2, Zap } from "lucide-react";
 import toast from "react-hot-toast";
 import { getInvoiceByOrderId, type InvoiceData } from "../../api/invoice";
+import { WHATSAPP_NUMBER } from "../../shared/utils/whatsapp";
 import OrderTracking from "./OrderTracking";
 
 declare global {
@@ -206,7 +207,7 @@ export default function QrisPaymentPage() {
                   Cek Pembayaran
                 </button>
                 <a
-                  href={`https://wa.me/628123456789?text=${encodeURIComponent(
+                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
                     `Halo, saya ingin mengonfirmasi pembayaran untuk nomor invoice ${invoice.invoice_number} atas nama ${invoice.customer_name}.`
                   )}`}
                   target="_blank"
