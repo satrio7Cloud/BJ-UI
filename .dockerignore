@@ -7,6 +7,5 @@ dist-ssr
 .env
 .env.*
 Dockerfile
-nginx.conf
 .dockerignore
 README.md

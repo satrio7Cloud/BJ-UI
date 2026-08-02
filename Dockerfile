@@ -12,6 +12,8 @@ ARG VITE_API_BASE_URL=http://localhost:3000/api/v1
 ARG VITE_GOOGLE_MAPS_KEY=ISI_API_KEY
 ARG VITE_WHATSAPP_NUMBER=628xxxxxxxxxx
 ARG VITE_MAPS_ORIGIN="Jl Hasan Saban Pancoran Mas Depok"
+# Pilih config nginx: nginx.conf (prod, proxy ke :3000) atau nginx.staging.conf (proxy ke :3001)
+ARG NGINX_CONF=nginx.conf
 
 # Vite membaca env vars berawalan VITE_ saat build
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
@@ -28,7 +30,7 @@ RUN npm run build
 # --- STAGE 2: Serve via nginx ---
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY ${NGINX_CONF} /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
