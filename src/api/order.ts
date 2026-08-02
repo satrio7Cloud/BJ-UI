@@ -113,6 +113,8 @@ export interface CreateOrderRequest {
   service_level: string;
   is_name_transfer_required: boolean;
   notes: string;
+  samsat_origin?: string;
+  samsat_destination?: string;
 }
 
 export const createOrderApi = async (data: CreateOrderRequest): Promise<{ data: { id: string }; message: string; status: string }> => {

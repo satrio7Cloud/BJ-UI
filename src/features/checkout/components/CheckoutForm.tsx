@@ -1,5 +1,7 @@
 import { ArrowLeft, Car, FileText, Loader2, ShieldCheck, Truck, User } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { createCustomer } from "../../../api/customer";
 import { createCustomerVehicle } from "../../../api/customerVehicle";
 import { createOrderApi, uploadCustomerDocument } from "../../../api/order";
@@ -33,6 +35,8 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
         return_method: "GRAB",
         is_name_transfer_required: false,
         notes: "",
+        samsat_origin: "",
+        samsat_destination: "",
     });
 
     const [models, setModels] = useState<VehicleModel[]>([]);
@@ -40,6 +44,7 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [orderIdRef, setOrderIdRef] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchModels = async () => {
@@ -53,44 +58,74 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
         fetchModels();
     }, []);
 
+    const adminFee = 25000;
+    const serviceNameLower = checkoutData.service.service_name.toLowerCase();
+    const categoryLower = checkoutData.service.category.toLowerCase();
+
+    const isServiceInherentlyNameTransfer =
+        categoryLower === "mutasi kendaraan" ||
+        categoryLower === "balik nama";
+
+    const isPhysicalCheckRequired =
+        isServiceInherentlyNameTransfer ||
+        serviceNameLower.includes("5 tahunan") ||
+        serviceNameLower.includes("ganti plat") ||
+        formData.is_name_transfer_required;
+
+    const physicalCheckFee = isPhysicalCheckRequired ? 30000 : 0;
+    const totalDisplayPrice = checkoutData.price + adminFee + physicalCheckFee;
+
     const handleSubmit = async () => {
         // Validasi Form Keseluruhan
         if (!formData.fullname.trim()) {
-            alert("Nama lengkap tidak boleh kosong.");
+            toast.error("Nama lengkap tidak boleh kosong.",);
             return;
         }
         if (!/^[0-9]{10,14}$/.test(formData.phone_number)) {
-            alert("Nomor WhatsApp tidak valid. Harus berupa 10-14 digit angka.");
+            toast.error("Nomor WhatsApp tidak valid. Harus berupa 10-14 digit angka.",);
             return;
         }
         if (!/^\d{16}$/.test(formData.nik)) {
-            alert("NIK harus terdiri dari 16 digit angka.");
+            toast.error("NIK harus terdiri dari 16 digit angka.",);
             return;
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            alert("Format email tidak valid.");
+            toast.error("Format email tidak valid.",);
             return;
         }
         if (!formData.address.trim()) {
-            alert("Alamat lengkap tidak boleh kosong.");
+            toast.error("Alamat lengkap tidak boleh kosong.",);
             return;
         }
         if (!formData.model_id) {
-            alert("Silakan pilih model kendaraan terlebih dahulu.");
+            toast.error("Silakan pilih model kendaraan terlebih dahulu.",);
             return;
         }
         if (!/^[A-Z]{1,2}\s[0-9]{1,4}\s[A-Z]{1,3}$/.test(formData.plate_number.trim())) {
-            alert("Format Plat Nomor (Nopol) tidak valid. Harap gunakan format yang benar beserta spasi, contoh: B 1234 ABC");
+            toast.error("Format Plat Nomor (Nopol) tidak valid. Harap gunakan format yang benar beserta spasi, contoh: B 1234 ABC", {});
             return;
         }
         const yearInt = parseInt(formData.year, 10);
         if (isNaN(yearInt) || yearInt < 1900 || yearInt > new Date().getFullYear()) {
-            alert(`Tahun pembuatan tidak valid. Harap masukkan tahun antara 1900 dan ${new Date().getFullYear()}.`);
+            toast(`Tahun pembuatan tidak valid. Harap masukkan tahun antara 1900 dan ${new Date().getFullYear()}.`);
             return;
         }
-        if (!formData.pickup_address.trim()) {
-            alert("Alamat penjemputan/pengiriman tidak boleh kosong.");
-            return;
+        if (formData.pickup_method !== "SENDIRI" || formData.return_method !== "AMBIL_SENDIRI") {
+            if (!formData.pickup_address.trim()) {
+                toast("Alamat penjemputan/pengembalian tidak boleh kosong karena Anda memilih kurir/ojol.");
+                return;
+            }
+        }
+
+        if (isServiceInherentlyNameTransfer || formData.is_name_transfer_required) {
+            if (!formData.samsat_origin.trim()) {
+                toast.error("Samsat Asal tidak boleh kosong.");
+                return;
+            }
+            if (!formData.samsat_destination.trim()) {
+                toast.error("Samsat Tujuan tidak boleh kosong.");
+                return;
+            }
         }
 
         try {
@@ -133,7 +168,9 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
                 delivery_fee: 0,
                 express_fee: checkoutData.pkg === "express" ? checkoutData.service.express_fee : 0,
                 service_level: checkoutData.pkg.toUpperCase(),
-                is_name_transfer_required: formData.is_name_transfer_required,
+                is_name_transfer_required: formData.is_name_transfer_required || isServiceInherentlyNameTransfer,
+                samsat_origin: (isServiceInherentlyNameTransfer || formData.is_name_transfer_required) ? formData.samsat_origin : undefined,
+                samsat_destination: (isServiceInherentlyNameTransfer || formData.is_name_transfer_required) ? formData.samsat_destination : undefined,
                 notes: formData.notes,
             });
             const orderId = orderRes.data?.id;
@@ -151,7 +188,7 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
 
         } catch (error: any) {
             console.error(error);
-            alert(error.message || "Terjadi kesalahan saat memproses pesanan.");
+            toast.error(error.message || "Terjadi kesalahan saat memproses pesanan.");
         } finally {
             setIsSubmitting(false);
         }
@@ -177,6 +214,29 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
                         <li>Anda akan menerima pesan <b>WhatsApp</b> yang berisi Link Pembayaran resmi.</li>
                     </ul>
                 </div>
+
+                {(formData.pickup_method === "OJOL" || formData.pickup_method === "GOSEND" || formData.pickup_method === "KURIR") && (
+                    <div className="bg-blue-50 border border-blue-200 p-6 rounded-2xl text-left space-y-3 mt-4">
+                        <h3 className="font-bold text-blue-900 text-lg flex items-center gap-2">
+                            <Truck className="w-5 h-5" />
+                            Khusus Penjemputan via Kurir / Ojol
+                        </h3>
+                        <p className="text-blue-800 text-sm">
+                            Karena Anda memilih metode penjemputan berkas via GoSend/GrabExpress/Kurir Eksternal, <b>mohon segera pesan kurir Anda</b> ke alamat kantor kami.
+                        </p>
+                        <p className="text-blue-800 text-sm">
+                            Setelah kurir dipesan, <b>kirimkan Link Live Tracking atau Nomor Resi</b> ke WhatsApp Admin kami agar kami bisa melacak kedatangan berkas Anda.
+                        </p>
+                        <a
+                            href={`https://wa.me/6285156419062?text=${encodeURIComponent(`Halo Admin, ini link tracking/resi untuk penjemputan berkas pesanan saya (ID: ${orderIdRef}).\nLink/Resi: `)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-block mt-2 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg text-sm hover:bg-blue-700 transition-colors"
+                        >
+                            Kirim Resi ke WhatsApp Admin
+                        </a>
+                    </div>
+                )}
 
                 <div className="text-xs text-slate-500 font-mono mt-4">
                     ID Pesanan: {orderIdRef}
@@ -204,8 +264,31 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
                     className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-emerald-600 transition-colors mb-2"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Kembali ke Daftar Layanan
+                    Kembali ke Daftar Layananx
                 </button>
+
+                {isServiceInherentlyNameTransfer && (
+                    <div className="bg-amber-50/80 border border-amber-200 rounded-3xl p-6 space-y-4">
+                        <h3 className="text-base font-bold text-amber-900 flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-amber-600" />
+                            Informasi & Syarat Layanan
+                        </h3>
+                        <p className="text-sm text-amber-800 leading-relaxed">
+                            {checkoutData.service.service_name.toLowerCase().includes("mutasi")
+                                ? "Mutasi motor/kendaraan adalah proses memindahkan data surat kendaraan (STNK dan BPKB) dari satu wilayah Samsat asal ke wilayah Samsat tujuan yang baru. Syarat utamanya meliputi BPKB asli dan fotokopi, STNK asli, KTP pemilik baru, serta kuitansi jual beli bermeterai."
+                                : "Balik nama kendaraan adalah proses pengalihan kepemilikan kendaraan bermotor dari pemilik pertama ke pemilik kedua dan seterusnya. Syarat utamanya meliputi BPKB asli dan fotokopi, STNK asli, KTP pemilik baru, serta kuitansi jual beli bermeterai."
+                            }
+                        </p>
+                        <div className="border-t border-amber-200 pt-3">
+                            <p className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-2">Syarat Dokumen Fisik:</p>
+                            <ul className="list-disc list-inside text-sm text-amber-800 space-y-1">
+                                <li>STNK asli beserta fotokopi</li>
+                                <li>BPKB asli beserta fotokopi</li>
+                                <li>KTP asli pemilik baru sesuai alamat tujuan</li>
+                            </ul>
+                        </div>
+                    </div>
+                )}
 
                 <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
                     <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
@@ -226,7 +309,7 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">Nomor WhatsApp</label>
                             <input
-                                type="tel"
+                                type="number"
                                 placeholder="Contoh: 08123456789"
                                 value={formData.phone_number}
                                 onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
@@ -361,16 +444,25 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
                                 <option value="KURIR">Kurir Internal</option>
                             </select>
                         </div>
-                        <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Alamat Penjemputan / Pengiriman</label>
-                            <textarea
-                                placeholder="Detail alamat penjemputan berkas..."
-                                rows={2}
-                                value={formData.pickup_address}
-                                onChange={(e) => setFormData({ ...formData, pickup_address: e.target.value })}
-                                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white"
-                            />
-                        </div>
+                        {!(formData.pickup_method === "SENDIRI" && formData.return_method === "AMBIL_SENDIRI") && (
+                            <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    {formData.pickup_method !== "SENDIRI" && formData.return_method !== "AMBIL_SENDIRI"
+                                        ? "Alamat Penjemputan & Pengembalian"
+                                        : formData.pickup_method !== "SENDIRI"
+                                            ? "Alamat Penjemputan Berkas"
+                                            : "Alamat Pengembalian Berkas"
+                                    }
+                                </label>
+                                <textarea
+                                    placeholder="Detail alamat lengkap Anda..."
+                                    rows={2}
+                                    value={formData.pickup_address}
+                                    onChange={(e) => setFormData({ ...formData, pickup_address: e.target.value })}
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white"
+                                />
+                            </div>
+                        )}
                         <div className="sm:col-span-2">
                             <label className="block text-sm font-medium text-slate-700 mb-2">Catatan Tambahan (Opsional)</label>
                             <textarea
@@ -385,14 +477,39 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
                             <input
                                 type="checkbox"
                                 id="nameTransfer"
-                                checked={formData.is_name_transfer_required}
+                                checked={formData.is_name_transfer_required || isServiceInherentlyNameTransfer}
+                                disabled={isServiceInherentlyNameTransfer}
                                 onChange={(e) => setFormData({ ...formData, is_name_transfer_required: e.target.checked })}
-                                className="w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                                className="w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 disabled:opacity-50"
                             />
-                            <label htmlFor="nameTransfer" className="text-sm font-semibold text-emerald-900 cursor-pointer">
-                                Perlu Mutasi / Balik Nama Kendaraan
+                            <label htmlFor="nameTransfer" className={`text-sm font-semibold text-emerald-900 cursor-pointer ${isServiceInherentlyNameTransfer ? "opacity-50" : ""}`}>
+                                Perlu Mutasi / Balik Nama Kendaraan {isServiceInherentlyNameTransfer && "(Sudah Termasuk)"}
                             </label>
                         </div>
+                        {(isServiceInherentlyNameTransfer || formData.is_name_transfer_required) && (
+                            <div className="sm:col-span-2 grid sm:grid-cols-2 gap-4 mt-1 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-600 mb-1">Samsat Asal (Kota Asal Kendaraan)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Contoh: SAMSAT Jakarta Timur"
+                                        value={formData.samsat_origin}
+                                        onChange={(e) => setFormData({ ...formData, samsat_origin: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-600 mb-1">Samsat Tujuan (Mutasi Ke)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Contoh: SAMSAT Bandung Barat"
+                                        value={formData.samsat_destination}
+                                        onChange={(e) => setFormData({ ...formData, samsat_destination: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-sm"
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -446,10 +563,27 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
                                 {checkoutData.pkg}
                             </div>
                         </div>
+                        <div className="pt-4 border-t border-slate-700 space-y-2 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Biaya Layanan</span>
+                                <span className="font-semibold">Rp {checkoutData.price.toLocaleString("id-ID")}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Biaya Admin</span>
+                                <span className="font-semibold">Rp {adminFee.toLocaleString("id-ID")}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Biaya Cek Fisik</span>
+                                <span className={`font-semibold ${physicalCheckFee > 0 ? "text-emerald-400" : ""}`}>
+                                    Rp {physicalCheckFee.toLocaleString("id-ID")}
+                                </span>
+                            </div>
+                        </div>
+
                         <div className="pt-4 border-t border-slate-700">
                             <p className="text-slate-400 text-sm mb-1">Total Biaya</p>
                             <p className="text-3xl font-extrabold text-emerald-400">
-                                Rp {checkoutData.price.toLocaleString("id-ID")}
+                                Rp {totalDisplayPrice.toLocaleString("id-ID")}
                             </p>
                         </div>
                     </div>
