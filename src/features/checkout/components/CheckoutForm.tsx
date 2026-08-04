@@ -1,6 +1,5 @@
 import { ArrowLeft, Car, FileText, Loader2, ShieldCheck, Truck, User } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { createCustomer } from "../../../api/customer";
 import { createCustomerVehicle } from "../../../api/customerVehicle";
@@ -44,7 +43,6 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [orderIdRef, setOrderIdRef] = useState<string | null>(null);
-    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchModels = async () => {

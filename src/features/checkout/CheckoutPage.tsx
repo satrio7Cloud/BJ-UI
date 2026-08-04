@@ -14,7 +14,6 @@ import {
     CheckCircle
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { getServices, type ApiService } from "../../api/services";
 import Footer from "../../shared/layout/Footer";
 import Header from "../../shared/layout/Header";
@@ -78,7 +77,6 @@ const getCategoryFilterIcon = (category: string) => {
 };
 
 export default function CheckoutPage() {
-    const navigate = useNavigate();
     const [services, setServices] = useState<ApiService[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
