@@ -77,7 +77,7 @@ export default function Excellence() {
             <div className="grid sm:grid-cols-2 gap-x-8 gap-y-10">
               {features.map((item) => (
                 <div key={item.title} className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-shrink-0">
+                  <div className=" shrink-0">
                     <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
                       <item.icon className="w-5 h-5" strokeWidth={2.5} />
                     </div>

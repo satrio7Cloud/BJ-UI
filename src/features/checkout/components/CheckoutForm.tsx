@@ -1,5 +1,6 @@
 import { ArrowLeft, Car, FileText, Loader2, ShieldCheck, Truck, User } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { createCustomer } from "../../../api/customer";
 import { createCustomerVehicle } from "../../../api/customerVehicle";
@@ -17,23 +18,26 @@ interface CheckoutFormProps {
 }
 
 export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps) {
+    const location = useLocation();
+    const prefill = (location.state as any)?.prefill;
+
     const [formData, setFormData] = useState({
         // Customer Data
         fullname: "",
         email: "",
         phone_number: "",
         address: "",
-        nik: "",
+        nik: prefill?.nik || "",
         // Vehicle Data
         model_id: "",
-        plate_number: "",
-        year: new Date().getFullYear().toString(),
+        plate_number: prefill?.nopol || "",
+        year: prefill?.tahun || new Date().getFullYear().toString(),
         // Order Logistics Data
         pickup_method: "OJOL",
         pickup_address: "",
         return_method: "GRAB",
         is_name_transfer_required: false,
-        notes: "",
+        notes: prefill?.noRangkaMesin ? `No. Rangka/Mesin: ${prefill.noRangkaMesin}` : "",
         samsat_origin: "",
         samsat_destination: "",
     });

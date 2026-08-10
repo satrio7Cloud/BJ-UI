@@ -5,7 +5,6 @@ export default function Footer() {
     <footer className="bg-[#052e16] text-emerald-100/70 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 mb-12">
-          
           {/* Brand */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-6">
@@ -17,7 +16,8 @@ export default function Footer() {
               </h3>
             </div>
             <p className="text-sm leading-relaxed max-w-xs">
-              Partner terpercaya untuk perpanjangan pajak dan administrasi kendaraan Anda.
+              Partner terpercaya untuk perpanjangan pajak dan administrasi
+              kendaraan Anda.
             </p>
           </div>
 
@@ -26,22 +26,34 @@ export default function Footer() {
             <h4 className="font-bold text-white mb-6">Layanan</h4>
             <ul className="space-y-4 text-sm">
               <li>
-                <a href="#layanan" className="hover:text-white transition-colors">
+                <a
+                  href="#layanan"
+                  className="hover:text-white transition-colors"
+                >
                   Perpanjang Pajak Motor
                 </a>
               </li>
               <li>
-                <a href="#layanan" className="hover:text-white transition-colors">
+                <a
+                  href="#layanan"
+                  className="hover:text-white transition-colors"
+                >
                   Perpanjang Pajak Mobil
                 </a>
               </li>
               <li>
-                <a href="#layanan" className="hover:text-white transition-colors">
+                <a
+                  href="#layanan"
+                  className="hover:text-white transition-colors"
+                >
                   Pengurusan STNK
                 </a>
               </li>
               <li>
-                <a href="#layanan" className="hover:text-white transition-colors">
+                <a
+                  href="#layanan"
+                  className="hover:text-white transition-colors"
+                >
                   Balik Nama & Mutasi
                 </a>
               </li>
@@ -58,7 +70,10 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#beranda" className="hover:text-white transition-colors">
+                <a
+                  href="#beranda"
+                  className="hover:text-white transition-colors"
+                >
                   Beranda
                 </a>
               </li>
@@ -70,15 +85,15 @@ export default function Footer() {
             <h4 className="font-bold text-white mb-6">Kontak</h4>
             <ul className="space-y-4 text-sm">
               <li className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <MapPin className="w-4 h-4 mt-0.5  shrink-0" />
                 <span>Jl. Sudirman No. 123, Jakarta</span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone className="w-4 h-4 flex-shrink-0" />
+                <Phone className="w-4 h-4 shrink-0" />
                 <span>0812-3456-7890</span>
               </li>
               <li className="flex items-center gap-3">
-                <Calendar className="w-4 h-4 flex-shrink-0" />
+                <Calendar className="w-4 h-4 shrink-0" />
                 <span>Senin - Sabtu: 08.00 - 17.00</span>
               </li>
             </ul>
@@ -102,12 +117,12 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-
         </div>
 
         {/* Divider & Copyright */}
         <div className="border-t border-emerald-900/50 pt-8 text-center text-sm">
-          © {new Date().getFullYear()} Biro Jasa Prima. Seluruh hak cipta dilindungi.
+          © {new Date().getFullYear()} Biro Jasa Prima. Seluruh hak cipta
+          dilindungi.
         </div>
       </div>
     </footer>

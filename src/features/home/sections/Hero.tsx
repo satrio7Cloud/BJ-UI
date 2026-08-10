@@ -33,10 +33,10 @@ export default function Hero() {
             {/* Buttons */}
             <div className="flex flex-row flex-wrap justify-start gap-3 sm:gap-4 mb-10">
               <a
-                href="#kontak"
+                href="#cek-pajak"
                 className="group flex items-center justify-center gap-2 bg-emerald-900 text-white text-sm sm:text-base font-semibold px-6 sm:px-8 py-3 sm:py-3.5 rounded-full hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-900/20"
               >
-                Konsultasi Gratis
+                Cek Estimasi Pajak
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </a>
 

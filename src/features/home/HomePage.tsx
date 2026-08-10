@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../../shared/layout/Footer";
 import Header from "../../shared/layout/Header";
 import ServicePrice from "../services/ServicePrice";
+import TaxCalculatorSection from "../services/components/TaxCalculatorSection";
 import About from "./sections/About";
 import Excellence from "./sections/Excellence";
 import Hero from "./sections/Hero";
@@ -18,6 +19,8 @@ export default function Home() {
             <main id="beranda" className="bg-[#FDFBF7]">
                 {/* HERO */}
                 <Hero />
+                {/* SIMULASI & CEK PAJAK KENDARAAN */}
+                <TaxCalculatorSection />
                 {/* LAYANAN */}
                 <Services />
                 <Excellence />

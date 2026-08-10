@@ -1,0 +1,13 @@
+services:
+  bj_frontend_staging:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NGINX_CONF: nginx.staging.conf
+        VITE_API_BASE_URL: http://103.127.135.226:3001/api/v1
+    container_name: bj_frontend_staging
+    restart: always
+    ports:
+      - "8080:80"
+

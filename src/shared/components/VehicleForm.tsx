@@ -18,7 +18,7 @@ export default function VehicleForm() {
     <form
       onSubmit={handleSubmit}
       onClick={(e) => e.stopPropagation()}
-      className="relative space-y-5 text-gray-800 bg-white rounded-2xl shadow-xl px-8 py-7 w-[95%] sm:w-[90%] md:w-[720px] lg:w-[820px] mx-auto max-h-[90vh] overflow-y-auto"
+      className="relative space-y-5 text-gray-800 bg-white rounded-2xl shadow-xl px-8 py-7 w-[95%] sm:w-[90%]  md:w-180 lg:w-205 mx-auto max-h-[90vh] overflow-y-auto"
     >
       {/* TITLE */}
       <div className="text-center mb-2">

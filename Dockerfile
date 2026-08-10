@@ -4,13 +4,13 @@
 # ============================================
 
 # --- STAGE 1: Build ---
-FROM node:22-alpine AS build
+FROM node:22-slim AS build
 WORKDIR /app
 
 # Build args (diisi saat docker build, nilai default utk dev)
 ARG VITE_API_BASE_URL=http://localhost:3000/api/v1
 ARG VITE_GOOGLE_MAPS_KEY=ISI_API_KEY
-ARG VITE_WHATSAPP_NUMBER=628xxxxxxxxxx
+ARG VITE_WHATSAPP_NUMBER=6285156419062
 ARG VITE_MAPS_ORIGIN="Jl Hasan Saban Pancoran Mas Depok"
 # Pilih config nginx: nginx.conf (prod, proxy ke :3000) atau nginx.staging.conf (proxy ke :3001)
 ARG NGINX_CONF=nginx.conf
