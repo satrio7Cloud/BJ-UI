@@ -1,12 +1,33 @@
-import { Car, Check, Layers, List, Plus, RefreshCw, Shield } from "lucide-react";
+import {
+  Car,
+  Check,
+  Layers,
+  List,
+  Plus,
+  RefreshCw,
+  Shield,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { createService, getServices, type ApiService } from "../../api/services";
-import { createBrand, createModel, getBrands, getModels, type Brand, type VehicleModel } from "../../api/vehicle";
+import {
+  createService,
+  getServices,
+  type ApiService,
+} from "../../api/services";
+import {
+  createBrand,
+  createModel,
+  getBrands,
+  getModels,
+  type Brand,
+  type VehicleModel,
+} from "../../api/vehicle";
 
 export default function VehiclesPage() {
-  const [activeTab, setActiveTab] = useState<"brands" | "models" | "services">("brands");
-  
+  const [activeTab, setActiveTab] = useState<"brands" | "models" | "services">(
+    "brands",
+  );
+
   // Brands states
   const [brands, setBrands] = useState<Brand[]>([]);
   const [isLoadingBrands, setIsLoadingBrands] = useState(false);
@@ -188,7 +209,8 @@ export default function VehiclesPage() {
             Data Master
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Kelola data merek, Merek Kendaraan, dan jenis layanan yang aktif di sistem.
+            Kelola data merek, Merek Kendaraan, dan jenis layanan yang aktif di
+            sistem.
           </p>
         </div>
         <button
@@ -358,7 +380,9 @@ export default function VehiclesPage() {
                   </label>
                   <div className="flex gap-4">
                     <label className="flex-1 flex items-center justify-between p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 cursor-pointer text-sm font-semibold select-none">
-                      <span className="text-slate-700 dark:text-slate-300">Mobil</span>
+                      <span className="text-slate-700 dark:text-slate-300">
+                        Mobil
+                      </span>
                       <input
                         type="radio"
                         name="vehicleType"
@@ -368,7 +392,9 @@ export default function VehiclesPage() {
                       />
                     </label>
                     <label className="flex-1 flex items-center justify-between p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 cursor-pointer text-sm font-semibold select-none">
-                      <span className="text-slate-700 dark:text-slate-300">Motor</span>
+                      <span className="text-slate-700 dark:text-slate-300">
+                        Motor
+                      </span>
                       <input
                         type="radio"
                         name="vehicleType"
@@ -424,7 +450,10 @@ export default function VehiclesPage() {
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {models.map((model, idx) => (
-                        <tr key={model.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                        <tr
+                          key={model.id}
+                          className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                        >
                           <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
                             {idx + 1}
                           </td>
@@ -435,11 +464,13 @@ export default function VehiclesPage() {
                             {getBrandName(model.brand_id)}
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                              model.vehicle_type === "mobil" 
-                                ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400" 
-                                : "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
-                            }`}>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                                model.vehicle_type === "mobil"
+                                  ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                                  : "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                              }`}
+                            >
                               {model.vehicle_type}
                             </span>
                           </td>
@@ -572,20 +603,31 @@ export default function VehiclesPage() {
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {services.map((service, idx) => {
                         const displayDate = service.created_at
-                          ? new Date(service.created_at).toLocaleDateString("id-ID", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })
+                          ? new Date(service.created_at).toLocaleDateString(
+                              "id-ID",
+                              {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              },
+                            )
                           : "-";
                         return (
-                          <tr key={service.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                          <tr
+                            key={service.id}
+                            className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                          >
                             <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
                               {idx + 1}
                             </td>
                             <td className="px-4 py-3">
-                              <p className="font-semibold text-slate-900 dark:text-white">{service.service_name}</p>
-                              <p className="text-xs text-slate-450 dark:text-slate-500 truncate max-h-100" title={service.description}>
+                              <p className="font-semibold text-slate-900 dark:text-white">
+                                {service.service_name}
+                              </p>
+                              <p
+                                className="text-xs text-slate-450 dark:text-slate-500 truncate max-h-100"
+                                title={service.description}
+                              >
                                 {service.description}
                               </p>
                             </td>
@@ -595,10 +637,16 @@ export default function VehiclesPage() {
                               </span>
                             </td>
                             <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">
-                              Rp {(service.service_fee || 0).toLocaleString("id-ID")}
+                              Rp{" "}
+                              {(service.service_fee || 0).toLocaleString(
+                                "id-ID",
+                              )}
                             </td>
                             <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">
-                              Rp {(service.express_fee || 0).toLocaleString("id-ID")}
+                              Rp{" "}
+                              {(service.express_fee || 0).toLocaleString(
+                                "id-ID",
+                              )}
                             </td>
                             <td className="px-4 py-3 text-slate-500 text-xs">
                               {displayDate}
