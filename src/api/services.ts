@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './config';
+import { API_BASE_URL, apiFetch, sanitizeErrorMessage } from './config';
 
 export interface ApiService {
   id: string;
@@ -27,21 +27,21 @@ const getAuthHeaders = () => {
 };
 
 export const getServices = async (): Promise<{ data: ApiService[]; status: string }> => {
-  const response = await fetch(`${API_BASE_URL}/services`, {
+  const response = await apiFetch(`${API_BASE_URL}/services`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'Gagal mengambil data layanan');
+    throw new Error(sanitizeErrorMessage(errorData.message || 'Gagal mengambil data layanan'));
   }
 
   return response.json();
 };
 
 export const createService = async (data: CreateServiceRequest): Promise<{ message: string; status: string }> => {
-  const response = await fetch(`${API_BASE_URL}/services`, {
+  const response = await apiFetch(`${API_BASE_URL}/services`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -49,7 +49,7 @@ export const createService = async (data: CreateServiceRequest): Promise<{ messa
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'Gagal menambahkan layanan baru');
+    throw new Error(sanitizeErrorMessage(errorData.message || 'Gagal menambahkan layanan baru'));
   }
 
   return response.json();
