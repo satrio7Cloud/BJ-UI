@@ -71,6 +71,7 @@ export const createModel = async (data: CreateModelRequest): Promise<{ message: 
 export interface VehicleModel {
     id: string;
     brand_id: string;
+    brand_name?: string;
     model_name: string;
     vehicle_type: "mobil" | "motor";
 }

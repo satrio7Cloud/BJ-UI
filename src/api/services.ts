@@ -6,6 +6,8 @@ export interface ApiService {
   category: string;
   service_fee: number;
   express_fee: number;
+  admin_fee: number;
+  physical_check_fee: number;
   description: string;
   created_at: string;
 }
