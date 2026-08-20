@@ -25,7 +25,7 @@ export default function Home() {
                 <Services />
                 <Excellence />
                 <HowItWorks />
-                <ServicePrice onOpenServices={() => navigate("/checkout")} />
+                <ServicePrice onOpenServices={() => navigate("/layanan")} />
                 {/* TESTIMONIAL */}
                 <Testimonials />
                 {/* TENTANG KAMI */}

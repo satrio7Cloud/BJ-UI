@@ -8,6 +8,7 @@ import VehiclesPage from "../features/vehicles/VehiclesPage";
 import MyVehiclesPage from "../features/vehicles/MyVehiclesPage";
 import QrisPaymentPage from "../features/invoice/QrisPaymentPage";
 import CheckoutPage from "../features/checkout/CheckoutPage";
+import ServicesPage from "../features/services/ServicesPage";
 
 import AdminLayout from "../features/dashboard/components/AdminLayout";
 
@@ -15,6 +16,7 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/layanan" element={<ServicesPage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/my-vehicles" element={<MyVehiclesPage />} />
       <Route path="/pay/:orderId" element={<QrisPaymentPage />} />

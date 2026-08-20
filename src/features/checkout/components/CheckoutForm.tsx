@@ -1,4 +1,4 @@
-import { ArrowLeft, Car, FileText, Loader2, ShieldCheck, Truck, User } from "lucide-react";
+import { Car, FileText, Loader2, ShieldCheck, Truck, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -20,6 +20,7 @@ interface CheckoutFormProps {
 export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps) {
     const location = useLocation();
     const prefill = (location.state as any)?.prefill;
+    const estimasiPajakTotal = prefill?.estimasiPajakTotal || 0;
 
     const [formData, setFormData] = useState({
         // Customer Data
@@ -60,7 +61,7 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
         fetchModels();
     }, []);
 
-    const adminFee = 25000;
+    const adminFee = 10000;
     const serviceNameLower = checkoutData.service.service_name.toLowerCase();
     const categoryLower = checkoutData.service.category.toLowerCase();
 
@@ -163,7 +164,7 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
                 pickup_address: formData.pickup_address,
                 customer_tracking_number: "",
                 return_method: formData.return_method,
-                tax_amount: 0,
+                tax_amount: estimasiPajakTotal,
                 service_fee: checkoutData.service.service_fee,
                 admin_fee: 0,
                 physical_check_fee: 0,
@@ -261,13 +262,6 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
         <div className="grid lg:grid-cols-3 gap-8">
             {/* Left Column - Form */}
             <div className="lg:col-span-2 space-y-6">
-                <button
-                    onClick={onBack}
-                    className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-emerald-600 transition-colors mb-2"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    Kembali ke Daftar Layananx
-                </button>
 
                 {isServiceInherentlyNameTransfer && (
                     <div className="bg-amber-50/80 border border-amber-200 rounded-3xl p-6 space-y-4">
@@ -568,8 +562,14 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
                         <div className="pt-4 border-t border-slate-700 space-y-2 text-sm">
                             <div className="flex justify-between">
                                 <span className="text-slate-400">Biaya Layanan</span>
-                                <span className="font-semibold">Rp {checkoutData.price.toLocaleString("id-ID")}</span>
+                                <span className="font-semibold">Rp {(checkoutData.pkg === "reguler" ? checkoutData.service.service_fee : checkoutData.service.express_fee).toLocaleString("id-ID")}</span>
                             </div>
+                            {estimasiPajakTotal > 0 && (
+                                <div className="flex justify-between">
+                                    <span className="text-slate-400">Estimasi Pajak (PKB + SWDKLLJ)</span>
+                                    <span className="font-semibold">Rp {estimasiPajakTotal.toLocaleString("id-ID")}</span>
+                                </div>
+                            )}
                             <div className="flex justify-between">
                                 <span className="text-slate-400">Biaya Admin</span>
                                 <span className="font-semibold">Rp {adminFee.toLocaleString("id-ID")}</span>
