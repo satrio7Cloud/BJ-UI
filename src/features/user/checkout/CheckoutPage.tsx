@@ -1,5 +1,5 @@
-import { useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Footer from "../../../shared/layout/Footer";
 import Header from "../../../shared/layout/Header";
@@ -9,7 +9,7 @@ import CheckoutHeader from "./components/CheckoutHeader";
 export default function CheckoutPage() {
     const location = useLocation();
     const navigate = useNavigate();
-    
+
     // We expect the checkoutData to be passed from the ServicesPage
     const checkoutData = location.state?.checkoutData;
 
@@ -25,10 +25,10 @@ export default function CheckoutPage() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col bg-slate-50">
+        <div className="min-h-screen flex flex-col bg-transparent relative">
             <Header />
 
-            <main className="flex-1 pt-24 pb-20 px-4 sm:px-6 lg:px-8">
+            <main className="flex-1 pt-4 pb-20 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto">
                     <button
                         onClick={() => navigate("/layanan", { state: { prefill: location.state?.prefill } })}
@@ -37,9 +37,9 @@ export default function CheckoutPage() {
                         <ArrowLeft className="w-4 h-4" />
                         Kembali ke Daftar Layanan
                     </button>
-                    <CheckoutHeader 
-                        serviceName={checkoutData.service.service_name} 
-                        pkg={checkoutData.pkg} 
+                    <CheckoutHeader
+                        serviceName={checkoutData.service.service_name}
+                        pkg={checkoutData.pkg}
                     />
                     <div className="space-y-6">
                         <CheckoutForm

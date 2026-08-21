@@ -16,7 +16,7 @@ export default function Home() {
     return (
         <>
             <Header />
-            <main id="beranda" className="bg-[#FDFBF7]">
+            <main id="beranda" className="bg-transparent relative">
                 {/* HERO */}
                 <Hero />
                 {/* SIMULASI & CEK PAJAK KENDARAAN */}

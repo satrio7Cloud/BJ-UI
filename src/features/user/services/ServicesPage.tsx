@@ -1,4 +1,5 @@
 import {
+    ArrowLeft,
     ArrowRight,
     Car,
     CheckCircle,
@@ -153,65 +154,70 @@ export default function ServicesPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col bg-slate-50">
+        <div className="min-h-screen flex flex-col bg-transparent relative">
             <Header />
 
-            <main className="flex-1 pt-24 pb-20 px-4 sm:px-6 lg:px-8">
+            <main className="flex-1 pt-4 pb-20 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto">
-                    {/* Hero Banner Section */}
-                    <div className="relative bg-linear-to-r bg-from-[#031E15] via-[#042C20] to-[#0A3D2F] rounded-3xl overflow-hidden px-8 py-12 md:py-16 text-white mb-10 shadow-lg">
-                        {/* Silhouette Image */}
-                        <img
-                            src={heroImg}
-                            alt="Car Banner Outline"
-                            className="absolute right-0 bottom-0 top-0 h-full w-[45%] object-cover pointer-events-none opacity-20 mix-blend-overlay hidden md:block"
-                        />
-
-                        <div className="relative z-10 max-w-xl">
-                            <span className="inline-block bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase mb-4">
-                                Layanan Administrasi Kendaraan
-                            </span>
-                            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4 leading-tight">
-                                Pilih Layanan Anda
-                            </h1>
-                            <p className="text-slate-300 text-sm md:text-base leading-relaxed mb-8">
-                                Temukan layanan administrasi kendaraan yang sesuai dengan kebutuhan Anda.
-                            </p>
-
-                            {/* Search Input */}
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Search className="h-5 w-5 text-slate-400" />
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="Cari layanan (mis: STNK, Mutasi)..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="block w-full pl-12 pr-4 py-4 border border-transparent rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 bg-white shadow-md transition-all placeholder:text-slate-400"
+                    {/* Hide Search and Hero if single service view */}
+                    {!(filteredServices.length === 1 && prefill) && (
+                        <>
+                            {/* Hero Banner Section */}
+                            <div className="relative bg-linear-to-r bg-from-[#031E15] via-[#042C20] to-[#0A3D2F] rounded-3xl overflow-hidden px-8 py-12 md:py-16 text-white mb-10 shadow-lg">
+                                {/* Silhouette Image */}
+                                <img
+                                    src={heroImg}
+                                    alt="Car Banner Outline"
+                                    className="absolute right-0 bottom-0 top-0 h-full w-[45%] object-cover pointer-events-none opacity-20 mix-blend-overlay hidden md:block"
                                 />
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Category Filter Chips */}
-                    <div className="mb-10">
-                        <div className="flex flex-wrap gap-3">
-                            {categories.map((category) => (
-                                <button
-                                    key={category}
-                                    onClick={() => setSelectedCategory(category)}
-                                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all cursor-pointer border ${selectedCategory === category
-                                        ? "bg-[#007A53] border-[#007A53] text-white shadow-md shadow-emerald-900/15"
-                                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
-                                        }`}
-                                >
-                                    {getCategoryFilterIcon(category)}
-                                    <span>{category}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                                <div className="relative z-10 max-w-xl">
+                                    <span className="inline-block bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase mb-4">
+                                        Layanan Administrasi Kendaraan
+                                    </span>
+                                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4 leading-tight">
+                                        Pilih Layanan Anda
+                                    </h1>
+                                    <p className="text-slate-300 text-sm md:text-base leading-relaxed mb-8">
+                                        Temukan layanan administrasi kendaraan yang sesuai dengan kebutuhan Anda.
+                                    </p>
+
+                                    {/* Search Input */}
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <Search className="h-5 w-5 text-slate-400" />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            placeholder="Cari layanan (mis: STNK, Mutasi)..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="block w-full pl-12 pr-4 py-4 border border-transparent rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 bg-white shadow-md transition-all placeholder:text-slate-400"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Category Filter Chips */}
+                            <div className="mb-10">
+                                <div className="flex flex-wrap gap-3">
+                                    {categories.map((category) => (
+                                        <button
+                                            key={category}
+                                            onClick={() => setSelectedCategory(category)}
+                                            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all cursor-pointer border ${selectedCategory === category
+                                                ? "bg-[#007A53] border-[#007A53] text-white shadow-md shadow-emerald-900/15"
+                                                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                                                }`}
+                                        >
+                                            {getCategoryFilterIcon(category)}
+                                            <span>{category}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    )}
 
                     {/* Services Grid */}
                     {loading ? (
@@ -226,6 +232,115 @@ export default function ServicesPage() {
                         <div className="bg-slate-50 border border-slate-200 p-8 rounded-3xl text-center">
                             <p className="text-slate-500 text-lg">Tidak ada layanan yang ditemukan.</p>
                         </div>
+                    ) : filteredServices.length === 1 && prefill ? (
+                        // Modern Single Service View
+                        (() => {
+                            const service = filteredServices[0];
+                            const styles = getCategoryStyle(service.category);
+                            const hasExpress = service.express_fee > 0;
+                            const selectedPkg = hasExpress ? (selectedPackages[service.id] || "reguler") : "reguler";
+                            const servicePrice = selectedPkg === "reguler" ? service.service_fee : service.express_fee;
+                            const totalEstimasi = servicePrice + estimasiPajakTotal;
+
+                            return (
+                                <div className="max-w-xl mx-auto pt-4">
+                                    <button 
+                                        onClick={() => navigate("/")} 
+                                        className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-emerald-600 transition-colors cursor-pointer"
+                                    >
+                                        <ArrowLeft className="w-4 h-4" />
+                                        Kembali
+                                    </button>
+                                    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xl shadow-slate-200/50">
+
+                                        {/* Header Info */}
+                                        <div className="flex items-start gap-4 mb-6 pb-6 border-b border-slate-100">
+                                            <div className={`w-14 h-14 rounded-2xl ${styles.bg} ${styles.text} flex items-center justify-center shrink-0`}>
+                                                <styles.icon className="w-7 h-7" />
+                                            </div>
+                                            <div>
+                                                <span className={`inline-block px-2.5 py-1 ${styles.bg} ${styles.text} text-[10px] font-extrabold uppercase tracking-wider rounded-lg mb-1.5`}>
+                                                    {service.category}
+                                                </span>
+                                                <h2 className="text-xl font-bold text-slate-800 mb-1">{service.service_name}</h2>
+                                                <p className="text-slate-500 text-xs">
+                                                    {service.description || `Layanan pengurusan administrasi untuk ${service.service_name.toLowerCase()}.`}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Package Selection */}
+                                        <h3 className="text-base font-bold text-slate-800 mb-3">Pilih Paket Layanan</h3>
+                                        <div className={`grid ${hasExpress ? 'sm:grid-cols-2' : 'grid-cols-1'} gap-3 mb-6`}>
+                                            <button
+                                                onClick={() => handleSelectPackage(service.id, "reguler")}
+                                                className={`text-left p-4 rounded-2xl border-2 transition-all cursor-pointer ${selectedPkg === 'reguler' ? 'border-emerald-500 bg-emerald-50/50 shadow-sm' : 'border-slate-200 hover:border-emerald-200 bg-white'}`}
+                                            >
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className={`font-bold text-sm ${selectedPkg === 'reguler' ? 'text-emerald-700' : 'text-slate-700'}`}>Reguler</span>
+                                                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedPkg === 'reguler' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-300'}`}>
+                                                        {selectedPkg === 'reguler' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                                    </div>
+                                                </div>
+                                                <div className="text-xl font-extrabold text-slate-800 mb-0.5">Rp {service.service_fee.toLocaleString('id-ID')}</div>
+                                                <p className="text-[10px] text-slate-500">Standar antrean Samsat</p>
+                                            </button>
+
+                                            {hasExpress && (
+                                                <button
+                                                    onClick={() => handleSelectPackage(service.id, "express")}
+                                                    className={`text-left p-4 rounded-2xl border-2 transition-all cursor-pointer ${selectedPkg === 'express' ? 'border-emerald-500 bg-emerald-50/50 shadow-sm' : 'border-slate-200 hover:border-emerald-200 bg-white'}`}
+                                                >
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <span className={`font-bold text-sm ${selectedPkg === 'express' ? 'text-emerald-700' : 'text-slate-700'}`}>Express (Prioritas)</span>
+                                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedPkg === 'express' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-300'}`}>
+                                                            {selectedPkg === 'express' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-xl font-extrabold text-slate-800 mb-0.5">Rp {service.express_fee.toLocaleString('id-ID')}</div>
+                                                    <p className="text-[10px] text-slate-500">Lebih cepat diproses</p>
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* Cost Summary */}
+                                        <div className="bg-slate-50 rounded-2xl p-5 mb-6 border border-slate-200">
+                                            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Rincian Total Biaya</h3>
+
+                                            <div className="space-y-2.5">
+                                                <div className="flex justify-between items-center text-xs">
+                                                    <span className="text-slate-600">Jasa Pengurusan ({selectedPkg === 'reguler' ? 'Reguler' : 'Express'})</span>
+                                                    <span className="font-bold text-slate-800">Rp {servicePrice.toLocaleString('id-ID')}</span>
+                                                </div>
+
+                                                {estimasiPajakTotal > 0 && (
+                                                    <div className="flex justify-between items-center text-xs">
+                                                        <span className="text-slate-600">Pajak & PNBP (Estimasi)</span>
+                                                        <span className="font-bold text-slate-800">Rp {estimasiPajakTotal.toLocaleString('id-ID')}</span>
+                                                    </div>
+                                                )}
+
+                                                <div className="pt-3 mt-1.5 border-t border-slate-200/80 flex justify-between items-center">
+                                                    <div>
+                                                        <span className="font-bold text-slate-800 block text-sm">Total Pembayaran</span>
+                                                        <span className="text-[9px] text-slate-500">*Belum termasuk admin</span>
+                                                    </div>
+                                                    <span className="text-xl font-extrabold text-emerald-600">Rp {totalEstimasi.toLocaleString('id-ID')}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={() => handleCheckout(service)}
+                                            className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-base flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-900/20 hover:scale-[1.01] cursor-pointer"
+                                        >
+                                            <span>Lanjutkan Pemesanan</span>
+                                            <ArrowRight className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })()
                     ) : (
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {filteredServices.map((service) => {

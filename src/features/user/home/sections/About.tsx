@@ -2,7 +2,7 @@ import { CheckCircle2, ShieldCheck, Target, Zap } from "lucide-react";
 
 export default function About() {
   return (
-    <section id="tentang" className="py-24 relative overflow-hidden bg-white">
+    <section id="tentang" className="py-24 relative overflow-hidden">
       {/* Decorative Background Elements */}
       <div className="absolute top-0 right-0 -mr-20 -mt-20  w-125 h-125 bg-emerald-50 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
 

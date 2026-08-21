@@ -131,7 +131,7 @@ export default function MyVehiclesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="min-h-screen bg-transparent relative dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-200">
       {/* NAVBAR */}
       <nav className="border-b bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 transition-colors">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">

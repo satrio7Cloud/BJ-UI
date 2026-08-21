@@ -25,6 +25,8 @@ export default function TaxCalculatorSection() {
         tipeLayanan: "tahunan" as "tahunan" | "5tahunan" | "baliknama" | "mutasi",
     });
 
+    const [nopolParts, setNopolParts] = useState({ p1: "", p2: "", p3: "" });
+
     const [calculatedResult, setCalculatedResult] = useState<{
         pkb: number;
         swdkllj: number;
@@ -141,7 +143,7 @@ export default function TaxCalculatorSection() {
     return (
         <section
             id="cek-pajak"
-            className="py-16 md:py-24 bg-linear-to-b from-[#FDFBF7] via-emerald-50/40 to-slate-50 relative overflow-hidden"
+            className="py-16 md:py-24 relative overflow-hidden"
         >
             {/* Background Decor */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
@@ -310,24 +312,55 @@ export default function TaxCalculatorSection() {
                                 </div>
                             </div>
 
-                            {/* Grid 2 Columns: Nopol & Tahun */}
-                            <div className="grid sm:grid-cols-2 gap-4">
-                                <div>
+                            {/* Grid 3 Columns: Nopol (span 2) & Tahun (span 1) */}
+                            <div className="grid sm:grid-cols-3 gap-4">
+                                <div className="sm:col-span-2">
                                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                                         Nomor Polisi (Nopol) *
                                     </label>
-                                    <input
-                                        type="text"
-                                        placeholder="Contoh: B 1234 ABC"
-                                        value={formData.nopol}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                nopol: e.target.value.toUpperCase(),
-                                            })
-                                        }
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none text-slate-900 font-semibold uppercase text-sm"
-                                    />
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="B"
+                                            value={nopolParts.p1}
+                                            maxLength={2}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/[^A-Za-z]/g, "").toUpperCase();
+                                                const newParts = { ...nopolParts, p1: val };
+                                                setNopolParts(newParts);
+                                                setFormData({ ...formData, nopol: `${newParts.p1} ${newParts.p2} ${newParts.p3}`.trim().replace(/\s+/g, ' ') });
+                                            }}
+                                            className="w-16 px-2 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none text-slate-900 font-bold uppercase text-center text-sm"
+                                        />
+                                        <span className="text-slate-400 font-bold">-</span>
+                                        <input
+                                            type="text"
+                                            placeholder="1234"
+                                            value={nopolParts.p2}
+                                            maxLength={4}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/[^0-9]/g, "");
+                                                const newParts = { ...nopolParts, p2: val };
+                                                setNopolParts(newParts);
+                                                setFormData({ ...formData, nopol: `${newParts.p1} ${newParts.p2} ${newParts.p3}`.trim().replace(/\s+/g, ' ') });
+                                            }}
+                                            className="flex-1 px-2 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none text-slate-900 font-bold uppercase text-center text-sm tracking-widest"
+                                        />
+                                        <span className="text-slate-400 font-bold">-</span>
+                                        <input
+                                            type="text"
+                                            placeholder="ABC"
+                                            value={nopolParts.p3}
+                                            maxLength={3}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/[^A-Za-z]/g, "").toUpperCase();
+                                                const newParts = { ...nopolParts, p3: val };
+                                                setNopolParts(newParts);
+                                                setFormData({ ...formData, nopol: `${newParts.p1} ${newParts.p2} ${newParts.p3}`.trim().replace(/\s+/g, ' ') });
+                                            }}
+                                            className="w-20 px-2 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none text-slate-900 font-bold uppercase text-center text-sm"
+                                        />
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">

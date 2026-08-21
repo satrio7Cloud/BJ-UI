@@ -11,15 +11,18 @@ import ServicesPage from "../features/user/services/ServicesPage";
 import MyVehiclesPage from "../features/user/vehicles/MyVehiclesPage";
 
 import AdminLayout from "../features/admin/dashboard/components/AdminLayout";
+import UserLayout from "../features/user/layout/UserLayout";
 
 export default function AppRoutes() {
     return (
         <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/layanan" element={<ServicesPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/my-vehicles" element={<MyVehiclesPage />} />
-            <Route path="/pay/:orderId" element={<QrisPaymentPage />} />
+            <Route element={<UserLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/layanan" element={<ServicesPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/my-vehicles" element={<MyVehiclesPage />} />
+                <Route path="/pay/:orderId" element={<QrisPaymentPage />} />
+            </Route>
             <Route path="/admin" element={<LoginPage />} />
             <Route element={<AdminLayout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
