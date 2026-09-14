@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import { getInvoiceByOrderId, type InvoiceData } from "../../../api/invoice";
+import Button from "../../../shared/components/Button";
 import { WHATSAPP_NUMBER } from "../../../shared/utils/whatsapp";
 import OrderTracking from "./OrderTracking";
 
@@ -197,15 +198,16 @@ export default function QrisPaymentPage() {
                     {!isPaid && (
                         <div className="w-full flex flex-col gap-3 pt-2">
                             <div className="grid grid-cols-2 gap-3">
-                                <button
-                                    type="button"
+                                <Button
+                                    variant="outline"
+                                    size="full"
                                     onClick={() => fetchInvoiceDetails(true)}
                                     disabled={isChecking}
-                                    className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl border border-slate-300 hover:bg-slate-50 font-bold text-slate-700 text-xs transition cursor-pointer disabled:opacity-50"
+                                    className="py-3 text-xs text-slate-700"
                                 >
                                     <RefreshCw size={14} className={isChecking ? "animate-spin" : ""} />
                                     Cek Pembayaran
-                                </button>
+                                </Button>
                                 <a
                                     href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
                                         `Halo, saya ingin mengonfirmasi pembayaran untuk nomor invoice ${invoice.invoice_number} atas nama ${invoice.customer_name}.`
@@ -219,14 +221,15 @@ export default function QrisPaymentPage() {
                                 </a>
                             </div>
                             {/* NATIVE MIDTRANS PAY BUTTON */}
-                            <button
-                                type="button"
+                            <Button
+                                variant="admin"
+                                size="full"
                                 onClick={handleBayarSekarang}
-                                className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition shadow-lg hover:shadow-blue-600/30 cursor-pointer mt-1"
+                                className="py-3 text-sm mt-1"
                             >
                                 <Zap size={16} />
                                 Bayar Sekarang
-                            </button>
+                            </Button>
                         </div>
                     )}
                 </div>

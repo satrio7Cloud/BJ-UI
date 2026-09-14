@@ -45,8 +45,9 @@ export default function InvoiceTable() {
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white transition-colors">Riwayat Invoice</h2>
                 <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => navigate("/invoice")}
-                    className="px-4 py-2 border border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400 rounded-lg text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer transition-colors"
                 >
                     Lihat Semua
                 </Button>
@@ -72,12 +73,14 @@ export default function InvoiceTable() {
                             <tr>
                                 <td colSpan={7} className="py-8 text-center text-red-500 dark:text-red-400">
                                     <p className="text-sm font-semibold">Gagal memuat data: {error}</p>
-                                    <button
+                                    <Button
+                                        variant="admin"
+                                        size="sm"
                                         onClick={fetchInvoices}
-                                        className="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700 cursor-pointer"
+                                        className="mt-2"
                                     >
                                         Coba Lagi
-                                    </button>
+                                    </Button>
                                 </td>
                             </tr>
                         ) : isLoading ? (
@@ -111,9 +114,9 @@ export default function InvoiceTable() {
                                         <InvoiceStatusBadge status={mappedStatus as any} />
                                     </td>
                                     <td className="text-right">
-                                        <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400 transition-colors cursor-pointer">
+                                        <Button variant="ghost" size="icon">
                                             <MoreHorizontal size={18} />
-                                        </button>
+                                        </Button>
                                     </td>
                                 </tr>
                             );

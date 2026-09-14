@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getAdminProfile, logoutAdmin } from "../../../../api/auth";
-import { getDashboardSummary } from "../../../../api/dashboard";
+import NotificationDrawer from "./NotificationDrawer";
 
 interface SidebarProps {
     isOpen: boolean;
@@ -16,6 +16,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const navigate = useNavigate();
     const [profile, setProfile] = useState<{ email: string; role: string } | null>(null);
     const [pendingNotifs, setPendingNotifs] = useState(0);
+    const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -32,19 +33,15 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             }
 
             try {
-                const summary = await getDashboardSummary();
-                if (summary?.pending_actions) {
-                    const totalPending =
-                        (summary.pending_actions.unverified_documents || 0) +
-                        (summary.pending_actions.stuck_orders || 0);
-                    setPendingNotifs(totalPending);
-                }
+                const { getUnreadNotifications } = await import('../../../../api/notification');
+                const notifs = await getUnreadNotifications();
+                setPendingNotifs(notifs.length);
             } catch (err) {
                 console.error("Failed to fetch notifications", err);
             }
         };
         fetchData();
-    }, [navigate]);
+    }, [navigate, location.pathname]);
 
     const handleLogout = async () => {
         try {
@@ -116,8 +113,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 key={item.name}
                                 to={item.path}
                                 className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-                                        ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold shadow-sm shadow-blue-100 dark:shadow-none"
-                                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+                                    ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold shadow-sm shadow-blue-100 dark:shadow-none"
+                                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
                                     } ${!isOpen ? "justify-center px-0" : ""}`}
                                 title={!isOpen ? item.name : undefined}
                             >
@@ -135,14 +132,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
                 <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-4 shrink-0">
                     <button
-                        onClick={() => {
-                            if (pendingNotifs > 0) {
-                                toast(`Ada ${pendingNotifs} Peringatan: Dokumen belum diverifikasi / pesanan stuck!`, { icon: '⚠️' });
-                            } else {
-                                toast('Tidak ada notifikasi baru', { icon: '🔔' });
-                            }
-                        }}
-                        className={`flex items-center space-x-3 px-4 py-3 w-full text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors font-medium ${!isOpen ? "justify-center px-0" : ""}`}
+                        onClick={() => setIsNotifDrawerOpen(true)}
+                        className={`flex items-center space-x-3 px-4 py-3 w-full text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors font-medium cursor-pointer ${!isOpen ? "justify-center px-0" : ""}`}
                         title={!isOpen ? "Notifikasi" : undefined}
                     >
                         <div className="relative shrink-0">
@@ -178,7 +169,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
                         <button
                             onClick={handleLogout}
-                            className="p-2.5 text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 rounded-xl transition-colors shrink-0"
+                            className="p-2.5 text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 rounded-xl transition-colors shrink-0 cursor-pointer"
                             title="Logout"
                         >
                             <LogOut className="w-5 h-5 shrink-0" />
@@ -186,6 +177,12 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     </div>
                 </div>
             </motion.div>
+
+            <NotificationDrawer
+                isOpen={isNotifDrawerOpen}
+                onClose={() => setIsNotifDrawerOpen(false)}
+                onReadCountUpdate={(count) => setPendingNotifs(count)}
+            />
         </>
     );
 }

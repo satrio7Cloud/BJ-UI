@@ -8,7 +8,7 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import type { DashboardChartData } from "../../../api/dashboard";
+import type { DashboardChartData } from "../../../../api/dashboard";
 
 import { TrendingUp } from "lucide-react";
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Menu } from "lucide-react";
+import Button from "../../../../shared/components/Button";
 import Sidebar from "./Sidebar";
 
 export default function AdminLayout() {
@@ -22,12 +23,13 @@ export default function AdminLayout() {
         {/* Mobile Header */}
         <div className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 z-10 transition-colors duration-200">
           <h1 className="font-bold text-lg text-blue-600 dark:text-blue-400">Admin Panel</h1>
-          <button 
+          <Button 
+            variant="ghost"
+            size="icon"
             onClick={() => setIsSidebarOpen(true)}
-            className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-colors"
           >
             <Menu className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
 
         {/* Child Routes will be rendered here */}

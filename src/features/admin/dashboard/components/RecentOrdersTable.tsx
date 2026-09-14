@@ -1,6 +1,7 @@
 import { AlertCircle, ChevronDown, ChevronUp, Clock, RefreshCw, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { type DashboardOrder } from '../../../../api/dashboard';
+import Button from "../../../../shared/components/Button";
 import OrderActivityLog from './OrderActivityLog';
 
 interface Props {
@@ -28,14 +29,15 @@ export default function RecentOrdersTable({ orders, isLoading, onOrderUpdate }: 
                 <div className="flex items-center gap-3">
                     <span className="text-xs text-slate-400 dark:text-slate-500">{orders.length} pesanan</span>
                     {onOrderUpdate && (
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={onOrderUpdate}
                             disabled={isLoading}
-                            className="p-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                             title="Refresh Data"
                         >
                             <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
-                        </button>
+                        </Button>
                     )}
                 </div>
             </div>
@@ -109,16 +111,17 @@ export default function RecentOrdersTable({ orders, isLoading, onOrderUpdate }: 
                                                 </span>
                                             </td>
                                             <td className="py-3.5 text-right">
-                                                <button
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
                                                     onClick={() => setExpandedOrderId(expandedOrderId === order.order_id ? null : order.order_id)}
-                                                    className={`p-2 rounded-lg transition-colors cursor-pointer ${expandedOrderId === order.order_id
+                                                    className={expandedOrderId === order.order_id
                                                         ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
-                                                        : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500'
-                                                        }`}
+                                                        : ''}
                                                     title="Update Status"
                                                 >
                                                     {expandedOrderId === order.order_id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                                </button>
+                                                </Button>
                                             </td>
                                         </tr>
                                         {expandedOrderId === order.order_id && (

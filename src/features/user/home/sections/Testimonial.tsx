@@ -135,13 +135,13 @@ export default function Testimonials() {
                       </div>
 
                       {/* Message */}
-                      <p className="text-slate-600 text-base leading-relaxed mb-8 flex-grow relative z-10 italic">
+                      <p className="text-slate-600 text-base leading-relaxed mb-8 grow relative z-10 italic">
                         "{item.message}"
                       </p>
 
                       {/* User Info */}
                       <div className="flex items-center gap-4 mt-auto relative z-10 border-t border-slate-100 pt-5">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white flex items-center justify-center font-bold text-xl shadow-md shrink-0">
+                        <div className="w-12 h-12 rounded-full bg-linear-to-br from-emerald-400 to-teal-500 text-white flex items-center justify-center font-bold text-xl shadow-md shrink-0">
                           {item.name.charAt(0)}
                         </div>
                         <div>

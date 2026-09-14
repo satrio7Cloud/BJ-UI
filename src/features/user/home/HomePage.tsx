@@ -5,6 +5,7 @@ import Header from "../../../shared/layout/Header";
 import ServicePrice from "../services/ServicePrice";
 import TaxCalculatorSection from "../services/components/TaxCalculatorSection";
 import About from "./sections/About";
+import CetakKtlSection from "./sections/CetakKtlSection";
 import Excellence from "./sections/Excellence";
 import Hero from "./sections/Hero";
 import HowItWorks from "./sections/HowItWorks";
@@ -26,12 +27,12 @@ export default function Home() {
                 <Excellence />
                 <HowItWorks />
                 <ServicePrice onOpenServices={() => navigate("/layanan")} />
+                {/* CETAK KTL STNK */}
+                <CetakKtlSection />
                 {/* TESTIMONIAL */}
                 <Testimonials />
                 {/* TENTANG KAMI */}
                 <About />
-                {/* CTA FORM */}
-                {/* <CtaForm /> */}
                 <Footer />
             </main>
         </>

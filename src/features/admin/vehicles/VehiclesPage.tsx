@@ -22,6 +22,7 @@ import {
     type Brand,
     type VehicleModel,
 } from "../../../api/vehicle";
+import Button from "../../../shared/components/Button";
 
 export default function VehiclesPage() {
     const [activeTab, setActiveTab] = useState<"brands" | "models" | "services">(
@@ -213,25 +214,26 @@ export default function VehiclesPage() {
                         sistem.
                     </p>
                 </div>
-                <button
+                <Button
+                    variant="outline"
                     onClick={() => {
                         fetchBrandsData();
                         fetchModelsData();
                         fetchServicesData();
                         toast.success("Semua data master berhasil disegarkan");
                     }}
-                    className="flex items-center gap-2 justify-center px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 rounded-xl text-sm hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer shrink-0 transition-colors"
+                    className="shrink-0"
                 >
                     <RefreshCw size={16} />
                     Segarkan Data
-                </button>
+                </Button>
             </div>
 
             {/* Tabs Header */}
             <div className="flex border-b border-slate-200 dark:border-slate-800 transition-colors">
                 <button
                     onClick={() => setActiveTab("brands")}
-                    className={`flex items-center gap-2 py-3 px-4 font-medium text-sm border-b-2 transition-all -mb-0.5 ${activeTab === "brands"
+                    className={`flex items-center gap-2 py-3 px-4 font-medium text-sm border-b-2 transition-all -mb-0.5 cursor-pointer ${activeTab === "brands"
                         ? "border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400"
                         : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                         }`}
@@ -241,7 +243,7 @@ export default function VehiclesPage() {
                 </button>
                 <button
                     onClick={() => setActiveTab("models")}
-                    className={`flex items-center gap-2 py-3 px-4 font-medium text-sm border-b-2 transition-all -mb-0.5 ${activeTab === "models"
+                    className={`flex items-center gap-2 py-3 px-4 font-medium text-sm border-b-2 transition-all -mb-0.5 cursor-pointer ${activeTab === "models"
                         ? "border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400"
                         : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                         }`}
@@ -251,7 +253,7 @@ export default function VehiclesPage() {
                 </button>
                 <button
                     onClick={() => setActiveTab("services")}
-                    className={`flex items-center gap-2 py-3 px-4 font-medium text-sm border-b-2 transition-all -mb-0.5 ${activeTab === "services"
+                    className={`flex items-center gap-2 py-3 px-4 font-medium text-sm border-b-2 transition-all -mb-0.5 cursor-pointer ${activeTab === "services"
                         ? "border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400"
                         : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                         }`}
@@ -283,14 +285,15 @@ export default function VehiclesPage() {
                                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                                     />
                                 </div>
-                                <button
+                                <Button
                                     type="submit"
-                                    disabled={isSubmittingBrand}
-                                    className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition-colors disabled:opacity-50 cursor-pointer"
+                                    variant="primary"
+                                    size="full"
+                                    isLoading={isSubmittingBrand}
                                 >
                                     <Plus size={16} />
-                                    {isSubmittingBrand ? "Menyimpan..." : "Tambah Merek"}
-                                </button>
+                                    Tambah Merek
+                                </Button>
                             </form>
                         </div>
 
@@ -403,14 +406,15 @@ export default function VehiclesPage() {
                                     </div>
                                 </div>
 
-                                <button
+                                <Button
                                     type="submit"
-                                    disabled={isSubmittingModel}
-                                    className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition-colors disabled:opacity-50 cursor-pointer"
+                                    variant="primary"
+                                    size="full"
+                                    isLoading={isSubmittingModel}
                                 >
                                     <Plus size={16} />
-                                    {isSubmittingModel ? "Menyimpan..." : "Tambah Model"}
-                                </button>
+                                    Tambah Model
+                                </Button>
                             </form>
                         </div>
 
@@ -553,14 +557,16 @@ export default function VehiclesPage() {
                                 </div>
 
                                 <div className="md:col-span-2 pt-2">
-                                    <button
+                                    <Button
                                         type="submit"
-                                        disabled={isSubmittingService}
-                                        className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl text-sm transition-colors disabled:opacity-50 cursor-pointer shadow-sm hover:shadow-md"
+                                        variant="primary"
+                                        size="full"
+                                        isLoading={isSubmittingService}
+                                        className="py-3 shadow-sm hover:shadow-md"
                                     >
                                         <Plus size={16} />
-                                        {isSubmittingService ? "Menyimpan..." : "Tambah Layanan"}
-                                    </button>
+                                        Tambah Layanan
+                                    </Button>
                                 </div>
                             </form>
                         </div>

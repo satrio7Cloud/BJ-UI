@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { type InvoiceData } from "../../../../api/invoice";
+import Button from "../../../../shared/components/Button";
 
 interface Props {
     invoice: InvoiceData | null;
@@ -52,9 +53,13 @@ export default function InvoiceDetailPanel({ invoice, onClose }: Props) {
                                 <p className="text-sm text-slate-400 dark:text-slate-500">{invoice.invoice_number}</p>
                             </div>
 
-                            <button onClick={onClose} className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
+                            <Button 
+                                variant="ghost"
+                                size="icon"
+                                onClick={onClose}
+                            >
                                 <X size={20} />
-                            </button>
+                            </Button>
                         </div>
 
                         {/* CONTENT */}
@@ -134,15 +139,15 @@ export default function InvoiceDetailPanel({ invoice, onClose }: Props) {
 
                         {/* FOOTER */}
                         <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-3 transition-colors">
-                            <button className="w-full border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg py-2 flex items-center justify-center gap-2 transition-colors">
+                            <Button variant="outline" size="full">
                                 <Download size={16} />
                                 Download PDF
-                            </button>
+                            </Button>
 
                             {isPending && (
-                                <button className="w-full bg-blue-600 text-white rounded-lg py-2">
+                                <Button variant="admin" size="full">
                                     Bayar Sekarang
-                                </button>
+                                </Button>
                             )}
                         </div>
                     </motion.div>

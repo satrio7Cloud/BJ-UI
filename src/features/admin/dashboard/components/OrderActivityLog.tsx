@@ -2,7 +2,8 @@ import { AlertCircle, CheckCircle2, Clock, ExternalLink, Image as ImageIcon, Ref
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { generateInvoiceApi, getInvoiceByOrderId, type InvoiceData } from "../../../../api/invoice";
-import { getOrderActivity, getOrderDocuments, updateOrderStatus, type OrderActivity, type OrderDocument } from "../../../../api/order";
+import { getOrderActivity, getOrderDocuments, updateOrderStatus, verifyCustomerDocument, type OrderActivity, type OrderDocument } from "../../../../api/order";
+import Button from "../../../../shared/components/Button";
 
 interface Props {
     orderId: string;
@@ -81,6 +82,19 @@ export default function OrderActivityLog({ orderId, onStatusChange }: Props) {
         }
     };
 
+    const handleVerifyDocument = async (docId: string, currentStatus: boolean) => {
+        try {
+            await verifyCustomerDocument(docId, !currentStatus);
+            toast.success(currentStatus ? "Verifikasi dokumen dibatalkan" : "Dokumen berhasil diverifikasi");
+            // Refresh documents
+            const docs = await getOrderDocuments(orderId);
+            setDocuments(docs || []);
+            if (onStatusChange) onStatusChange(); // Notify parent table to refresh
+        } catch (error: any) {
+            toast.error(error.message || "Gagal mengubah status verifikasi dokumen");
+        }
+    };
+
     const handleGenerateInvoice = async () => {
         try {
             setIsGeneratingInvoice(true);
@@ -137,16 +151,26 @@ export default function OrderActivityLog({ orderId, onStatusChange }: Props) {
                                     )}
                                 </div>
                                 {doc.url ? (
-                                    <div className="relative">
+                                    <div className="relative group/overlay overflow-hidden">
                                         <img src={doc.url} alt={doc.document_type} className="w-full h-32 object-cover" />
-                                        <a
-                                            href={doc.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-medium gap-2"
-                                        >
-                                            <ExternalLink size={16} /> Lihat
-                                        </a>
+                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/overlay:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
+                                            <a
+                                                href={doc.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center text-white text-xs font-medium gap-1.5 hover:text-blue-300 transition-colors bg-white/10 px-3 py-1.5 rounded-lg backdrop-blur-sm"
+                                            >
+                                                <ExternalLink size={14} /> Lihat Penuh
+                                            </a>
+                                            {!doc.is_verified && (
+                                                <button
+                                                    onClick={() => handleVerifyDocument(doc.id, doc.is_verified)}
+                                                    className="flex items-center text-white text-xs font-bold gap-1.5 hover:text-white transition-colors bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg shadow-lg cursor-pointer"
+                                                >
+                                                    <CheckCircle2 size={14} /> Verifikasi
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="h-32 flex items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800">
@@ -196,13 +220,14 @@ export default function OrderActivityLog({ orderId, onStatusChange }: Props) {
                         />
                     </div>
                 </div>
-                <button
+                <Button
                     type="submit"
-                    disabled={isUpdating}
-                    className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                    variant="admin"
+                    isLoading={isUpdating}
+                    className="w-full sm:w-auto"
                 >
-                    {isUpdating ? <RefreshCw className="animate-spin w-4 h-4" /> : "Perbarui"}
-                </button>
+                    Perbarui
+                </Button>
             </form>
 
             {/* Invoice Management */}
@@ -211,13 +236,13 @@ export default function OrderActivityLog({ orderId, onStatusChange }: Props) {
                 {!invoice ? (
                     <div>
                         <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">Pesanan ini belum memiliki tagihan. Pastikan dokumen pelanggan sudah lengkap dan valid sebelum membuat tagihan.</p>
-                        <button
+                        <Button
+                            variant="admin"
                             onClick={handleGenerateInvoice}
-                            disabled={isGeneratingInvoice}
-                            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                            isLoading={isGeneratingInvoice}
                         >
-                            {isGeneratingInvoice ? <RefreshCw className="animate-spin w-4 h-4" /> : "Buat Tagihan (Generate Invoice)"}
-                        </button>
+                            Buat Tagihan (Generate Invoice)
+                        </Button>
                     </div>
                 ) : (
                     <div>

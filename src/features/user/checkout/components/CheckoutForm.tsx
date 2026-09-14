@@ -1,4 +1,4 @@
-import { Car, FileText, Loader2, Search, ShieldCheck, Truck, User } from "lucide-react";
+import { Car, FileText, Search, ShieldCheck, Truck, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useLocation } from "react-router-dom";
@@ -7,6 +7,7 @@ import { createCustomerVehicle } from "../../../../api/customerVehicle";
 import { createOrderApi, uploadCustomerDocument } from "../../../../api/order";
 import { type ApiService } from "../../../../api/services";
 import { getModels, type VehicleModel } from "../../../../api/vehicle";
+import Button from "../../../../shared/components/Button";
 
 interface CheckoutFormProps {
     checkoutData: {
@@ -44,7 +45,8 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
     });
 
     const [models, setModels] = useState<VehicleModel[]>([]);
-    const [documentFile, setDocumentFile] = useState<File | null>(null);
+    const [ktpFile, setKtpFile] = useState<File | null>(null);
+    const [stnkFile, setStnkFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [orderIdRef, setOrderIdRef] = useState<string | null>(null);
@@ -195,8 +197,11 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
             if (!orderId) throw new Error("Gagal membuat pesanan");
 
             // 4. Upload Document
-            if (documentFile) {
-                await uploadCustomerDocument(orderId, "STNK", documentFile);
+            if (ktpFile) {
+                await uploadCustomerDocument(orderId, "KTP", ktpFile);
+            }
+            if (stnkFile) {
+                await uploadCustomerDocument(orderId, "STNK", stnkFile);
             }
 
             // 5. Show Success Screen
@@ -260,15 +265,16 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
                     ID Pesanan: {orderIdRef}
                 </div>
 
-                <button
+                <Button
+                    variant="primary"
                     onClick={() => {
                         setIsSuccess(false);
                         onBack();
                     }}
-                    className="mt-8 px-8 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold transition-colors w-full sm:w-auto"
+                    className="mt-8 w-full sm:w-auto"
                 >
                     Selesai & Kembali ke Layanan
-                </button>
+                </Button>
             </div>
         );
     }
@@ -566,30 +572,60 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
                         <FileText className="w-5 h-5 text-emerald-600" />
                         Upload Dokumen Pendukung
                     </h2>
-                    <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center hover:bg-slate-100 transition-colors">
-                        <input
-                            type="file"
-                            id="fileUpload"
-                            className="hidden"
-                            onChange={(e) => {
-                                if (e.target.files && e.target.files.length > 0) {
-                                    setDocumentFile(e.target.files[0]);
-                                }
-                            }}
-                        />
-                        <label htmlFor="fileUpload" className="cursor-pointer flex flex-col items-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                                <FileText className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-bold text-slate-700">
-                                    {documentFile ? documentFile.name : "Pilih File Dokumen (STNK/KTP)"}
-                                </p>
-                                <p className="text-xs text-slate-500 mt-1">
-                                    {documentFile ? "Klik untuk mengganti file" : "Upload foto atau scan berkas fisik Anda (Maks. 5MB)"}
-                                </p>
-                            </div>
-                        </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* KTP Upload */}
+                        <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center hover:bg-slate-100 transition-colors">
+                            <input
+                                type="file"
+                                id="ktpUpload"
+                                className="hidden"
+                                onChange={(e) => {
+                                    if (e.target.files && e.target.files.length > 0) {
+                                        setKtpFile(e.target.files[0]);
+                                    }
+                                }}
+                            />
+                            <label htmlFor="ktpUpload" className="cursor-pointer flex flex-col items-center gap-3">
+                                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                                    <User className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-slate-700">
+                                        {ktpFile ? ktpFile.name : "Foto KTP"}
+                                    </p>
+                                    <p className="text-xs text-slate-500 mt-1">
+                                        Format JPG, PNG (Max 5MB)
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
+
+                        {/* STNK Upload */}
+                        <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center hover:bg-slate-100 transition-colors">
+                            <input
+                                type="file"
+                                id="stnkUpload"
+                                className="hidden"
+                                onChange={(e) => {
+                                    if (e.target.files && e.target.files.length > 0) {
+                                        setStnkFile(e.target.files[0]);
+                                    }
+                                }}
+                            />
+                            <label htmlFor="stnkUpload" className="cursor-pointer flex flex-col items-center gap-3">
+                                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                                    <FileText className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-slate-700">
+                                        {stnkFile ? stnkFile.name : "Foto STNK"}
+                                    </p>
+                                    <p className="text-xs text-slate-500 mt-1">
+                                        Format JPG, PNG (Max 5MB)
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -642,20 +678,15 @@ export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps
                         </div>
                     </div>
 
-                    <button
+                    <Button
+                        size="full"
+                        variant="primary"
                         onClick={handleSubmit}
-                        disabled={isSubmitting}
-                        className="w-full py-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white font-bold transition-colors shadow-lg hover:shadow-emerald-500/30 text-lg flex items-center justify-center gap-2 cursor-pointer"
+                        isLoading={isSubmitting}
+                        className="mt-4"
                     >
-                        {isSubmitting ? (
-                            <>
-                                <Loader2 className="w-6 h-6 animate-spin" />
-                                Memproses...
-                            </>
-                        ) : (
-                            "Pilih Metode Pembayaran"
-                        )}
-                    </button>
+                        Pilih Metode Pembayaran
+                    </Button>
                     <p className="text-center text-xs text-slate-400 mt-4">
                         Data Anda aman dan dienkripsi dengan standar keamanan tinggi.
                     </p>

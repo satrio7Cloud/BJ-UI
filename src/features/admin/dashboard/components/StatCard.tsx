@@ -6,6 +6,7 @@ type Props = {
   description?: string;
   icon?: LucideIcon;
   variant?: "success" | "warning" | "info" | "danger";
+  onClick?: () => void;
 };
 
 export default function StatCard({
@@ -14,6 +15,7 @@ export default function StatCard({
   description,
   icon: Icon,
   variant = "info",
+  onClick,
 }: Props) {
   const variantStyle = {
     success: "text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800",
@@ -28,10 +30,12 @@ export default function StatCard({
         rounded-xl
         p-3 sm:p-4 lg:px-6 lg:py-6
         shadow-sm dark:shadow-none
-        transition-colors
+        transition-all
         border
         ${variantStyle}
+        ${onClick ? "cursor-pointer hover:shadow-md hover:scale-[1.02]" : ""}
       `}
+      onClick={onClick}
     >
       <div className="flex items-start justify-between gap-2">
         <div>

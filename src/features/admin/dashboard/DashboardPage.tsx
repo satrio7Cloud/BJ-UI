@@ -2,38 +2,45 @@ import { AlertTriangle, CheckCircle, Clock, FileText, TrendingUp, Zap } from "lu
 import { useEffect, useState } from "react";
 import type { DashboardChartData, DashboardOrder, DashboardSummary } from "../../../api/dashboard";
 import { getDashboardChart, getDashboardOrders, getDashboardSummary } from "../../../api/dashboard";
+import { getKTLOrders, type OrderKTLResponse } from "../../../api/order";
 import HorizontalBarChart from "./components/HorizontalBarChart";
 import InvoiceTable from "./components/InvoiceTable";
 import LineChart from "./components/LineChart";
 import RecentOrdersTable from "./components/RecentOrdersTable";
+import RecentKtlTable from "./components/RecentKtlTable";
 import StatCard from "./components/StatCard";
 
 export default function Dashboard() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [orders, setOrders] = useState<DashboardOrder[]>([]);
+  const [ktlOrders, setKtlOrders] = useState<OrderKTLResponse[]>([]);
   const [chartData, setChartData] = useState<DashboardChartData[]>([]);
   const [isLoadingSummary, setIsLoadingSummary] = useState(true);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [isLoadingKtlOrders, setIsLoadingKtlOrders] = useState(true);
   const [isLoadingChart, setIsLoadingChart] = useState(true);
   const [errorSummary, setErrorSummary] = useState<string | null>(null);
   const [errorOrders, setErrorOrders] = useState<string | null>(null);
+  const [errorKtlOrders, setErrorKtlOrders] = useState<string | null>(null);
   const [errorChart, setErrorChart] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+
+  const fetchSummary = async () => {
+    try {
+      setIsLoadingSummary(true);
+      setErrorSummary(null);
+      const data = await getDashboardSummary();
+      setSummary(data);
+    } catch (err: any) {
+      console.error("Failed to fetch dashboard summary", err);
+      setErrorSummary(err.message || "Gagal mengambil ringkasan dashboard");
+    } finally {
+      setIsLoadingSummary(false);
+    }
+  };
 
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        setIsLoadingSummary(true);
-        setErrorSummary(null);
-        const data = await getDashboardSummary();
-        setSummary(data);
-      } catch (err: any) {
-        console.error("Failed to fetch dashboard summary", err);
-        setErrorSummary(err.message || "Gagal mengambil ringkasan dashboard");
-      } finally {
-        setIsLoadingSummary(false);
-      }
-    };
-    fetch();
+    fetchSummary();
   }, []);
 
   const fetchOrders = async () => {
@@ -50,9 +57,30 @@ export default function Dashboard() {
     }
   };
 
+  const fetchKtlOrders = async () => {
+    try {
+      setIsLoadingKtlOrders(true);
+      setErrorKtlOrders(null);
+      const data = await getKTLOrders();
+      setKtlOrders(data);
+    } catch (err: any) {
+      console.error("Failed to fetch ktl orders", err);
+      setErrorKtlOrders(err.message || "Gagal mengambil data pesanan KTL");
+    } finally {
+      setIsLoadingKtlOrders(false);
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
+    fetchKtlOrders();
   }, []);
+
+  const handleDashboardUpdate = () => {
+    fetchOrders();
+    fetchKtlOrders();
+    fetchSummary();
+  };
 
   useEffect(() => {
     const fetch = async () => {
@@ -157,25 +185,94 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* PENDING ACTIONS */}
-      {!isLoadingSummary && summary && (summary.pending_actions.unverified_documents > 0 || summary.pending_actions.stuck_orders > 0) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {summary.pending_actions.unverified_documents > 0 && (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800">
-              <FileText size={18} className="text-orange-600 dark:text-orange-400 shrink-0" />
-              <p className="text-sm text-orange-700 dark:text-orange-300">
-                <span className="font-bold">{summary.pending_actions.unverified_documents}</span> dokumen belum diverifikasi
-              </p>
-            </div>
-          )}
-          {summary.pending_actions.stuck_orders > 0 && (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-              <AlertTriangle size={18} className="text-red-600 dark:text-red-400 shrink-0" />
-              <p className="text-sm text-red-700 dark:text-red-300">
-                <span className="font-bold">{summary.pending_actions.stuck_orders}</span> order tertahan / stuck
-              </p>
-            </div>
-          )}
+      {/* KTL KPI CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+        {isLoadingSummary ? (
+          <>
+            <StatSkeleton /><StatSkeleton /><StatSkeleton />
+          </>
+        ) : (
+          <>
+            <StatCard
+              title="KTL Tertunda"
+              value={summary?.total_pending_ktls ?? 0}
+              description="Menunggu diproses"
+              variant="warning"
+              icon={Clock}
+              onClick={() => {
+                setFilterStatus("Pending");
+                document.getElementById("recent-ktl-section")?.scrollIntoView({ behavior: "smooth" });
+              }}
+            />
+            <StatCard
+              title="KTL Selesai"
+              value={summary?.total_completed_ktls ?? 0}
+              description="KTL berhasil dicetak"
+              variant="success"
+              icon={CheckCircle}
+              onClick={() => {
+                setFilterStatus("Completed");
+                document.getElementById("recent-ktl-section")?.scrollIntoView({ behavior: "smooth" });
+              }}
+            />
+            <StatCard
+              title="Pendapatan KTL"
+              value={`Rp ${(summary?.total_revenue_ktls ?? 0).toLocaleString("id-ID")}`}
+              description="Total jasa dari cetak KTL"
+              variant="info"
+              icon={TrendingUp}
+            />
+          </>
+        )}
+      </div>
+
+      {/* ACTION REQUIRED / ALERTS */}
+      {!isLoadingSummary && summary && (summary.pending_actions.unverified_documents > 0 || summary.pending_actions.stuck_orders > 0 || summary.pending_actions.stuck_ktls > 0) && (
+        <div className="space-y-3 mt-4">
+          <h3 className="text-sm font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
+            <AlertTriangle size={16} /> Butuh Perhatian Segera
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {summary.pending_actions.unverified_documents > 0 && (
+              <StatCard
+                title="Dokumen Belum Verifikasi"
+                value={summary.pending_actions.unverified_documents}
+                description="Lihat pesanan yang perlu diverifikasi"
+                variant="warning"
+                icon={FileText}
+                onClick={() => {
+                  setFilterStatus(filterStatus === "Pending" ? null : "Pending");
+                  document.getElementById("recent-orders-section")?.scrollIntoView({ behavior: "smooth" });
+                }}
+              />
+            )}
+            {summary.pending_actions.stuck_orders > 0 && (
+              <StatCard
+                title="Order Tertahan (Stuck)"
+                value={summary.pending_actions.stuck_orders}
+                description="Proses terhenti/bermasalah"
+                variant="danger"
+                icon={AlertTriangle}
+                onClick={() => {
+                  setFilterStatus(filterStatus === "Cancelled" ? null : "Cancelled");
+                  document.getElementById("recent-orders-section")?.scrollIntoView({ behavior: "smooth" });
+                }}
+              />
+            )}
+            {summary.pending_actions.stuck_ktls > 0 && (
+              <StatCard
+                title="KTL Tertahan"
+                value={summary.pending_actions.stuck_ktls}
+                description="Harap cek KTL bermasalah"
+                variant="danger"
+                icon={AlertTriangle}
+                onClick={() => {
+                  setFilterStatus(filterStatus === "Cancelled" ? null : "Cancelled");
+                  document.getElementById("recent-ktl-section")?.scrollIntoView({ behavior: "smooth" });
+                }}
+              />
+            )}
+          </div>
         </div>
       )}
 
@@ -204,7 +301,29 @@ export default function Dashboard() {
       </div>
 
       {/* RECENT ORDERS TABLE */}
-      <RecentOrdersTable orders={orders} isLoading={isLoadingOrders} onOrderUpdate={fetchOrders} />
+      <div id="recent-orders-section" className="scroll-mt-8">
+        <RecentOrdersTable 
+          orders={filterStatus ? orders.filter(o => o.status === filterStatus) : orders} 
+          isLoading={isLoadingOrders} 
+          onOrderUpdate={handleDashboardUpdate} 
+        />
+        {filterStatus && (
+          <div className="mt-2 text-right">
+             <button onClick={() => setFilterStatus(null)} className="text-sm text-blue-600 hover:underline">
+               Hapus Filter Tampilan
+             </button>
+          </div>
+        )}
+      </div>
+
+      {/* RECENT KTL TABLE */}
+      <div id="recent-ktl-section" className="scroll-mt-8 mt-6">
+        <RecentKtlTable 
+          orders={filterStatus ? ktlOrders.filter(o => o.status === filterStatus) : ktlOrders} 
+          isLoading={isLoadingKtlOrders} 
+          onOrderUpdate={handleDashboardUpdate} 
+        />
+      </div>
 
       {/* INVOICE TABLE */}
       <div className="pt-6 border-t border-slate-200 dark:border-slate-800 transition-colors">

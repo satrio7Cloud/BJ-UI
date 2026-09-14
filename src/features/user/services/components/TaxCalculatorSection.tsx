@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import Button from "../../../../shared/components/Button";
 
 export default function TaxCalculatorSection() {
     const navigate = useNavigate();
@@ -36,15 +37,18 @@ export default function TaxCalculatorSection() {
         isValidated: boolean;
     } | null>(null);
 
+    const [isCalculating, setIsCalculating] = useState(false);
+
     const handleCalculate = (e: React.FormEvent) => {
         e.preventDefault();
+        if (isCalculating) return;
+        setIsCalculating(true);
 
         // Validasi input
         const pkb = parseFloat(formData.pajakStnk.replace(/\D/g, "")) || 0;
         if (pkb <= 0) {
-            toast.error(
-                "Masukkan nilai harga pajak tahunan yang tertera di STNK Anda",
-            );
+            toast.error("Silakan masukkan nominal PKB (Pajak Kendaraan Bermotor) dari STNK Anda");
+            setIsCalculating(false);
             return;
         }
 
@@ -52,21 +56,20 @@ export default function TaxCalculatorSection() {
             !formData.nopol.trim() ||
             !/^[A-Z]{1,2}\s?[0-9]{1,4}\s?[A-Z]{1,3}$/i.test(formData.nopol.trim())
         ) {
-            toast.error(
-                "Format Nomor Polisi (Nopol) tidak valid. Contoh: B 1234 ABC",
-            );
+            toast.error("Format Nomor Polisi (Nopol) tidak valid. Contoh: B 1234 ABC");
+            setIsCalculating(false);
             return;
         }
 
         if (!formData.nik.trim() || formData.nik.trim().length !== 16) {
             toast.error("NIK / Nomor KTP harus 16 digit angka");
+            setIsCalculating(false);
             return;
         }
 
         if (!formData.noRangkaMesin.trim()) {
-            toast.error(
-                "Nomor Rangka / Nomor Mesin wajib diisi untuk validasi tambahan",
-            );
+            toast.error("Nomor Rangka / Nomor Mesin wajib diisi untuk validasi tambahan");
+            setIsCalculating(false);
             return;
         }
 
@@ -76,48 +79,51 @@ export default function TaxCalculatorSection() {
             yearInt < 1990 ||
             yearInt > new Date().getFullYear()
         ) {
-            toast.error(
-                `Tahun kendaraan harus antara 1990 dan ${new Date().getFullYear()}`,
-            );
+            toast.error(`Tahun kendaraan harus antara 1990 dan ${new Date().getFullYear()}`);
+            setIsCalculating(false);
             return;
         }
 
-        // Kalkulasi
-        // SWDKLLJ: Motor ~ Rp 35.000, Mobil ~ Rp 143.000
-        const swdkllj = formData.jenisKendaraan === "motor" ? 35000 : 153000;
+        // Simulasi loading/kalkulasi (1.5 detik) agar tidak terjadi spam hit
+        setTimeout(() => {
+            // Kalkulasi
+            // SWDKLLJ: Motor ~ Rp 35.000, Mobil ~ Rp 143.000
+            const swdkllj = formData.jenisKendaraan === "motor" ? 35000 : 153000;
 
-        // Estimasi Biaya Jasa DTerazz
-        let biayaJasa = 50000; // Pajak Tahunan
-        if (formData.tipeLayanan === "5tahunan") {
-            biayaJasa = 100000;
-        } else if (formData.tipeLayanan === "baliknama") {
-            biayaJasa = 130000;
-        } else if (formData.tipeLayanan === "mutasi") {
-            biayaJasa = 200000;
-        }
+            // Estimasi Biaya Jasa DTerazz
+            let biayaJasa = 50000; // Pajak Tahunan
+            if (formData.tipeLayanan === "5tahunan") {
+                biayaJasa = 100000;
+            } else if (formData.tipeLayanan === "baliknama") {
+                biayaJasa = 130000;
+            } else if (formData.tipeLayanan === "mutasi") {
+                biayaJasa = 200000;
+            }
 
-        // Biaya Penerbitan Plat/STNK Resmi (Khusus 5 Tahunan / Balik Nama)
-        let biayaAdmStnkPlat = 0;
-        if (
-            formData.tipeLayanan === "5tahunan" ||
-            formData.tipeLayanan === "baliknama" ||
-            formData.tipeLayanan === "mutasi"
-        ) {
-            biayaAdmStnkPlat = formData.jenisKendaraan === "motor" ? 185000 : 350000;
-        }
+            // Biaya Penerbitan Plat/STNK Resmi (Khusus 5 Tahunan / Balik Nama)
+            let biayaAdmStnkPlat = 0;
+            if (
+                formData.tipeLayanan === "5tahunan" ||
+                formData.tipeLayanan === "baliknama" ||
+                formData.tipeLayanan === "mutasi"
+            ) {
+                biayaAdmStnkPlat = formData.jenisKendaraan === "motor" ? 185000 : 350000;
+            }
 
-        const totalEstimasi = pkb + swdkllj + biayaJasa + biayaAdmStnkPlat;
+            const totalEstimasi = pkb + swdkllj + biayaJasa + biayaAdmStnkPlat;
 
-        setCalculatedResult({
-            pkb,
-            swdkllj,
-            biayaJasa,
-            biayaAdmStnkPlat,
-            totalEstimasi,
-            isValidated: true,
-        });
+            setCalculatedResult({
+                pkb,
+                swdkllj,
+                biayaJasa,
+                biayaAdmStnkPlat,
+                totalEstimasi,
+                isValidated: true,
+            });
 
-        toast.success("Berhasil dihitung! Yuk, cek estimasi biaya kendaraan Anda.");
+            setIsCalculating(false);
+            toast.success("Berhasil dihitung! Yuk, cek estimasi biaya kendaraan Anda.");
+        }, 1200);
     };
 
     const handleProceedToCheckout = () => {
@@ -403,6 +409,7 @@ export default function TaxCalculatorSection() {
                                         />
                                     </div>
                                     <div>
+                                        {/* bantu di buat 5 Digit terakhir No Rangka */}
                                         <label className="block text-xs font-semibold text-slate-600 mb-1.5">
                                             No. Rangka / No. Mesin *
                                         </label>
@@ -422,13 +429,16 @@ export default function TaxCalculatorSection() {
                                 </div>
                             </div>
 
-                            <button
+                            <Button
                                 type="submit"
-                                className="w-full py-4 bg-emerald-900 hover:bg-emerald-800 text-white font-extrabold rounded-2xl transition-all shadow-lg shadow-emerald-950/15 flex items-center justify-center gap-2 text-base cursor-pointer mt-4"
+                                variant="primary"
+                                size="full"
+                                isLoading={isCalculating}
+                                className="bg-emerald-900 hover:bg-emerald-800 text-lg mt-4"
                             >
                                 <Calculator className="w-5 h-5" />
                                 Hitung Estimasi Biaya Pajak
-                            </button>
+                            </Button>
                         </form>
                     </div>
 
@@ -518,13 +528,15 @@ export default function TaxCalculatorSection() {
                                         </p>
                                     </div>
 
-                                    <button
+                                    <Button
+                                        variant="secondary"
+                                        size="full"
                                         onClick={handleProceedToCheckout}
-                                        className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-2xl transition-all shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 text-base cursor-pointer"
+                                        className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20 text-lg"
                                     >
                                         <span>Lanjutkan Pemesanan Layanan</span>
                                         <ArrowRight className="w-5 h-5" />
-                                    </button>
+                                    </Button>
                                 </div>
                             ) : (
                                 <div className="py-12 text-center space-y-4">

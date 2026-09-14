@@ -14,6 +14,7 @@ import {
     User,
     Zap
 } from "lucide-react";
+import Button from "../../../shared/components/Button";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getServices, type ApiService } from "../../../api/services";
@@ -244,8 +245,8 @@ export default function ServicesPage() {
 
                             return (
                                 <div className="max-w-xl mx-auto pt-4">
-                                    <button 
-                                        onClick={() => navigate("/")} 
+                                    <button
+                                        onClick={() => navigate("/")}
                                         className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-emerald-600 transition-colors cursor-pointer"
                                     >
                                         <ArrowLeft className="w-4 h-4" />
@@ -406,16 +407,18 @@ export default function ServicesPage() {
                                                 * Harga belum termasuk biaya admin {(service.admin_fee || 0) > 0 ? `Rp ${(service.admin_fee).toLocaleString("id-ID")}` : ''} & cek fisik (jika ada)
                                             </p>
 
-                                            <button
+                                            <Button
+                                                variant="primary"
+                                                size="full"
                                                 onClick={() => handleCheckout(service)}
-                                                className="w-full py-3.5 px-4 rounded-xl bg-[#007A53] hover:bg-[#006846] text-white text-sm font-bold transition-all duration-200 flex items-center justify-between shadow-lg shadow-emerald-950/10 hover:shadow-emerald-950/20 group-hover:scale-[1.01] cursor-pointer"
+                                                className="bg-[#007A53] hover:bg-[#006846] justify-between shadow-emerald-950/10 hover:shadow-emerald-950/20 group-hover:scale-[1.01]"
                                             >
                                                 <div className="flex items-center gap-2">
                                                     <ShoppingCart className="w-4 h-4 text-emerald-200" />
                                                     <span>Pesan Sekarang</span>
                                                 </div>
                                                 <ArrowRight className="w-4 h-4 text-emerald-200 group-hover:translate-x-1 transition-transform" />
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 );
