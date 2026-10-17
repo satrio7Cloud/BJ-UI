@@ -45,3 +45,14 @@ export const sanitizeErrorMessage = (message: string): string => {
     }
     return message;
 };
+
+/**
+ * Mendapatkan header autentikasi secara umum untuk API requests
+ */
+export const getAuthHeaders = (): HeadersInit => {
+    const token = localStorage.getItem('adminToken');
+    return {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+};

@@ -13,28 +13,22 @@ import Services from "./sections/Service";
 import Testimonials from "./sections/Testimonial";
 
 export default function Home() {
-    const navigate = useNavigate();
-    return (
-        <>
-            <Header />
-            <main id="beranda" className="bg-transparent relative">
-                {/* HERO */}
-                <Hero />
-                {/* SIMULASI & CEK PAJAK KENDARAAN */}
-                <TaxCalculatorSection />
-                {/* LAYANAN */}
-                <Services />
-                <Excellence />
-                <HowItWorks />
-                <ServicePrice onOpenServices={() => navigate("/layanan")} />
-                {/* CETAK KTL STNK */}
-                <CetakKtlSection />
-                {/* TESTIMONIAL */}
-                <Testimonials />
-                {/* TENTANG KAMI */}
-                <About />
-                <Footer />
-            </main>
-        </>
-    );
+  const navigate = useNavigate();
+  return (
+    <>
+      <Header />
+      <main id="beranda" className="bg-transparent relative">
+        <Hero />
+        <TaxCalculatorSection />
+        <Services />
+        <Excellence />
+        <HowItWorks />
+        <ServicePrice onOpenServices={() => navigate("/layanan")} />
+        <CetakKtlSection />
+        <Testimonials />
+        <About />
+        <Footer />
+      </main>
+    </>
+  );
 }

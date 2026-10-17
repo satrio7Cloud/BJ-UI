@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './config';
+import { API_BASE_URL, getAuthHeaders } from './config';
 
 export interface CreateCustomerRequest {
   fullname: string;
@@ -8,13 +8,6 @@ export interface CreateCustomerRequest {
   nik: string;
 }
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('adminToken');
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-  };
-};
 
 export const createCustomer = async (data: CreateCustomerRequest): Promise<{ message: string; status: string; data?: { id: string } }> => {
   const response = await fetch(`${API_BASE_URL}/customers`, {

@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './config';
+import { API_BASE_URL, getAuthHeaders } from './config';
 
 export interface CustomerVehicle {
   id: string;
@@ -15,13 +15,6 @@ export interface CreateCustomerVehicleRequest {
   year: number;
 }
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('adminToken');
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-  };
-};
 
 export const getCustomerVehicles = async (): Promise<{ data: CustomerVehicle[]; status: string }> => {
   const response = await fetch(`${API_BASE_URL}/vehicles`, {

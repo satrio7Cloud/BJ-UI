@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './config';
+import { API_BASE_URL, getAuthHeaders } from './config';
 
 export interface DashboardSummary {
     total_pending_orders: number;
@@ -37,13 +37,6 @@ export interface DashboardChartData {
     revenue: number;
 }
 
-const getAuthHeaders = () => {
-    const token = localStorage.getItem('adminToken');
-    return {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
-};
 
 export const getDashboardSummary = async (): Promise<DashboardSummary> => {
     const res = await fetch(`${API_BASE_URL}/dashboard/summary`, {
@@ -54,13 +47,25 @@ export const getDashboardSummary = async (): Promise<DashboardSummary> => {
     return json.data;
 };
 
-export const getDashboardOrders = async (): Promise<DashboardOrder[]> => {
-    const res = await fetch(`${API_BASE_URL}/dashboard/orders`, {
+export interface DashboardOrdersResponse {
+    data: DashboardOrder[];
+    meta: {
+        page: number;
+        limit: number;
+        total_records: number;
+    };
+}
+
+export const getDashboardOrders = async (page = 1, limit = 20): Promise<DashboardOrdersResponse> => {
+    const res = await fetch(`${API_BASE_URL}/dashboard/orders?page=${page}&limit=${limit}`, {
         headers: getAuthHeaders(),
     });
     if (!res.ok) throw new Error('Failed to fetch dashboard orders');
     const json = await res.json();
-    return json.data;
+    return {
+        data: json.data || [],
+        meta: json.meta || { page: 1, limit: 20, total_records: 0 }
+    };
 };
 
 export const getDashboardChart = async (): Promise<DashboardChartData[]> => {

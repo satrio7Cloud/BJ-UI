@@ -1,697 +1,375 @@
-import { Car, FileText, Search, ShieldCheck, Truck, User } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useLocation } from "react-router-dom";
-import { createCustomer } from "../../../../api/customer";
-import { createCustomerVehicle } from "../../../../api/customerVehicle";
 import { createOrderApi, uploadCustomerDocument } from "../../../../api/order";
-import { type ApiService } from "../../../../api/services";
+import { getShippingRates, type ShippingRate } from "../../../../api/shipping";
 import { getModels, type VehicleModel } from "../../../../api/vehicle";
-import Button from "../../../../shared/components/Button";
+import { type CheckoutData, type CheckoutFormData } from "../types";
+import CheckoutSuccess from "./CheckoutSuccess";
+import CustomerDataCard from "./CustomerDataCard";
+import DocumentUploadCard from "./DocumentUploadCard";
+import OrderSummaryCard from "./OrderSummaryCard";
+import ShippingLogisticsCard from "./ShippingLogisticsCard";
+import TransferNoticeCard from "./TransferNoticeCard";
+import VehicleDataCard from "./VehicleDataCard";
 
 interface CheckoutFormProps {
-    checkoutData: {
-        service: ApiService;
-        pkg: "reguler" | "express";
-        price: number;
-    };
-    onBack: () => void;
+  checkoutData: CheckoutData;
+  onBack: () => void;
 }
 
-export default function CheckoutForm({ checkoutData, onBack }: CheckoutFormProps) {
-    const location = useLocation();
-    const prefill = (location.state as any)?.prefill;
-    const estimasiPajakTotal = prefill?.estimasiPajakTotal || 0;
+export default function CheckoutForm({
+  checkoutData,
+  onBack,
+}: CheckoutFormProps) {
+  const location = useLocation();
+  const prefill = (location.state as any)?.prefill;
+  const estimasiPajakTotal = prefill?.estimasiPajakTotal || 0;
 
-    const [formData, setFormData] = useState({
-        // Customer Data
-        fullname: "",
-        email: "",
-        phone_number: "",
-        address: "",
-        nik: prefill?.nik || "",
-        // Vehicle Data
-        model_id: "",
-        plate_number: prefill?.nopol || "",
-        year: prefill?.tahun || new Date().getFullYear().toString(),
-        // Order Logistics Data
-        pickup_method: "OJOL",
-        pickup_address: "",
-        return_method: "GRAB",
-        is_name_transfer_required: false,
-        notes: prefill?.noRangkaMesin ? `No. Rangka/Mesin: ${prefill.noRangkaMesin}` : "",
-        samsat_origin: "",
-        samsat_destination: "",
-    });
+  const [formData, setFormData] = useState<CheckoutFormData>({
+    // Customer Data
+    fullname: "",
+    email: "",
+    phone_number: "",
+    address: "",
+    postal_code: "",
+    nik: prefill?.nik || "",
+    // Vehicle Data
+    model_id: "",
+    plate_number: prefill?.nopol || "",
+    year: prefill?.tahun || new Date().getFullYear().toString(),
+    // Order Logistics Data
+    pickup_method: "OJOL",
+    pickup_courier: "",
+    pickup_address: "",
+    return_method: "EKSPEDISI",
+    is_name_transfer_required: false,
+    notes: prefill?.noRangkaMesin
+      ? `No. Rangka/Mesin: ${prefill.noRangkaMesin}`
+      : "",
+    samsat_origin: "",
+    samsat_destination: "",
+  });
 
-    const [models, setModels] = useState<VehicleModel[]>([]);
-    const [ktpFile, setKtpFile] = useState<File | null>(null);
-    const [stnkFile, setStnkFile] = useState<File | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
-    const [orderIdRef, setOrderIdRef] = useState<string | null>(null);
+  // Shipping state
+  const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
+  const [selectedCourierCompany, setSelectedCourierCompany] =
+    useState<string>("");
+  const [selectedRate, setSelectedRate] = useState<ShippingRate | null>(null);
+  const [isLoadingRates, setIsLoadingRates] = useState(false);
 
-    // Searchable dropdown state
-    const [modelSearch, setModelSearch] = useState("");
-    const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
-    const modelDropdownRef = useRef<HTMLDivElement>(null);
+  const [models, setModels] = useState<VehicleModel[]>([]);
+  const [ktpFile, setKtpFile] = useState<File | null>(null);
+  const [stnkFile, setStnkFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [orderIdRef, setOrderIdRef] = useState<string | null>(null);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (modelDropdownRef.current && !modelDropdownRef.current.contains(event.target as Node)) {
-                setIsModelDropdownOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    useEffect(() => {
-        const fetchModels = async () => {
-            try {
-                const response = await getModels();
-                setModels(response.data);
-            } catch (err) {
-                console.error("Gagal memuat model kendaraan:", err);
-            }
-        };
-        fetchModels();
-    }, []);
-
-    const adminFee = checkoutData.service.admin_fee || 0;
-    const serviceNameLower = checkoutData.service.service_name.toLowerCase();
-    const categoryLower = checkoutData.service.category.toLowerCase();
-
-    const isServiceInherentlyNameTransfer =
-        categoryLower === "mutasi kendaraan" ||
-        categoryLower === "balik nama";
-
-    const isPhysicalCheckRequired =
-        isServiceInherentlyNameTransfer ||
-        serviceNameLower.includes("5 tahunan") ||
-        serviceNameLower.includes("ganti plat") ||
-        formData.is_name_transfer_required;
-
-    const physicalCheckFee = isPhysicalCheckRequired ? (checkoutData.service.physical_check_fee || 0) : 0;
-    const totalDisplayPrice = checkoutData.price + adminFee + physicalCheckFee;
-
-    const handleSubmit = async () => {
-        // Validasi Form Keseluruhan
-        if (!formData.fullname.trim()) {
-            toast.error("Nama lengkap tidak boleh kosong.",);
-            return;
-        }
-        if (!/^[0-9]{10,14}$/.test(formData.phone_number)) {
-            toast.error("Nomor WhatsApp tidak valid. Harus berupa 10-14 digit angka.",);
-            return;
-        }
-        if (!/^\d{16}$/.test(formData.nik)) {
-            toast.error("NIK harus terdiri dari 16 digit angka.",);
-            return;
-        }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            toast.error("Format email tidak valid.",);
-            return;
-        }
-        if (!formData.address.trim()) {
-            toast.error("Alamat lengkap tidak boleh kosong.",);
-            return;
-        }
-        if (!formData.model_id) {
-            toast.error("Silakan pilih model kendaraan terlebih dahulu.",);
-            return;
-        }
-        if (!/^[A-Z]{1,2}\s[0-9]{1,4}\s[A-Z]{1,3}$/.test(formData.plate_number.trim())) {
-            toast.error("Format Plat Nomor (Nopol) tidak valid. Harap gunakan format yang benar beserta spasi, contoh: B 1234 ABC", {});
-            return;
-        }
-        const yearInt = parseInt(formData.year, 10);
-        if (isNaN(yearInt) || yearInt < 1900 || yearInt > new Date().getFullYear()) {
-            toast(`Tahun pembuatan tidak valid. Harap masukkan tahun antara 1900 dan ${new Date().getFullYear()}.`);
-            return;
-        }
-        if (formData.pickup_method !== "SENDIRI" || formData.return_method !== "AMBIL_SENDIRI") {
-            if (!formData.pickup_address.trim()) {
-                toast("Alamat penjemputan/pengembalian tidak boleh kosong karena Anda memilih kurir/ojol.");
-                return;
-            }
-        }
-
-        if (isServiceInherentlyNameTransfer || formData.is_name_transfer_required) {
-            if (!formData.samsat_origin.trim()) {
-                toast.error("Samsat Asal tidak boleh kosong.");
-                return;
-            }
-            if (!formData.samsat_destination.trim()) {
-                toast.error("Samsat Tujuan tidak boleh kosong.");
-                return;
-            }
-        }
-
-        try {
-            setIsSubmitting(true);
-
-            // 1. Create Customer
-            const customerRes = await createCustomer({
-                fullname: formData.fullname,
-                email: formData.email,
-                phone_number: formData.phone_number,
-                address: formData.address,
-                nik: formData.nik,
-            });
-            const customerId = customerRes.data?.id;
-            if (!customerId) throw new Error("Gagal mendapatkan ID Customer dari server");
-
-            // 2. Create Vehicle
-            const vehicleRes = await createCustomerVehicle({
-                customer_id: customerId,
-                model_id: formData.model_id,
-                plate_number: formData.plate_number,
-                year: parseInt(formData.year, 10),
-            });
-            const vehicleId = vehicleRes.data?.id;
-            if (!vehicleId) throw new Error("Gagal mendapatkan ID Kendaraan dari server");
-
-            // 3. Create Order
-            const orderRes = await createOrderApi({
-                customer_id: customerId,
-                vehicle_id: vehicleId,
-                service_id: checkoutData.service.id,
-                pickup_method: formData.pickup_method,
-                pickup_address: formData.pickup_address,
-                customer_tracking_number: "",
-                return_method: formData.return_method,
-                tax_amount: estimasiPajakTotal,
-                service_fee: checkoutData.service.service_fee,
-                admin_fee: adminFee,
-                physical_check_fee: physicalCheckFee,
-                delivery_fee: 0,
-                express_fee: checkoutData.pkg === "express" ? checkoutData.service.express_fee : 0,
-                service_level: checkoutData.pkg.toUpperCase(),
-                is_name_transfer_required: formData.is_name_transfer_required || isServiceInherentlyNameTransfer,
-                samsat_origin: (isServiceInherentlyNameTransfer || formData.is_name_transfer_required) ? formData.samsat_origin : undefined,
-                samsat_destination: (isServiceInherentlyNameTransfer || formData.is_name_transfer_required) ? formData.samsat_destination : undefined,
-                notes: formData.notes,
-            });
-            const orderId = orderRes.data?.id;
-            if (!orderId) throw new Error("Gagal membuat pesanan");
-
-            // 4. Upload Document
-            if (ktpFile) {
-                await uploadCustomerDocument(orderId, "KTP", ktpFile);
-            }
-            if (stnkFile) {
-                await uploadCustomerDocument(orderId, "STNK", stnkFile);
-            }
-
-            // 5. Show Success Screen
-            setOrderIdRef(orderId);
-            setIsSuccess(true);
-            window.scrollTo(0, 0);
-
-        } catch (error: any) {
-            console.error(error);
-            toast.error(error.message || "Terjadi kesalahan saat memproses pesanan.");
-        } finally {
-            setIsSubmitting(false);
-        }
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const response = await getModels();
+        setModels(response.data);
+      } catch (err) {
+        console.error("Gagal memuat model kendaraan:", err);
+      }
     };
+    fetchModels();
+  }, []);
 
-    if (isSuccess) {
-        return (
-            <div className="bg-white rounded-3xl p-8 md:p-12 border border-slate-200 shadow-sm max-w-2xl mx-auto text-center space-y-6">
-                <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <ShieldCheck className="w-10 h-10" />
-                </div>
-                <h2 className="text-3xl font-extrabold text-slate-800">Pesanan Berhasil Dibuats!</h2>
+  const adminFee = checkoutData.service.admin_fee || 0;
+  const serviceNameLower = checkoutData.service.service_name.toLowerCase();
+  const categoryLower = checkoutData.service.category.toLowerCase();
 
-                <p className="text-slate-600 text-lg leading-relaxed">
-                    Terima kasih telah mempercayakan pengurusan surat kendaraan Anda kepada DTerazz Biro Jasa.
-                </p>
+  const isServiceInherentlyNameTransfer =
+    categoryLower === "mutasi kendaraan" || categoryLower === "balik nama";
 
-                <div className="bg-amber-50 border border-amber-200 p-6 rounded-2xl text-left space-y-3">
-                    <h3 className="font-bold text-amber-900 text-lg">Langkah Selanjutnya:</h3>
-                    <ul className="list-disc pl-5 text-amber-800 space-y-2 text-sm">
-                        <li>Admin kami akan melakukan pengecekan dan verifikasi dokumen yang Anda lampirkan.</li>
-                        <li>Jika dokumen sudah lengkap dan sesuai, Admin akan membuatkan tagihan pembayaran (Invoice).</li>
-                        <li>Anda akan menerima pesan <b>WhatsApp</b> yang berisi Link Pembayaran resmi.</li>
-                    </ul>
-                </div>
+  const isPhysicalCheckRequired =
+    isServiceInherentlyNameTransfer ||
+    serviceNameLower.includes("5 tahunan") ||
+    serviceNameLower.includes("ganti plat") ||
+    formData.is_name_transfer_required;
 
-                {(formData.pickup_method === "OJOL" || formData.pickup_method === "GOSEND" || formData.pickup_method === "KURIR") && (
-                    <div className="bg-blue-50 border border-blue-200 p-6 rounded-2xl text-left space-y-3 mt-4">
-                        <h3 className="font-bold text-blue-900 text-lg flex items-center gap-2">
-                            <Truck className="w-5 h-5" />
-                            Khusus Penjemputan via Kurir / Ojol
-                        </h3>
-                        <p className="text-blue-800 text-sm">
-                            Karena Anda memilih metode penjemputan berkas via GoSend/GrabExpress/Kurir Eksternal, <b>mohon segera pesan kurir Anda</b> ke alamat kantor kami.
-                        </p>
-                        <p className="text-blue-800 text-sm">
-                            Setelah kurir dipesan, <b>kirimkan Link Live Tracking atau Nomor Resi</b> ke WhatsApp Admin kami agar kami bisa melacak kedatangan berkas Anda.
-                        </p>
-                        <a
-                            href={`https://wa.me/6285156419062?text=${encodeURIComponent(`Halo Admin, ini link tracking/resi untuk penjemputan berkas pesanan saya (ID: ${orderIdRef}).\nLink/Resi: `)}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-block mt-2 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg text-sm hover:bg-blue-700 transition-colors"
-                        >
-                            Kirim Resi ke WhatsApp Admin
-                        </a>
-                    </div>
-                )}
+  const physicalCheckFee = isPhysicalCheckRequired
+    ? checkoutData.service.physical_check_fee || 0
+    : 0;
 
-                <div className="text-xs text-slate-500 font-mono mt-4">
-                    ID Pesanan: {orderIdRef}
-                </div>
+  // Skenario A: Full Kurir (Antar-Jemput 2 Arah = 2x tarif kurir)
+  const deliveryFee = selectedRate ? selectedRate.price * 2 : 0;
+  const totalDisplayPrice =
+    checkoutData.price + adminFee + physicalCheckFee + deliveryFee;
 
-                <Button
-                    variant="primary"
-                    onClick={() => {
-                        setIsSuccess(false);
-                        onBack();
-                    }}
-                    className="mt-8 w-full sm:w-auto"
-                >
-                    Selesai & Kembali ke Layanan
-                </Button>
-            </div>
+  // Auto fetch shipping rates saat postal_code terisi 5 digit
+  useEffect(() => {
+    if (
+      formData.postal_code.trim().length === 5 &&
+      formData.return_method === "EKSPEDISI"
+    ) {
+      const fetchRates = async () => {
+        setIsLoadingRates(true);
+        try {
+          const res = await getShippingRates(formData.postal_code.trim());
+          if (res.data && res.data.length > 0) {
+            setShippingRates(res.data);
+            const initialCompany = res.data[0].courier_name;
+            setSelectedCourierCompany((prev) =>
+              prev && res.data.some((r) => r.courier_name === prev)
+                ? prev
+                : initialCompany,
+            );
+
+            setSelectedRate((prev) => {
+              if (
+                prev &&
+                res.data.some(
+                  (r) =>
+                    r.courier_name === prev.courier_name &&
+                    r.courier_service_name === prev.courier_service_name,
+                )
+              ) {
+                return prev;
+              }
+              return (
+                res.data.find((r) => r.courier_name === initialCompany) ||
+                res.data[0]
+              );
+            });
+            toast.success("Ongkir ekspedisi berhasil diperbarui!");
+          } else {
+            setShippingRates([]);
+            setSelectedRate(null);
+            setSelectedCourierCompany("");
+            toast.error("Tidak ada kurir yang menjangkau kode pos ini");
+          }
+        } catch (err: any) {
+          console.error("Gagal memuat ongkos kirim:", err);
+          setShippingRates([]);
+          setSelectedRate(null);
+          setSelectedCourierCompany("");
+          toast.error(err.message || "Gagal memuat tarif ongkir");
+        } finally {
+          setIsLoadingRates(false);
+        }
+      };
+      fetchRates();
+    } else if (formData.return_method !== "EKSPEDISI") {
+      setSelectedRate(null);
+      setSelectedCourierCompany("");
+    }
+  }, [formData.postal_code, formData.return_method]);
+
+  const handleSubmit = async () => {
+    // Validasi Form Keseluruhan
+    if (!formData.fullname.trim()) {
+      toast.error("Nama lengkap tidak boleh kosong.");
+      return;
+    }
+    if (!/^[0-9]{10,14}$/.test(formData.phone_number)) {
+      toast.error(
+        "Nomor WhatsApp tidak valid. Harus berupa 10-14 digit angka.",
+      );
+      return;
+    }
+    if (!/^\d{16}$/.test(formData.nik)) {
+      toast.error("NIK harus terdiri dari 16 digit angka.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      toast.error("Format email tidak valid.");
+      return;
+    }
+    if (!formData.address.trim()) {
+      toast.error("Alamat lengkap tidak boleh kosong.");
+      return;
+    }
+    if (!formData.model_id) {
+      toast.error("Silakan pilih model kendaraan terlebih dahulu.");
+      return;
+    }
+    if (
+      !/^[A-Z]{1,2}\s[0-9]{1,4}\s[A-Z]{1,3}$/.test(formData.plate_number.trim())
+    ) {
+      toast.error(
+        "Format Plat Nomor (Nopol) tidak valid. Harap gunakan format yang benar beserta spasi, contoh: B 1234 ABC",
+      );
+      return;
+    }
+    const yearInt = parseInt(formData.year, 10);
+    if (
+      isNaN(yearInt) ||
+      yearInt < 1900 ||
+      yearInt > new Date().getFullYear()
+    ) {
+      toast.error(
+        `Tahun pembuatan tidak valid. Harap masukkan tahun antara 1900 dan ${new Date().getFullYear()}.`,
+      );
+      return;
+    }
+    if (
+      formData.pickup_method !== "SENDIRI" ||
+      formData.return_method !== "AMBIL_SENDIRI"
+    ) {
+      if (!formData.pickup_address.trim()) {
+        toast.error(
+          "Alamat penjemputan/pengembalian tidak boleh kosong karena Anda memilih kurir/ojol.",
         );
+        return;
+      }
     }
 
+    if (formData.return_method === "EKSPEDISI") {
+      if (!formData.postal_code || formData.postal_code.trim().length !== 5) {
+        toast.error(
+          "Harap masukkan 5 digit Kode Pos Tujuan untuk pengiriman ekspedisi.",
+        );
+        return;
+      }
+      if (!selectedRate) {
+        toast.error("Harap pilih salah satu kurir ekspedisi yang tersedia.");
+        return;
+      }
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      // 1. Create Order All-in-One (Customer & Vehicle otomatis di-resolve / dibuat di Backend)
+      const orderRes = await createOrderApi({
+        fullname: formData.fullname,
+        email: formData.email,
+        phone_number: formData.phone_number,
+        address: formData.address,
+        nik: formData.nik,
+
+        model_id: formData.model_id,
+        plate_number: formData.plate_number,
+        year: parseInt(formData.year, 10),
+
+        service_id: checkoutData.service.id,
+        pickup_method: "KURIR_JEMPUT",
+        pickup_address: formData.pickup_address || formData.address,
+        return_method: selectedRate
+          ? `${selectedRate.courier_name} - ${selectedRate.courier_service_name}`
+          : "KURIR_KIRIM",
+        tax_amount: estimasiPajakTotal,
+        service_fee: checkoutData.service.service_fee,
+        admin_fee: adminFee,
+        physical_check_fee: physicalCheckFee,
+        delivery_fee: deliveryFee,
+        express_fee:
+          checkoutData.pkg === "express" ? checkoutData.service.express_fee : 0,
+        courier_name: selectedRate?.courier_name,
+        courier_service: selectedRate?.courier_service_name,
+        service_level: checkoutData.pkg.toUpperCase(),
+        is_name_transfer_required:
+          formData.is_name_transfer_required || isServiceInherentlyNameTransfer,
+        samsat_origin:
+          isServiceInherentlyNameTransfer || formData.is_name_transfer_required
+            ? formData.samsat_origin
+            : undefined,
+        samsat_destination:
+          isServiceInherentlyNameTransfer || formData.is_name_transfer_required
+            ? formData.samsat_destination
+            : undefined,
+        notes: formData.notes,
+      });
+
+      const orderId = orderRes.data?.id;
+      if (!orderId) throw new Error("Gagal membuat pesanan");
+
+      // Upload Documents
+      if (ktpFile) {
+        await uploadCustomerDocument(orderId, "KTP", ktpFile);
+      }
+      if (stnkFile) {
+        await uploadCustomerDocument(orderId, "STNK", stnkFile);
+      }
+
+      // Show Success Screen
+      setOrderIdRef(orderId);
+      setIsSuccess(true);
+      window.scrollTo(0, 0);
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Terjadi kesalahan saat memproses pesanan.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isSuccess) {
     return (
-        <div className="grid lg:grid-cols-3 gap-8">
-            {/* Left Column - Form */}
-            <div className="lg:col-span-2 space-y-6">
-
-                {isServiceInherentlyNameTransfer && (
-                    <div className="bg-amber-50/80 border border-amber-200 rounded-3xl p-6 space-y-4">
-                        <h3 className="text-base font-bold text-amber-900 flex items-center gap-2">
-                            <FileText className="w-5 h-5 text-amber-600" />
-                            Informasi & Syarat Layanan
-                        </h3>
-                        <p className="text-sm text-amber-800 leading-relaxed">
-                            {checkoutData.service.service_name.toLowerCase().includes("mutasi")
-                                ? "Mutasi motor/kendaraan adalah proses memindahkan data surat kendaraan (STNK dan BPKB) dari satu wilayah Samsat asal ke wilayah Samsat tujuan yang baru. Syarat utamanya meliputi BPKB asli dan fotokopi, STNK asli, KTP pemilik baru, serta kuitansi jual beli bermeterai."
-                                : "Balik nama kendaraan adalah proses pengalihan kepemilikan kendaraan bermotor dari pemilik pertama ke pemilik kedua dan seterusnya. Syarat utamanya meliputi BPKB asli dan fotokopi, STNK asli, KTP pemilik baru, serta kuitansi jual beli bermeterai."
-                            }
-                        </p>
-                        <div className="border-t border-amber-200 pt-3">
-                            <p className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-2">Syarat Dokumen Fisik:</p>
-                            <ul className="list-disc list-inside text-sm text-amber-800 space-y-1">
-                                <li>STNK asli beserta fotokopi</li>
-                                <li>BPKB asli beserta fotokopi</li>
-                                <li>KTP asli pemilik baru sesuai alamat tujuan</li>
-                            </ul>
-                        </div>
-                    </div>
-                )}
-
-                <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
-                    <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <User className="w-5 h-5 text-emerald-600" />
-                        Masukan Data Diri Anda
-                    </h2>
-                    <div className="grid sm:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Nama Lengkap</label>
-                            <input
-                                type="text"
-                                placeholder="Sesuai KTP"
-                                value={formData.fullname}
-                                onChange={(e) => setFormData({ ...formData, fullname: e.target.value })}
-                                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Nomor WhatsApp</label>
-                            <input
-                                type="number"
-                                placeholder="Contoh: 08123456789"
-                                value={formData.phone_number}
-                                onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Nomor Induk Kependudukan (NIK)</label>
-                            <input
-                                type="text"
-                                placeholder="16 Digit NIK KTP"
-                                value={formData.nik}
-                                disabled={!!prefill?.nik}
-                                onChange={(e) => {
-                                    // Hanya angka dan maksimal 16 digit
-                                    const value = e.target.value.replace(/\D/g, "").slice(0, 16);
-
-                                    setFormData({
-                                        ...formData,
-                                        nik: value,
-                                    });
-                                }}
-                                maxLength={16}
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                className={`w-full px-4 py-3 rounded-xl border border-slate-200 outline-none transition-all ${prefill?.nik ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500'}`}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
-                            <input
-                                type="email"
-                                placeholder="Contoh: budi@email.com"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white"
-                            />
-                        </div>
-                        <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Alamat Lengkap</label>
-                            <textarea
-                                placeholder="Sesuai KTP / Domisili saat ini"
-                                rows={2}
-                                value={formData.address}
-                                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
-                    <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <Car className="w-5 h-5 text-emerald-600" />
-                        Data Kendaraan Anda
-                    </h2>
-                    <div className="grid sm:grid-cols-2 gap-6">
-                        <div className="sm:col-span-2 relative" ref={modelDropdownRef}>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Pilih Model Kendaraan</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Search className="h-4 w-4 text-slate-400" />
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="Cari model kendaraan (contoh: Vario, Civic)..."
-                                    value={modelSearch}
-                                    onChange={(e) => {
-                                        setModelSearch(e.target.value);
-                                        setIsModelDropdownOpen(true);
-                                        if (formData.model_id) setFormData({ ...formData, model_id: "" });
-                                    }}
-                                    onFocus={() => setIsModelDropdownOpen(true)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white"
-                                />
-                            </div>
-
-                            {isModelDropdownOpen && (
-                                <div className="absolute z-10 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
-                                    {models
-                                        .filter(model => !prefill?.jenisKendaraan || model.vehicle_type === prefill.jenisKendaraan)
-                                        .filter(model => model.model_name.toLowerCase().includes(modelSearch.toLowerCase()) || model.brand_name?.toLowerCase().includes(modelSearch.toLowerCase()))
-                                        .map(model => (
-                                            <div
-                                                key={model.id}
-                                                className={`px-4 py-3 cursor-pointer hover:bg-emerald-50 transition-colors ${formData.model_id === model.id ? 'bg-emerald-50 text-emerald-700 font-medium' : 'text-slate-700'}`}
-                                                onClick={() => {
-                                                    setFormData({ ...formData, model_id: model.id });
-                                                    setModelSearch(`${model.brand_name ? model.brand_name + ' ' : ''}${model.model_name}`);
-                                                    setIsModelDropdownOpen(false);
-                                                }}
-                                            >
-                                                {model.brand_name ? `${model.brand_name} ` : ''}{model.model_name} <span className="text-xs text-slate-400 ml-1">({model.vehicle_type === 'mobil' ? 'Mobil' : 'Motor'})</span>
-                                            </div>
-                                        ))}
-                                    {models
-                                        .filter(model => !prefill?.jenisKendaraan || model.vehicle_type === prefill.jenisKendaraan)
-                                        .filter(model => model.model_name.toLowerCase().includes(modelSearch.toLowerCase()) || model.brand_name?.toLowerCase().includes(modelSearch.toLowerCase()))
-                                        .length === 0 && (
-                                            <div className="px-4 py-4 text-sm text-slate-500 text-center">
-                                                Model kendaraan tidak ditemukan
-                                            </div>
-                                        )}
-                                </div>
-                            )}
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Plat Nomor (Nopol)</label>
-                            <input
-                                type="text"
-                                placeholder="Contoh: B 1234 ABC"
-                                value={formData.plate_number}
-                                disabled={!!prefill?.nopol}
-                                onChange={(e) => {
-                                    const value = e.target.value
-                                        .toUpperCase()
-                                        .replace(/[^A-Z0-9 ]/g, "");
-
-                                    setFormData({
-                                        ...formData,
-                                        plate_number: value,
-                                    });
-                                }}
-                                maxLength={10}
-                                className={`w-full px-4 py-3 rounded-xl border border-slate-200 outline-none transition-all ${prefill?.nopol ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500'}`}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Tahun Pembuatan</label>
-                            <input
-                                type="number"
-                                placeholder="Contoh: 2018"
-                                value={formData.year}
-                                disabled={!!prefill?.tahun}
-                                onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                                className={`w-full px-4 py-3 rounded-xl border border-slate-200 outline-none transition-all ${prefill?.tahun ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500'}`}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
-                    <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <Truck className="w-5 h-5 text-emerald-600" />
-                        Pengiriman & Catatan
-                    </h2>
-                    <div className="grid sm:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Metode Penjemputan Berkas</label>
-                            <select
-                                value={formData.pickup_method}
-                                onChange={(e) => setFormData({ ...formData, pickup_method: e.target.value })}
-                                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white"
-                            >
-                                <option value="OJOL">Ojek Online (GoSend/GrabExpress)</option>
-                                <option value="SENDIRI">Antar Sendiri ke Kantor</option>
-                                <option value="KURIR">Kurir Internal</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Metode Pengembalian Berkas</label>
-                            <select
-                                value={formData.return_method}
-                                onChange={(e) => setFormData({ ...formData, return_method: e.target.value })}
-                                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white"
-                            >
-                                <option value="GRAB">GrabExpress / GoSend</option>
-                                <option value="AMBIL_SENDIRI">Ambil Sendiri di Kantor</option>
-                                <option value="KURIR">Kurir Internal</option>
-                            </select>
-                        </div>
-                        {!(formData.pickup_method === "SENDIRI" && formData.return_method === "AMBIL_SENDIRI") && (
-                            <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    {formData.pickup_method !== "SENDIRI" && formData.return_method !== "AMBIL_SENDIRI"
-                                        ? "Alamat Penjemputan & Pengembalian"
-                                        : formData.pickup_method !== "SENDIRI"
-                                            ? "Alamat Penjemputan Berkas"
-                                            : "Alamat Pengembalian Berkas"
-                                    }
-                                </label>
-                                <textarea
-                                    placeholder="Detail alamat lengkap Anda..."
-                                    rows={2}
-                                    value={formData.pickup_address}
-                                    onChange={(e) => setFormData({ ...formData, pickup_address: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white"
-                                />
-                            </div>
-                        )}
-                        <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Catatan Tambahan (Opsional)</label>
-                            <textarea
-                                placeholder="Contoh: Tolong diproses cepat ya mas..."
-                                rows={2}
-                                value={formData.notes}
-                                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white"
-                            />
-                        </div>
-                        <div className="sm:col-span-2 flex items-center gap-3 bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                            <input
-                                type="checkbox"
-                                id="nameTransfer"
-                                checked={formData.is_name_transfer_required || isServiceInherentlyNameTransfer}
-                                disabled={isServiceInherentlyNameTransfer}
-                                onChange={(e) => setFormData({ ...formData, is_name_transfer_required: e.target.checked })}
-                                className="w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 disabled:opacity-50"
-                            />
-                            <label htmlFor="nameTransfer" className={`text-sm font-semibold text-emerald-900 cursor-pointer ${isServiceInherentlyNameTransfer ? "opacity-50" : ""}`}>
-                                Perlu Mutasi / Balik Nama Kendaraan {isServiceInherentlyNameTransfer && "(Sudah Termasuk)"}
-                            </label>
-                        </div>
-                        {(isServiceInherentlyNameTransfer || formData.is_name_transfer_required) && (
-                            <div className="sm:col-span-2 grid sm:grid-cols-2 gap-4 mt-1 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-600 mb-1">Samsat Asal (Kota Asal Kendaraan)</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Contoh: SAMSAT Jakarta Timur"
-                                        value={formData.samsat_origin}
-                                        onChange={(e) => setFormData({ ...formData, samsat_origin: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-600 mb-1">Samsat Tujuan (Mutasi Ke)</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Contoh: SAMSAT Bandung Barat"
-                                        value={formData.samsat_destination}
-                                        onChange={(e) => setFormData({ ...formData, samsat_destination: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-sm"
-                                    />
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
-                    <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-emerald-600" />
-                        Upload Dokumen Pendukung
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* KTP Upload */}
-                        <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center hover:bg-slate-100 transition-colors">
-                            <input
-                                type="file"
-                                id="ktpUpload"
-                                className="hidden"
-                                onChange={(e) => {
-                                    if (e.target.files && e.target.files.length > 0) {
-                                        setKtpFile(e.target.files[0]);
-                                    }
-                                }}
-                            />
-                            <label htmlFor="ktpUpload" className="cursor-pointer flex flex-col items-center gap-3">
-                                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                                    <User className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-700">
-                                        {ktpFile ? ktpFile.name : "Foto KTP"}
-                                    </p>
-                                    <p className="text-xs text-slate-500 mt-1">
-                                        Format JPG, PNG (Max 5MB)
-                                    </p>
-                                </div>
-                            </label>
-                        </div>
-
-                        {/* STNK Upload */}
-                        <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center hover:bg-slate-100 transition-colors">
-                            <input
-                                type="file"
-                                id="stnkUpload"
-                                className="hidden"
-                                onChange={(e) => {
-                                    if (e.target.files && e.target.files.length > 0) {
-                                        setStnkFile(e.target.files[0]);
-                                    }
-                                }}
-                            />
-                            <label htmlFor="stnkUpload" className="cursor-pointer flex flex-col items-center gap-3">
-                                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                                    <FileText className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-700">
-                                        {stnkFile ? stnkFile.name : "Foto STNK"}
-                                    </p>
-                                    <p className="text-xs text-slate-500 mt-1">
-                                        Format JPG, PNG (Max 5MB)
-                                    </p>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Right Column - Summary */}
-            <div className="lg:col-span-1">
-                <div className="bg-slate-900 rounded-3xl p-6 shadow-xl sticky top-24 text-white">
-                    <h3 className="text-lg font-bold mb-4 border-b border-slate-700 pb-4">Ringkasan Pesanan Anda</h3>
-
-                    <div className="space-y-4 mb-6">
-                        <div>
-                            <p className="text-slate-400 text-sm mb-1">Layanan</p>
-                            <p className="font-semibold text-lg">{checkoutData.service.service_name}</p>
-                        </div>
-                        <div>
-                            <p className="text-slate-400 text-sm mb-1">Paket Pilihan</p>
-                            <div className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                                <ShieldCheck className="w-3 h-3" />
-                                {checkoutData.pkg}
-                            </div>
-                        </div>
-                        <div className="pt-4 border-t border-slate-700 space-y-2 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-slate-400">Biaya Layanan</span>
-                                <span className="font-semibold">Rp {(checkoutData.pkg === "reguler" ? checkoutData.service.service_fee : checkoutData.service.express_fee).toLocaleString("id-ID")}</span>
-                            </div>
-                            {estimasiPajakTotal > 0 && (
-                                <div className="flex justify-between">
-                                    <span className="text-slate-400">Estimasi Pajak (PKB + SWDKLLJ)</span>
-                                    <span className="font-semibold">Rp {estimasiPajakTotal.toLocaleString("id-ID")}</span>
-                                </div>
-                            )}
-                            <div className="flex justify-between">
-                                <span className="text-slate-400">Biaya Admin</span>
-                                <span className="font-semibold">Rp {adminFee.toLocaleString("id-ID")}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-slate-400">Biaya Cek Fisik</span>
-                                <span className={`font-semibold ${physicalCheckFee > 0 ? "text-emerald-400" : ""}`}>
-                                    Rp {physicalCheckFee.toLocaleString("id-ID")}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="pt-4 border-t border-slate-700">
-                            <p className="text-slate-400 text-sm mb-1">Total Biaya</p>
-                            <p className="text-3xl font-extrabold text-emerald-400">
-                                Rp {totalDisplayPrice.toLocaleString("id-ID")}
-                            </p>
-                        </div>
-                    </div>
-
-                    <Button
-                        size="full"
-                        variant="primary"
-                        onClick={handleSubmit}
-                        isLoading={isSubmitting}
-                        className="mt-4"
-                    >
-                        Pilih Metode Pembayaran
-                    </Button>
-                    <p className="text-center text-xs text-slate-400 mt-4">
-                        Data Anda aman dan dienkripsi dengan standar keamanan tinggi.
-                    </p>
-                </div>
-            </div>
-        </div>
+      <CheckoutSuccess
+        orderIdRef={orderIdRef}
+        pickupMethod={formData.pickup_method}
+        onBack={onBack}
+        onResetSuccess={() => setIsSuccess(false)}
+      />
     );
+  }
+
+  return (
+    <div className="grid lg:grid-cols-3 gap-8">
+      {/* Left Column - Form */}
+      <div className="lg:col-span-2 space-y-6">
+        {isServiceInherentlyNameTransfer && (
+          <TransferNoticeCard
+            serviceName={checkoutData.service.service_name}
+          />
+        )}
+
+        <CustomerDataCard
+          formData={formData}
+          setFormData={setFormData}
+          prefillNik={prefill?.nik}
+        />
+
+        <VehicleDataCard
+          formData={formData}
+          setFormData={setFormData}
+          models={models}
+          prefill={{
+            jenisKendaraan: prefill?.jenisKendaraan,
+            nopol: prefill?.nopol,
+            tahun: prefill?.tahun,
+          }}
+        />
+
+        <ShippingLogisticsCard
+          formData={formData}
+          setFormData={setFormData}
+          shippingRates={shippingRates}
+          selectedCourierCompany={selectedCourierCompany}
+          setSelectedCourierCompany={setSelectedCourierCompany}
+          selectedRate={selectedRate}
+          setSelectedRate={setSelectedRate}
+          isLoadingRates={isLoadingRates}
+          isServiceInherentlyNameTransfer={isServiceInherentlyNameTransfer}
+        />
+
+        <DocumentUploadCard
+          ktpFile={ktpFile}
+          setKtpFile={setKtpFile}
+          stnkFile={stnkFile}
+          setStnkFile={setStnkFile}
+        />
+      </div>
+
+      {/* Right Column - Order Summary */}
+      <div className="lg:col-span-1">
+        <OrderSummaryCard
+          checkoutData={checkoutData}
+          estimasiPajakTotal={estimasiPajakTotal}
+          adminFee={adminFee}
+          physicalCheckFee={physicalCheckFee}
+          deliveryFee={deliveryFee}
+          selectedRate={selectedRate}
+          isExpedisi={formData.return_method === "EKSPEDISI"}
+          totalDisplayPrice={totalDisplayPrice}
+          isSubmitting={isSubmitting}
+          onSubmit={handleSubmit}
+        />
+      </div>
+    </div>
+  );
 }

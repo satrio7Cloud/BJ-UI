@@ -8,6 +8,12 @@ interface Props {
     orders: DashboardOrder[];
     isLoading: boolean;
     onOrderUpdate?: () => void;
+    meta?: {
+        page: number;
+        limit: number;
+        total_records: number;
+    };
+    onPageChange?: (page: number) => void;
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -18,9 +24,11 @@ const statusConfig: Record<string, { label: string; className: string }> = {
     Cancelled: { label: 'Dibatalkan', className: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' },
 };
 
-export default function RecentOrdersTable({ orders, isLoading, onOrderUpdate }: Props) {
+export default function RecentOrdersTable({ orders, isLoading, onOrderUpdate, meta, onPageChange }: Props) {
     orders = orders || [];
     const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+
+    const totalPages = meta ? Math.ceil(meta.total_records / meta.limit) : 1;
 
     return (
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-transparent dark:border-slate-800 transition-colors">
@@ -138,6 +146,33 @@ export default function RecentOrdersTable({ orders, isLoading, onOrderUpdate }: 
                     </tbody>
                 </table>
             </div>
+
+            {/* Pagination Controls */}
+            {meta && onPageChange && totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 px-2">
+                    <div className="text-sm text-slate-500 dark:text-slate-400">
+                        Menampilkan {((meta.page - 1) * meta.limit) + 1} - {Math.min(meta.page * meta.limit, meta.total_records)} dari {meta.total_records} pesanan
+                    </div>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onPageChange(meta.page - 1)}
+                            disabled={meta.page <= 1 || isLoading}
+                        >
+                            Sebelumnya
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onPageChange(meta.page + 1)}
+                            disabled={meta.page >= totalPages || isLoading}
+                        >
+                            Selanjutnya
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

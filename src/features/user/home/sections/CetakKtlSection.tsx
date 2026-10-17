@@ -4,7 +4,6 @@ import {
     MapPin,
     Phone,
     ShieldCheck,
-    Store,
     Upload,
 } from "lucide-react";
 import { useState } from "react";
@@ -21,13 +20,10 @@ export default function CetakKtlSection() {
         phone_number: "",
         vehicle_type: "Motor",
         region: "Jakarta",
-        merchant_ref: "",
+
         fee: "",
     });
     const [buktiKtlFile, setBuktiKtlFile] = useState<File | null>(null);
-    const [buktiPembayaranFile, setBuktiPembayaranFile] = useState<File | null>(
-        null,
-    );
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -43,19 +39,13 @@ export default function CetakKtlSection() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (
-            !formData.customer_name ||
-            !formData.phone_number ||
-            !formData.merchant_ref
-        ) {
-            toast.error(
-                "Nama lengkap, nomor WhatsApp, dan nama merchant harus diisi",
-            );
+        if (!formData.customer_name || !formData.phone_number) {
+            toast.error("Nama lengkap dan nomor WhatsApp harus diisi");
             return;
         }
 
-        if (!buktiKtlFile || !buktiPembayaranFile) {
-            toast.error("Bukti KTL/STNK dan Bukti Pembayaran harus dilampirkan");
+        if (!buktiKtlFile) {
+            toast.error("Bukti KTL/STNK harus dilampirkan");
             return;
         }
 
@@ -64,7 +54,6 @@ export default function CetakKtlSection() {
             toast.error("Biaya seikhlasnya harus lebih dari Rp 0");
             return;
         }
-
         try {
             setIsLoading(true);
             const payload = new FormData();
@@ -73,19 +62,48 @@ export default function CetakKtlSection() {
             payload.append("vehicle_type", formData.vehicle_type);
             payload.append("region", formData.region);
             payload.append("fee", feeNum.toString());
-            payload.append("merchant_ref", formData.merchant_ref);
             payload.append("bukti_ktl", buktiKtlFile);
-            payload.append("bukti_pembayaran", buktiPembayaranFile);
 
-            await createOrderKTL(payload);
-            toast.success("Permintaan KTL berhasil dibuat!");
-            setIsSuccess(true);
+            const response = await createOrderKTL(payload);
+
+            if (response.data.snap_token) {
+                // Jangan matikan loading dulu, tunggu sampai popup ditutup atau selesai
+                (window as any).snap.pay(response.data.snap_token, {
+                    onSuccess: function (_result: any) {
+                        toast.success("Pembayaran berhasil! Sedang diproses oleh sistem.");
+                        setIsSuccess(true);
+                        setIsLoading(false);
+                    },
+                    onPending: function (_result: any) {
+                        toast.success(
+                            "Menunggu pembayaran Anda! Silakan selesaikan pembayaran.",
+                        );
+                        setIsSuccess(true);
+                        setIsLoading(false);
+                    },
+                    onError: function (_result: any) {
+                        toast.error("Pembayaran gagal!");
+                        setIsLoading(false);
+                    },
+                    onClose: function () {
+                        toast.error(
+                            "Anda menutup pop-up sebelum menyelesaikan pembayaran.",
+                        );
+                        setIsLoading(false);
+                    },
+                });
+            } else {
+                toast.success("Permintaan KTL berhasil dibuat!");
+                setIsSuccess(true);
+                setIsLoading(false);
+            }
         } catch (error: unknown) {
             const err = error as Error;
             toast.error(err.message || "Gagal membuat permintaan KTL");
-        } finally {
             setIsLoading(false);
         }
+        // Catatan: Tidak menggunakan finally { setIsLoading(false) } karena
+        // kita ingin tombol tetap loading/disabled selama popup Midtrans terbuka.
     };
 
     if (isSuccess) {
@@ -99,9 +117,8 @@ export default function CetakKtlSection() {
                         Permintaan Cetak KTL Berhasil!
                     </h2>
                     <p className="text-slate-600 dark:text-slate-400 mb-6 text-base">
-                        Terima kasih! Kami akan segera memproses cetak Kartu Tanda Lunas
-                        (KTL) STNK Anda. Mohon siapkan bukti pembayaran merchant jika
-                        diminta oleh tim kami.
+                        Terima kasih! Pembayaran Anda sedang diproses oleh sistem. Kami akan
+                        segera mencetak Kartu Tanda Lunas (KTL) STNK Anda.
                     </p>
                     <Button variant="primary" onClick={() => setIsSuccess(false)}>
                         Buat Permintaan Lainnya
@@ -260,48 +277,18 @@ export default function CetakKtlSection() {
                                         </select>
                                     </div>
 
-                                    <div className="sm:col-span-2">
-                                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
-                                            <Store size={14} className="text-slate-400" />
-                                            Merchant Bayar <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="merchant_ref"
-                                            value={formData.merchant_ref}
-                                            onChange={handleChange}
-                                            placeholder="Indomaret, Alfamart, dll"
-                                            className="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    <div className="sm:col-span-2 mt-2">
                                         <div>
                                             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
                                                 <Upload size={14} className="text-slate-400" />
-                                                Bukti KTL/STNK <span className="text-red-500">*</span>
+                                                Bukti KTL/STNK (Foto){" "}
+                                                <span className="text-red-500">*</span>
                                             </label>
                                             <input
                                                 type="file"
                                                 accept="image/*,.pdf"
                                                 onChange={(e) =>
                                                     setBuktiKtlFile(e.target.files?.[0] || null)
-                                                }
-                                                className="w-full px-3 py-2.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 dark:file:bg-emerald-900/30 dark:file:text-emerald-400"
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
-                                                <Upload size={14} className="text-slate-400" />
-                                                Bukti Pembayaran <span className="text-red-500">*</span>
-                                            </label>
-                                            <input
-                                                type="file"
-                                                accept="image/*,.pdf"
-                                                onChange={(e) =>
-                                                    setBuktiPembayaranFile(e.target.files?.[0] || null)
                                                 }
                                                 className="w-full px-3 py-2.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 dark:file:bg-emerald-900/30 dark:file:text-emerald-400"
                                                 required

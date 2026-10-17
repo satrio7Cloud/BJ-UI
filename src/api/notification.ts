@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './config';
+import { API_BASE_URL, getAuthHeaders } from './config';
 
 export interface NotificationItem {
   id: string;
@@ -10,13 +10,6 @@ export interface NotificationItem {
   created_at: string;
 }
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('adminToken');
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-};
 
 export const getUnreadNotifications = async (): Promise<NotificationItem[]> => {
   const res = await fetch(`${API_BASE_URL}/notifications/unread`, {

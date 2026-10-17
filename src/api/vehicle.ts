@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './config';
+import { API_BASE_URL, getAuthHeaders } from './config';
 
 export interface Brand {
     id: string;
@@ -16,18 +16,13 @@ export interface CreateModelRequest {
     vehicle_type: "mobil" | "motor";
 }
 
-const getAuthHeaders = () => {
-    const token = localStorage.getItem('adminToken');
-    return {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-    };
-};
 
 export const getBrands = async (): Promise<{ data: Brand[]; status: string }> => {
     const response = await fetch(`${API_BASE_URL}/brands`, {
         method: 'GET',
-        headers: getAuthHeaders(),
+        headers: {
+            'Content-Type': 'application/json',
+        },
     });
 
     if (!response.ok) {
@@ -79,7 +74,9 @@ export interface VehicleModel {
 export const getModels = async (): Promise<{ data: VehicleModel[]; status: string }> => {
     const response = await fetch(`${API_BASE_URL}/models`, {
         method: 'GET',
-        headers: getAuthHeaders(),
+        headers: {
+            'Content-Type': 'application/json',
+        },
     });
 
     if (!response.ok) {

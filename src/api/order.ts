@@ -1,9 +1,11 @@
-import { API_BASE_URL } from './config';
+import { API_BASE_URL, getAuthHeaders } from './config';
 
 export interface OrderStatusHistory {
     id?: string;
     status: string;
     notes: string;
+    courier_name?: string;
+    courier_service?: string;
     created_at: string;
 }
 
@@ -13,13 +15,6 @@ export interface OrderActivity {
     history: OrderStatusHistory[];
 }
 
-const getAuthHeaders = () => {
-    const token = localStorage.getItem('adminToken');
-    return {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
-};
 
 export const getOrderActivity = async (orderId: string): Promise<{ data: OrderActivity; status: string }> => {
     const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
@@ -97,22 +92,37 @@ export const getOrderDocuments = async (orderId: string): Promise<OrderDocument[
 };
 
 export interface CreateOrderRequest {
-    customer_id: string;
-    vehicle_id?: string; // Optional if not a vehicle service
+    // Customer Details (Bisa kirim ID atau data langsung)
+    customer_id?: string;
+    fullname?: string;
+    phone_number?: string;
+    nik?: string;
+    email?: string;
+    address?: string;
+
+    // Vehicle Details (Bisa kirim ID atau data langsung)
+    vehicle_id?: string;
+    plate_number?: string;
+    model_id?: string;
+    year?: number;
+
+    // Service & Logistics
     service_id: string;
-    pickup_method: string;
-    pickup_address: string;
-    customer_tracking_number: string;
-    return_method: string;
-    tax_amount: number;
-    service_fee: number;
-    admin_fee: number;
-    physical_check_fee: number;
-    delivery_fee: number;
-    express_fee: number;
-    service_level: string;
-    is_name_transfer_required: boolean;
-    notes: string;
+    pickup_method?: string;
+    pickup_address?: string;
+    customer_tracking_number?: string;
+    return_method?: string;
+    tax_amount?: number;
+    service_fee?: number;
+    admin_fee?: number;
+    physical_check_fee?: number;
+    delivery_fee?: number;
+    express_fee?: number;
+    courier_name?: string;
+    courier_service?: string;
+    service_level?: string;
+    is_name_transfer_required?: boolean;
+    notes?: string;
     samsat_origin?: string;
     samsat_destination?: string;
 }
@@ -165,9 +175,7 @@ export interface CreateOrderKTLRequest {
     vehicle_type: string;
     region: string;
     fee: number;
-    merchant_ref: string;
     bukti_ktl: File;
-    bukti_pembayaran: File;
 }
 
 export interface OrderKTLResponse {
@@ -177,9 +185,12 @@ export interface OrderKTLResponse {
     vehicle_type: string;
     region: string;
     fee: number;
-    merchant_ref: string;
+    merchant_ref?: string;
     status: string;
     order_date: string;
+    bukti_ktl_path?: string;
+    bukti_pembayaran_path?: string;
+    snap_token?: string;
 }
 
 export const getKTLOrders = async (): Promise<OrderKTLResponse[]> => {
@@ -251,3 +262,18 @@ export const verifyCustomerDocument = async (documentId: string, is_verified: bo
 
     return response.json();
 };
+
+export const getOrderKTLByID = async (id: string): Promise<{ data: OrderKTLResponse; status: string }> => {
+    const response = await fetch(`${API_BASE_URL}/orders/ktl/${id}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || 'Gagal mengambil detail KTL');
+    }
+
+    return response.json();
+};
+
