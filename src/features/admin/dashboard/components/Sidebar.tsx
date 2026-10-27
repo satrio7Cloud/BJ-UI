@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getAdminProfile, logoutAdmin } from "../../../../api/auth";
+import { getUnreadNotifications } from "../../../../api/notification";
 import NotificationDrawer from "./NotificationDrawer";
 
 interface SidebarProps {
@@ -17,6 +18,15 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const [profile, setProfile] = useState<{ email: string; role: string } | null>(null);
     const [pendingNotifs, setPendingNotifs] = useState(0);
     const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
+
+    const refreshNotifications = async () => {
+        try {
+            const notifs = await getUnreadNotifications();
+            setPendingNotifs(notifs.length);
+        } catch (err) {
+            console.error("Failed to fetch notifications", err);
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -32,16 +42,16 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 return;
             }
 
-            try {
-                const { getUnreadNotifications } = await import('../../../../api/notification');
-                const notifs = await getUnreadNotifications();
-                setPendingNotifs(notifs.length);
-            } catch (err) {
-                console.error("Failed to fetch notifications", err);
-            }
+            refreshNotifications();
         };
         fetchData();
     }, [navigate, location.pathname]);
+
+    useEffect(() => {
+        const handleUpdate = () => refreshNotifications();
+        window.addEventListener("orderUpdated", handleUpdate);
+        return () => window.removeEventListener("orderUpdated", handleUpdate);
+    }, []);
 
     const handleLogout = async () => {
         try {

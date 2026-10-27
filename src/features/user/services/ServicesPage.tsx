@@ -159,7 +159,7 @@ export default function ServicesPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-transparent relative">
+    <div className="flex-1 flex flex-col bg-transparent relative">
       <Header />
 
       <main className="flex-1 pt-4 pb-20 px-4 sm:px-6 lg:px-8">

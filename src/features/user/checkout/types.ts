@@ -1,5 +1,7 @@
 import { type ApiService } from "../../../api/services";
 
+export type ShippingScenario = "A" | "B" | "C" | "D";
+
 export interface CheckoutFormData {
   // Customer Data
   fullname: string;
@@ -13,10 +15,13 @@ export interface CheckoutFormData {
   plate_number: string;
   year: string;
   // Order Logistics Data
+  shipping_scenario: ShippingScenario;
   pickup_method: string;
   pickup_courier: string;
   pickup_address: string;
   return_method: string;
+  return_address?: string;
+  customer_tracking_number?: string;
   is_name_transfer_required: boolean;
   notes: string;
   samsat_origin: string;

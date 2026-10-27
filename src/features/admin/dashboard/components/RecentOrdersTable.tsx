@@ -1,4 +1,4 @@
-import { AlertCircle, ChevronDown, ChevronUp, Clock, RefreshCw, Zap } from 'lucide-react';
+import { AlertCircle, ChevronDown, ChevronUp, Clock, RefreshCw, Search, X, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { type DashboardOrder } from '../../../../api/dashboard';
 import Button from "../../../../shared/components/Button";
@@ -14,6 +14,8 @@ interface Props {
         total_records: number;
     };
     onPageChange?: (page: number) => void;
+    searchQuery?: string;
+    onSearchChange?: (query: string) => void;
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -24,7 +26,15 @@ const statusConfig: Record<string, { label: string; className: string }> = {
     Cancelled: { label: 'Dibatalkan', className: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' },
 };
 
-export default function RecentOrdersTable({ orders, isLoading, onOrderUpdate, meta, onPageChange }: Props) {
+export default function RecentOrdersTable({
+    orders,
+    isLoading,
+    onOrderUpdate,
+    meta,
+    onPageChange,
+    searchQuery,
+    onSearchChange,
+}: Props) {
     orders = orders || [];
     const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
@@ -32,10 +42,40 @@ export default function RecentOrdersTable({ orders, isLoading, onOrderUpdate, me
 
     return (
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-transparent dark:border-slate-800 transition-colors">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Pesanan Terkini</h2>
-                <div className="flex items-center gap-3">
-                    <span className="text-xs text-slate-400 dark:text-slate-500">{orders.length} pesanan</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2.5">
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Pesanan Terkini</h2>
+                    <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2.5 py-0.5 rounded-full font-medium">
+                        {orders.length} pesanan
+                    </span>
+                </div>
+
+                <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                    {onSearchChange && (
+                        <div className="relative flex-1 sm:w-72">
+                            <Search
+                                size={15}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+                            />
+                            <input
+                                type="text"
+                                value={searchQuery || ""}
+                                onChange={(e) => onSearchChange(e.target.value)}
+                                placeholder="Cari nama, plat, order ID, no HP..."
+                                className="w-full pl-9 pr-8 py-1.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => onSearchChange("")}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded cursor-pointer"
+                                    title="Hapus pencarian"
+                                >
+                                    <X size={13} />
+                                </button>
+                            )}
+                        </div>
+                    )}
+
                     {onOrderUpdate && (
                         <Button
                             variant="ghost"
@@ -43,6 +83,7 @@ export default function RecentOrdersTable({ orders, isLoading, onOrderUpdate, me
                             onClick={onOrderUpdate}
                             disabled={isLoading}
                             title="Refresh Data"
+                            className="shrink-0"
                         >
                             <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
                         </Button>
@@ -76,8 +117,27 @@ export default function RecentOrdersTable({ orders, isLoading, onOrderUpdate, me
                             <tr>
                                 <td colSpan={7} className="py-12 text-center">
                                     <div className="flex flex-col items-center gap-2 text-slate-400 dark:text-slate-500">
-                                        <AlertCircle size={32} />
-                                        <p className="text-sm">Belum ada pesanan</p>
+                                        {searchQuery ? (
+                                            <>
+                                                <Search size={32} className="text-slate-300 dark:text-slate-600" />
+                                                <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                                                    Tidak ada pesanan yang cocok dengan &quot;{searchQuery}&quot;
+                                                </p>
+                                                {onSearchChange && (
+                                                    <button
+                                                        onClick={() => onSearchChange("")}
+                                                        className="mt-1 text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer"
+                                                    >
+                                                        Reset Pencarian
+                                                    </button>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <AlertCircle size={32} />
+                                                <p className="text-sm">Belum ada pesanan</p>
+                                            </>
+                                        )}
                                     </div>
                                 </td>
                             </tr>
@@ -114,9 +174,23 @@ export default function RecentOrdersTable({ orders, isLoading, onOrderUpdate, me
                                                 Rp {(order.total_cost || 0).toLocaleString('id-ID')}
                                             </td>
                                             <td className="py-3.5 pr-4">
-                                                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${status.className}`}>
-                                                    {status.label}
-                                                </span>
+                                                <div className="flex flex-col gap-1 items-start">
+                                                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${status.className}`}>
+                                                        {status.label}
+                                                    </span>
+                                                    {order.unverified_docs && order.unverified_docs > 0 ? (
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300">
+                                                            <AlertCircle size={10} />
+                                                            {order.unverified_docs} Dokumen Belum Verif
+                                                        </span>
+                                                    ) : null}
+                                                    {order.status === 'Processing' && (Date.now() - new Date(order.order_date).getTime()) >= 3 * 24 * 60 * 60 * 1000 ? (
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300">
+                                                            <Clock size={10} />
+                                                            Stuck &ge; 3 Hari
+                                                        </span>
+                                                    ) : null}
+                                                </div>
                                             </td>
                                             <td className="py-3.5 text-right">
                                                 <Button

@@ -253,16 +253,24 @@ export default function OrderActivityLog({ orderId, onStatusChange }: Props) {
                             </span>
                         </div>
 
-                        <a
-                            href={`https://wa.me/?text=${encodeURIComponent(
-                                `Halo, dokumen pesanan Anda telah kami verifikasi.\n\nSilakan lanjutkan ke proses pembayaran dengan mengklik link berikut:\n${window.location.origin}/pay/${orderId}\n\nTerima kasih,\nDTerazz Biro Jasa`
-                            )}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors"
-                        >
-                            Kirim Link Bayar via WhatsApp
-                        </a>
+                        {(() => {
+                            const cleanPhone = (invoice.customer_phone || "").replace(/\D/g, "");
+                            const targetPhone = cleanPhone.startsWith("0") ? `62${cleanPhone.slice(1)}` : cleanPhone;
+                            const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(
+                                `Halo ${invoice.customer_name || ""}, dokumen pesanan Anda telah kami verifikasi dan disetujui.\n\nSilakan selesaikan pembayaran resmi Anda melalui link berikut:\n${window.location.origin}/pay/${orderId}\n\nTerima kasih.`
+                            )}`;
+
+                            return (
+                                <a
+                                    href={waUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors cursor-pointer"
+                                >
+                                    Kirim Link Bayar via WhatsApp
+                                </a>
+                            );
+                        })()}
                     </div>
                 )}
             </div>

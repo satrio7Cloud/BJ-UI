@@ -16,8 +16,9 @@ export interface CreateCustomerVehicleRequest {
 }
 
 
-export const getCustomerVehicles = async (): Promise<{ data: CustomerVehicle[]; status: string }> => {
-  const response = await fetch(`${API_BASE_URL}/vehicles`, {
+export const getCustomerVehicles = async (customerId?: string): Promise<{ data: CustomerVehicle[]; status: string }> => {
+  const query = customerId ? `?customer_id=${encodeURIComponent(customerId)}` : '';
+  const response = await fetch(`${API_BASE_URL}/vehicles${query}`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });

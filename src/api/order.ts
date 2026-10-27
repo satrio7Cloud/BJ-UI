@@ -110,6 +110,7 @@ export interface CreateOrderRequest {
     service_id: string;
     pickup_method?: string;
     pickup_address?: string;
+    return_address?: string;
     customer_tracking_number?: string;
     return_method?: string;
     tax_amount?: number;

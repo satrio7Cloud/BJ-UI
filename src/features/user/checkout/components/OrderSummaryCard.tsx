@@ -1,7 +1,7 @@
 import { ShieldCheck } from "lucide-react";
 import { type ShippingRate } from "../../../../api/shipping";
 import Button from "../../../../shared/components/Button";
-import { type CheckoutData } from "../types";
+import { type CheckoutData, type ShippingScenario } from "../types";
 
 interface OrderSummaryCardProps {
   checkoutData: CheckoutData;
@@ -10,6 +10,7 @@ interface OrderSummaryCardProps {
   physicalCheckFee: number;
   deliveryFee: number;
   selectedRate: ShippingRate | null;
+  shippingScenario: ShippingScenario;
   isExpedisi: boolean;
   totalDisplayPrice: number;
   isSubmitting: boolean;
@@ -23,6 +24,7 @@ export default function OrderSummaryCard({
   physicalCheckFee,
   deliveryFee,
   selectedRate,
+  shippingScenario,
   isExpedisi,
   totalDisplayPrice,
   isSubmitting,
@@ -85,10 +87,27 @@ export default function OrderSummaryCard({
               Rp {physicalCheckFee.toLocaleString("id-ID")}
             </span>
           </div>
-          {isExpedisi && (
+          {shippingScenario === "D" ? (
             <div className="flex justify-between items-center text-sm">
               <div className="flex flex-col">
                 <span className="text-slate-400">Ongkos Kirim</span>
+                <span className="text-[11px] text-emerald-400 font-medium">
+                  Walk-in Mandiri (Di Kantor)
+                </span>
+              </div>
+              <span className="font-semibold text-emerald-400">
+                Bebas Ongkir (Rp 0)
+              </span>
+            </div>
+          ) : isExpedisi ? (
+            <div className="flex justify-between items-center text-sm">
+              <div className="flex flex-col">
+                <span className="text-slate-400">
+                  Ongkos Kirim{" "}
+                  {shippingScenario === "A"
+                    ? "(Door-to-Door / 2 Arah)"
+                    : "(1 Arah Pulang)"}
+                </span>
                 {selectedRate && (
                   <span className="text-[11px] text-emerald-400 font-medium">
                     {selectedRate.courier_name} (
@@ -106,7 +125,7 @@ export default function OrderSummaryCard({
                   : "Pilih Kurir"}
               </span>
             </div>
-          )}
+          ) : null}
         </div>
 
         <div className="pt-4 border-t border-slate-700">
@@ -124,10 +143,10 @@ export default function OrderSummaryCard({
         isLoading={isSubmitting}
         className="mt-4"
       >
-        Pilih Metode Pembayaran
+        Ajukan Pesanan & Verifikasi Dokumen
       </Button>
-      <p className="text-center text-xs text-slate-400 mt-4">
-        Data Anda aman dan dienkripsi dengan standar keamanan tinggi.
+      <p className="text-center text-xs text-slate-400 mt-3 leading-relaxed">
+        Dokumen Anda akan diperiksa tim kami terlebih dahulu. Link pembayaran resmi akan dikirimkan setelah berkas diverifikasi.
       </p>
     </div>
   );

@@ -155,7 +155,7 @@ export default function ServiceTab() {
                 setServiceExpressFee("");
                 setServiceDescription("");
               }}
-              className="text-xs text-red-500 hover:text-red-700 font-semibold"
+              className="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer"
             >
               Batal Ubah
             </button>
@@ -392,16 +392,14 @@ export default function ServiceTab() {
                               <button
                                 onClick={() => handleEditService(service)}
                                 title="Ubah"
-                                className="p-1.5 text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
+                                className="p-1.5 text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors cursor-pointer"
                               >
                                 <Edit2 size={16} />
                               </button>
                               <button
-                                onClick={() =>
-                                  handleDeleteService(service.id)
-                                }
+                                onClick={() => handleDeleteService(service.id)}
                                 title="Hapus"
-                                className="p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                                className="p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors cursor-pointer"
                               >
                                 <Trash2 size={16} />
                               </button>

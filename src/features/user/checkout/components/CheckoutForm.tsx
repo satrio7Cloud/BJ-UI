@@ -5,12 +5,13 @@ import { createOrderApi, uploadCustomerDocument } from "../../../../api/order";
 import { getShippingRates, type ShippingRate } from "../../../../api/shipping";
 import { getModels, type VehicleModel } from "../../../../api/vehicle";
 import { type CheckoutData, type CheckoutFormData } from "../types";
+import { useCompanyProfile } from "../../../../shared/hooks/useCompanyProfile";
 import CheckoutSuccess from "./CheckoutSuccess";
 import CustomerDataCard from "./CustomerDataCard";
 import DocumentUploadCard from "./DocumentUploadCard";
 import OrderSummaryCard from "./OrderSummaryCard";
+import ServiceNoticeCard from "./ServiceNoticeCard";
 import ShippingLogisticsCard from "./ShippingLogisticsCard";
-import TransferNoticeCard from "./TransferNoticeCard";
 import VehicleDataCard from "./VehicleDataCard";
 
 interface CheckoutFormProps {
@@ -22,6 +23,7 @@ export default function CheckoutForm({
   checkoutData,
   onBack,
 }: CheckoutFormProps) {
+  const { profile: officeProfile } = useCompanyProfile();
   const location = useLocation();
   const prefill = (location.state as any)?.prefill;
   const estimasiPajakTotal = prefill?.estimasiPajakTotal || 0;
@@ -39,10 +41,13 @@ export default function CheckoutForm({
     plate_number: prefill?.nopol || "",
     year: prefill?.tahun || new Date().getFullYear().toString(),
     // Order Logistics Data
-    pickup_method: "OJOL",
+    shipping_scenario: "A",
+    pickup_method: "KURIR_JEMPUT",
     pickup_courier: "",
     pickup_address: "",
     return_method: "EKSPEDISI",
+    return_address: "",
+    customer_tracking_number: "",
     is_name_transfer_required: false,
     notes: prefill?.noRangkaMesin
       ? `No. Rangka/Mesin: ${prefill.noRangkaMesin}`
@@ -94,16 +99,30 @@ export default function CheckoutForm({
     ? checkoutData.service.physical_check_fee || 0
     : 0;
 
-  // Skenario A: Full Kurir (Antar-Jemput 2 Arah = 2x tarif kurir)
-  const deliveryFee = selectedRate ? selectedRate.price * 2 : 0;
+  // Ongkos Kirim dihitung berdasarkan skenario:
+  // - Skenario A: Full Kurir (Antar & Jemput 2 Arah = 2x tarif kurir)
+  // - Skenario B: Semi-Mandiri (Diantar Sendiri, Dikirim Kurir 1 Arah Pulang = 1x tarif kurir)
+  // - Skenario C: Kirim Eksternal (Pelanggan Kirim Sendiri, Dikirim Kurir 1 Arah Pulang = 1x tarif kurir)
+  // - Skenario D: Walk-in (Datang Sendiri, Ambil Sendiri = Rp 0 Bebas Ongkir)
+  const deliveryFee =
+    formData.shipping_scenario === "D"
+      ? 0
+      : formData.shipping_scenario === "A"
+      ? selectedRate
+        ? selectedRate.price * 2
+        : 0
+      : selectedRate
+      ? selectedRate.price
+      : 0;
+
   const totalDisplayPrice =
     checkoutData.price + adminFee + physicalCheckFee + deliveryFee;
 
-  // Auto fetch shipping rates saat postal_code terisi 5 digit
+  // Auto fetch shipping rates saat postal_code terisi 5 digit dan skenario bukan D
   useEffect(() => {
     if (
       formData.postal_code.trim().length === 5 &&
-      formData.return_method === "EKSPEDISI"
+      formData.shipping_scenario !== "D"
     ) {
       const fetchRates = async () => {
         setIsLoadingRates(true);
@@ -152,11 +171,11 @@ export default function CheckoutForm({
         }
       };
       fetchRates();
-    } else if (formData.return_method !== "EKSPEDISI") {
+    } else if (formData.shipping_scenario === "D") {
       setSelectedRate(null);
       setSelectedCourierCompany("");
     }
-  }, [formData.postal_code, formData.return_method]);
+  }, [formData.postal_code, formData.shipping_scenario]);
 
   const handleSubmit = async () => {
     // Validasi Form Keseluruhan
@@ -205,22 +224,20 @@ export default function CheckoutForm({
       );
       return;
     }
-    if (
-      formData.pickup_method !== "SENDIRI" ||
-      formData.return_method !== "AMBIL_SENDIRI"
-    ) {
+    // Validasi Pengiriman & Alamat Dokumen berdasarkan Skenario
+    if (formData.shipping_scenario === "A") {
       if (!formData.pickup_address.trim()) {
         toast.error(
-          "Alamat penjemputan/pengembalian tidak boleh kosong karena Anda memilih kurir/ojol.",
+          "Alamat penjemputan dokumen wajib diisi untuk metode Door-to-Door.",
         );
         return;
       }
     }
 
-    if (formData.return_method === "EKSPEDISI") {
+    if (formData.shipping_scenario !== "D") {
       if (!formData.postal_code || formData.postal_code.trim().length !== 5) {
         toast.error(
-          "Harap masukkan 5 digit Kode Pos Tujuan untuk pengiriman ekspedisi.",
+          "Harap masukkan 5 digit Kode Pos Tujuan untuk menghitung tarif ongkos kirim.",
         );
         return;
       }
@@ -232,6 +249,49 @@ export default function CheckoutForm({
 
     try {
       setIsSubmitting(true);
+
+      const pickupMethodMap = {
+        A: "KURIR_JEMPUT",
+        B: "ANTAR_SENDIRI",
+        C: "KIRIM_EKSTERNAL",
+        D: "SENDIRI",
+      };
+
+      const returnMethodMap = {
+        A: selectedRate
+          ? `${selectedRate.courier_name} - ${selectedRate.courier_service_name}`
+          : "KURIR_KIRIM",
+        B: selectedRate
+          ? `${selectedRate.courier_name} - ${selectedRate.courier_service_name}`
+          : "KURIR_KIRIM",
+        C: selectedRate
+          ? `${selectedRate.courier_name} - ${selectedRate.courier_service_name}`
+          : "KURIR_KIRIM",
+        D: "AMBIL_SENDIRI",
+      };
+
+      const scenarioLabels = {
+        A: "Metode: Door-to-Door (Jemput & Antar Pulang)",
+        B: "Metode: Office Drop-off (Titip ke Kantor, Dikirim Pulang)",
+        C: "Metode: Send-in Ekspedisi (Kirim Paket Luar, Dikirim Pulang)",
+        D: "Metode: Walk-in Mandiri (Datang & Ambil di Kantor)",
+      };
+
+      const effectiveReturnAddress =
+        formData.shipping_scenario === "D"
+          ? "AMBIL_LANGSUNG_DI_KANTOR"
+          : formData.return_address?.trim() ||
+            formData.pickup_address?.trim() ||
+            formData.address;
+
+      const effectivePickupAddress =
+        formData.shipping_scenario === "A"
+          ? formData.pickup_address || formData.address
+          : formData.shipping_scenario === "D"
+          ? "DATANG_LANGSUNG_KE_KANTOR"
+          : formData.shipping_scenario === "B"
+          ? "DIANTAR_SENDIRI_KE_KANTOR"
+          : "DIKIRIM_VIA_EKSPEDISI_EKSTERNAL";
 
       // 1. Create Order All-in-One (Customer & Vehicle otomatis di-resolve / dibuat di Backend)
       const orderRes = await createOrderApi({
@@ -246,11 +306,11 @@ export default function CheckoutForm({
         year: parseInt(formData.year, 10),
 
         service_id: checkoutData.service.id,
-        pickup_method: "KURIR_JEMPUT",
-        pickup_address: formData.pickup_address || formData.address,
-        return_method: selectedRate
-          ? `${selectedRate.courier_name} - ${selectedRate.courier_service_name}`
-          : "KURIR_KIRIM",
+        pickup_method: pickupMethodMap[formData.shipping_scenario],
+        pickup_address: effectivePickupAddress,
+        return_address: effectiveReturnAddress,
+        return_method: returnMethodMap[formData.shipping_scenario],
+        customer_tracking_number: formData.customer_tracking_number,
         tax_amount: estimasiPajakTotal,
         service_fee: checkoutData.service.service_fee,
         admin_fee: adminFee,
@@ -258,8 +318,10 @@ export default function CheckoutForm({
         delivery_fee: deliveryFee,
         express_fee:
           checkoutData.pkg === "express" ? checkoutData.service.express_fee : 0,
-        courier_name: selectedRate?.courier_name,
-        courier_service: selectedRate?.courier_service_name,
+        courier_name:
+          formData.shipping_scenario === "D" ? undefined : selectedRate?.courier_name,
+        courier_service:
+          formData.shipping_scenario === "D" ? undefined : selectedRate?.courier_service_name,
         service_level: checkoutData.pkg.toUpperCase(),
         is_name_transfer_required:
           formData.is_name_transfer_required || isServiceInherentlyNameTransfer,
@@ -271,7 +333,20 @@ export default function CheckoutForm({
           isServiceInherentlyNameTransfer || formData.is_name_transfer_required
             ? formData.samsat_destination
             : undefined,
-        notes: formData.notes,
+        notes: [
+          `[${scenarioLabels[formData.shipping_scenario]}]`,
+          formData.customer_tracking_number
+            ? `Resi Berkas Masuk: ${formData.customer_tracking_number}`
+            : "",
+          formData.notes,
+          formData.shipping_scenario !== "D" &&
+          formData.return_address &&
+          formData.return_address.trim() !== formData.pickup_address.trim()
+            ? `Alamat Pengembalian: ${formData.return_address.trim()}`
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" | "),
       });
 
       const orderId = orderRes.data?.id;
@@ -301,9 +376,10 @@ export default function CheckoutForm({
     return (
       <CheckoutSuccess
         orderIdRef={orderIdRef}
-        pickupMethod={formData.pickup_method}
+        shippingScenario={formData.shipping_scenario}
         onBack={onBack}
         onResetSuccess={() => setIsSuccess(false)}
+        officeProfile={officeProfile}
       />
     );
   }
@@ -312,11 +388,11 @@ export default function CheckoutForm({
     <div className="grid lg:grid-cols-3 gap-8">
       {/* Left Column - Form */}
       <div className="lg:col-span-2 space-y-6">
-        {isServiceInherentlyNameTransfer && (
-          <TransferNoticeCard
-            serviceName={checkoutData.service.service_name}
-          />
-        )}
+        <ServiceNoticeCard
+          serviceName={checkoutData.service.service_name}
+          category={checkoutData.service.category}
+          isNameTransferRequired={formData.is_name_transfer_required}
+        />
 
         <CustomerDataCard
           formData={formData}
@@ -345,6 +421,7 @@ export default function CheckoutForm({
           setSelectedRate={setSelectedRate}
           isLoadingRates={isLoadingRates}
           isServiceInherentlyNameTransfer={isServiceInherentlyNameTransfer}
+          officeProfile={officeProfile}
         />
 
         <DocumentUploadCard
@@ -364,7 +441,8 @@ export default function CheckoutForm({
           physicalCheckFee={physicalCheckFee}
           deliveryFee={deliveryFee}
           selectedRate={selectedRate}
-          isExpedisi={formData.return_method === "EKSPEDISI"}
+          shippingScenario={formData.shipping_scenario}
+          isExpedisi={formData.shipping_scenario !== "D"}
           totalDisplayPrice={totalDisplayPrice}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit}

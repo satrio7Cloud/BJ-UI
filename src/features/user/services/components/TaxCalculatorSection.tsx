@@ -22,7 +22,6 @@ export default function TaxCalculatorSection() {
     nopol: "",
     tahunKendaraan: new Date().getFullYear().toString(),
     nik: "",
-    noRangkaMesin: "",
     jenisKendaraan: "motor" as "motor" | "mobil",
     serviceId: "",
   });
@@ -79,14 +78,6 @@ export default function TaxCalculatorSection() {
 
     if (!formData.nik.trim() || formData.nik.trim().length !== 16) {
       toast.error("NIK / Nomor KTP harus 16 digit angka");
-      setIsCalculating(false);
-      return;
-    }
-
-    if (!formData.noRangkaMesin.trim()) {
-      toast.error(
-        "Nomor Rangka / Nomor Mesin wajib diisi untuk validasi tambahan",
-      );
       setIsCalculating(false);
       return;
     }
@@ -150,7 +141,6 @@ export default function TaxCalculatorSection() {
           nopol: formData.nopol.toUpperCase(),
           nik: formData.nik,
           tahun: formData.tahunKendaraan,
-          noRangkaMesin: formData.noRangkaMesin,
           pajakStnk: calculatedResult.pkb,
           jenisKendaraan: formData.jenisKendaraan,
           serviceId: formData.serviceId,
@@ -162,11 +152,7 @@ export default function TaxCalculatorSection() {
   };
 
   return (
-    <section id="cek-pajak" className="py-16 md:py-24 relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-200/30 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20"></div>
-
+    <section id="cek-pajak" className="py-16 md:py-24 relative overflow-hidden bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
@@ -477,45 +463,25 @@ export default function TaxCalculatorSection() {
                 </div>
               </div>
 
-              {/* Validasi Tambahan: NIK & No Rangka / Mesin */}
+              {/* Validasi Tambahan: NIK */}
               <div className="pt-2 border-t border-slate-100 space-y-4">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                      NIK / Nomor KTP Pemilik *
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={16}
-                      placeholder="16 Digit NIK KTP"
-                      value={formData.nik}
-                      onChange={(e) => {
-                        const val = e.target.value
-                          .replace(/\D/g, "")
-                          .slice(0, 16);
-                        setFormData({ ...formData, nik: val });
-                      }}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none text-slate-900 text-sm font-mono"
-                    />
-                  </div>
-                  <div>
-                    {/* bantu di buat 5 Digit terakhir No Rangka */}
-                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                      No. Rangka / No. Mesin *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Contoh: MH1JM1110KK12345"
-                      value={formData.noRangkaMesin}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          noRangkaMesin: e.target.value.toUpperCase(),
-                        })
-                      }
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none text-slate-900 text-sm uppercase font-mono"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    NIK / Nomor KTP Pemilik *
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={16}
+                    placeholder="16 Digit NIK KTP"
+                    value={formData.nik}
+                    onChange={(e) => {
+                      const val = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 16);
+                      setFormData({ ...formData, nik: val });
+                    }}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none text-slate-900 text-sm font-mono"
+                  />
                 </div>
               </div>
 
@@ -647,8 +613,8 @@ export default function TaxCalculatorSection() {
                       Belum Ada Kalkulasi
                     </h4>
                     <p className="text-xs text-slate-500 max-w-xs mx-auto mt-1">
-                      Isi form harga pajak STNK, Nopol, Tahun, NIK, dan Nomor
-                      Rangka di sebelah kiri untuk melihat rincian biaya.
+                      Isi form harga pajak STNK, Nopol, Tahun, dan NIK di
+                      sebelah kiri untuk melihat rincian biaya.
                     </p>
                   </div>
                 </div>

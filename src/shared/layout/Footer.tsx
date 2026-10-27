@@ -1,9 +1,11 @@
-import { ShieldCheck, MapPin, Phone, Calendar } from "lucide-react";
+import { Calendar, MapPin, Phone, ShieldCheck } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#052e16] text-emerald-100/70 pt-16 pb-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer className="bg-[#052e16] text-emerald-100/70 pt-16 pb-8 relative overflow-hidden">
+      {/* Top Border Glow Accent */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-emerald-400/40 to-transparent pointer-events-none" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 mb-12">
           {/* Brand */}
           <div className="lg:col-span-1">

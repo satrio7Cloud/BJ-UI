@@ -7,10 +7,7 @@ interface Props {
 
 export default function ServicePrice({ onOpenServices }: Props) {
     return (
-        <section className="relative py-24 overflow-hidden">
-            {/* Background Decor */}
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]"></div>
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-100 bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none"></div>
+        <section className="relative py-24 overflow-hidden bg-transparent">
 
             <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-700 text-sm font-bold tracking-wide uppercase mb-6 shadow-sm">

@@ -63,14 +63,9 @@ export default function MyVehiclesPage() {
 
     try {
       setIsLoading(true);
-      const res = await getCustomerVehicles();
+      const res = await getCustomerVehicles(customerId.trim());
       if (res?.data) {
-        // Filter vehicles matching the input customer_id
-        const filtered = res.data.filter(
-          (v) =>
-            v.customer_id.toLowerCase() === customerId.trim().toLowerCase(),
-        );
-        setMyVehicles(filtered);
+        setMyVehicles(res.data);
         setIsGarageOpen(true);
         toast.success("Garasi berhasil dibuka!");
       }
@@ -114,13 +109,9 @@ export default function MyVehiclesPage() {
       setVehicleYear("");
 
       // Refresh list
-      const updatedRes = await getCustomerVehicles();
+      const updatedRes = await getCustomerVehicles(customerId.trim());
       if (updatedRes?.data) {
-        const filtered = updatedRes.data.filter(
-          (v) =>
-            v.customer_id.toLowerCase() === customerId.trim().toLowerCase(),
-        );
-        setMyVehicles(filtered);
+        setMyVehicles(updatedRes.data);
       }
     } catch (err: any) {
       toast.error(err.message || "Gagal mendaftarkan kendaraan");

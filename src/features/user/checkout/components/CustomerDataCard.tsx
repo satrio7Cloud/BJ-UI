@@ -109,7 +109,7 @@ export default function CustomerDataCard({
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Kode Pos Tujuan *
+              Kode Pos*
             </label>
             <input
               type="text"

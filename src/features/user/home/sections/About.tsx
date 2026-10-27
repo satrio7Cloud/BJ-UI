@@ -2,9 +2,12 @@ import { CheckCircle2, ShieldCheck, Target, Zap } from "lucide-react";
 
 export default function About() {
   return (
-    <section id="tentang" className="py-24 relative overflow-hidden">
+    <section
+      id="tentang"
+      className="py-24 relative overflow-hidden bg-transparent"
+    >
       {/* Decorative Background Elements */}
-      <div className="absolute top-0 right-0 -mr-20 -mt-20  w-125 h-125 bg-emerald-50 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
+      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-112.5 h-112.5 bg-emerald-100/40 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
@@ -18,7 +21,7 @@ export default function About() {
 
               <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight tracking-tight">
                 Solusi Praktis Pengurusan <br className="hidden md:block" />
-                <span className="text-transparent bg-clip-text  bg-liniear-to-r from-emerald-600 to-teal-500">
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-600 to-teal-500">
                   Administrasi Kendaraan
                 </span>
               </h2>

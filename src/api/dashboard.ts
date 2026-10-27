@@ -29,6 +29,7 @@ export interface DashboardOrder {
     phone_number: string;
     plate_number: string;
     service_name: string;
+    unverified_docs?: number;
 }
 
 export interface DashboardChartData {
@@ -56,8 +57,16 @@ export interface DashboardOrdersResponse {
     };
 }
 
-export const getDashboardOrders = async (page = 1, limit = 20): Promise<DashboardOrdersResponse> => {
-    const res = await fetch(`${API_BASE_URL}/dashboard/orders?page=${page}&limit=${limit}`, {
+export const getDashboardOrders = async (
+    page = 1,
+    limit = 20,
+    status?: string
+): Promise<DashboardOrdersResponse> => {
+    let url = `${API_BASE_URL}/dashboard/orders?page=${page}&limit=${limit}`;
+    if (status) {
+        url += `&status=${encodeURIComponent(status)}`;
+    }
+    const res = await fetch(url, {
         headers: getAuthHeaders(),
     });
     if (!res.ok) throw new Error('Failed to fetch dashboard orders');

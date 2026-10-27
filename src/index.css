@@ -24,3 +24,9 @@ html {
      Hal ini karena semua utility class Tailwind menggunakan satuan 'rem'. */
     font-size: 78%;
 }
+
+html,
+body {
+    overflow-x: hidden;
+    max-width: 100%;
+}

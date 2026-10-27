@@ -37,6 +37,7 @@ export default function Dashboard() {
   const [errorKtlOrders, setErrorKtlOrders] = useState<string | null>(null);
   const [errorChart, setErrorChart] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchSummary = async () => {
     try {
@@ -56,11 +57,15 @@ export default function Dashboard() {
     fetchSummary();
   }, []);
 
-  const fetchOrders = async (page = ordersMeta.page) => {
+  const fetchOrders = async (page = 1, status = filterStatus) => {
     try {
       setIsLoadingOrders(true);
       setErrorOrders(null);
-      const response = await getDashboardOrders(page, ordersMeta.limit);
+      const response = await getDashboardOrders(
+        page,
+        ordersMeta.limit,
+        status || undefined,
+      );
       setOrders(response.data);
       setOrdersMeta(response.meta);
     } catch (err: any) {
@@ -86,15 +91,24 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(1, filterStatus);
+  }, [filterStatus]);
+
+  useEffect(() => {
     fetchKtlOrders();
   }, []);
 
   const handleDashboardUpdate = () => {
-    fetchOrders();
+    fetchOrders(ordersMeta.page, filterStatus);
     fetchKtlOrders();
     fetchSummary();
   };
+
+  useEffect(() => {
+    const handleOrderEvent = () => handleDashboardUpdate();
+    window.addEventListener("orderUpdated", handleOrderEvent);
+    return () => window.removeEventListener("orderUpdated", handleOrderEvent);
+  }, [ordersMeta.page, filterStatus]);
 
   useEffect(() => {
     const fetch = async () => {
@@ -225,7 +239,7 @@ export default function Dashboard() {
                 { label: "Cetak KTL", value: summary?.total_pending_ktls ?? 0 },
               ]}
               onClick={() => {
-                setFilterStatus("Pending");
+                setFilterStatus(filterStatus === "Pending" ? null : "Pending");
                 document
                   .getElementById("recent-orders-section")
                   ?.scrollIntoView({ behavior: "smooth" });
@@ -252,7 +266,9 @@ export default function Dashboard() {
                 },
               ]}
               onClick={() => {
-                setFilterStatus("Completed");
+                setFilterStatus(
+                  filterStatus === "Completed" ? null : "Completed",
+                );
                 document
                   .getElementById("recent-orders-section")
                   ?.scrollIntoView({ behavior: "smooth" });
@@ -260,61 +276,50 @@ export default function Dashboard() {
             />
 
             {/* 4. Butuh Perhatian (Alerts) */}
-            {summary &&
-            (summary.pending_actions.unverified_documents > 0 ||
-              summary.pending_actions.stuck_orders > 0 ||
-              summary.pending_actions.stuck_ktls > 0) ? (
+            {summary && (
               <ModernStatCard
                 title="Butuh Perhatian Segera"
                 value={
-                  summary.pending_actions.unverified_documents +
-                  summary.pending_actions.stuck_orders +
-                  summary.pending_actions.stuck_ktls
+                  (summary.pending_actions?.unverified_documents || 0) +
+                  (summary.pending_actions?.stuck_orders || 0) +
+                  (summary.pending_actions?.stuck_ktls || 0)
                 }
                 variant="danger"
                 icon={AlertTriangle}
                 breakdowns={[
                   {
                     label: "Belum Verif",
-                    value: summary.pending_actions.unverified_documents,
+                    value: summary.pending_actions?.unverified_documents || 0,
                     valueClass:
-                      summary.pending_actions.unverified_documents > 0
-                        ? "text-red-500"
+                      (summary.pending_actions?.unverified_documents || 0) > 0
+                        ? "text-red-500 font-bold"
                         : "",
                   },
                   {
                     label: "Order Stuck",
-                    value: summary.pending_actions.stuck_orders,
+                    value: summary.pending_actions?.stuck_orders || 0,
                     valueClass:
-                      summary.pending_actions.stuck_orders > 0
-                        ? "text-red-500"
+                      (summary.pending_actions?.stuck_orders || 0) > 0
+                        ? "text-red-500 font-bold"
                         : "",
                   },
                   {
                     label: "KTL Stuck",
-                    value: summary.pending_actions.stuck_ktls,
+                    value: summary.pending_actions?.stuck_ktls || 0,
                     valueClass:
-                      summary.pending_actions.stuck_ktls > 0
-                        ? "text-red-500"
+                      (summary.pending_actions?.stuck_ktls || 0) > 0
+                        ? "text-red-500 font-bold"
                         : "",
                   },
                 ]}
                 onClick={() => {
                   setFilterStatus(
-                    filterStatus === "Cancelled" ? null : "Cancelled",
+                    filterStatus === "Attention" ? null : "Attention",
                   );
                   document
                     .getElementById("recent-orders-section")
                     ?.scrollIntoView({ behavior: "smooth" });
                 }}
-              />
-            ) : (
-              <ModernStatCard
-                title="Status Sistem"
-                value="Aman Terkendali"
-                variant="success"
-                icon={CheckCircle}
-                description="Tidak ada order bermasalah"
               />
             )}
           </>
@@ -350,48 +355,162 @@ export default function Dashboard() {
       </div>
 
       {/* RECENT ORDERS TABLE */}
-      <div id="recent-orders-section" className="scroll-mt-8">
-        <RecentOrdersTable
-          orders={
-            filterStatus
-              ? orders.filter(
-                  (o) =>
-                    o.status === filterStatus &&
-                    !ktlOrders.some((ktl) => ktl.id === o.order_id),
-                )
-              : orders.filter(
-                  (o) => !ktlOrders.some((ktl) => ktl.id === o.order_id),
-                )
-          }
-          isLoading={isLoadingOrders}
-          onOrderUpdate={handleDashboardUpdate}
-          meta={ordersMeta}
-          onPageChange={(page) => fetchOrders(page)}
-        />
-        {filterStatus && (
-          <div className="mt-2 text-right">
-            <button
-              onClick={() => setFilterStatus(null)}
-              className="text-sm text-blue-600 hover:underline cursor-pointer"
-            >
-              Hapus Filter Tampilan
-            </button>
-          </div>
-        )}
-      </div>
+      {(() => {
+        const isOrderStuck = (order: DashboardOrder) => {
+          if (order.status !== "Processing") return false;
+          const orderTime = new Date(order.order_date).getTime();
+          const diffDays = (Date.now() - orderTime) / (1000 * 60 * 60 * 24);
+          return diffDays >= 3;
+        };
 
-      {/* RECENT KTL TABLE */}
-      <div id="recent-ktl-section" className="scroll-mt-8 mt-6">
-        <RecentKtlTable
-          orders={
-            filterStatus
-              ? ktlOrders.filter((o) => o.status === filterStatus)
-              : ktlOrders
+        const isKtlStuck = (ktl: OrderKTLResponse) => {
+          if (ktl.status !== "Processing") return false;
+          const orderTime = new Date(ktl.order_date).getTime();
+          const diffDays = (Date.now() - orderTime) / (1000 * 60 * 60 * 24);
+          return diffDays >= 3;
+        };
+
+        const query = searchQuery.toLowerCase().trim();
+
+        const displayedOrders = orders.filter((o) => {
+          if (ktlOrders.some((ktl) => ktl.id === o.order_id)) return false;
+          if (filterStatus) {
+            if (filterStatus === "Attention") {
+              const hasUnverified =
+                typeof o.unverified_docs === "number"
+                  ? o.unverified_docs > 0
+                  : false;
+              if (!hasUnverified && !isOrderStuck(o)) return false;
+            } else if (o.status !== filterStatus) {
+              return false;
+            }
           }
-          isLoading={isLoadingKtlOrders}
-          onOrderUpdate={handleDashboardUpdate}
-        />
-      </div>
+          if (query) {
+            const matchName = o.customer_name?.toLowerCase().includes(query);
+            const matchPlate = o.plate_number?.toLowerCase().includes(query);
+            const matchOrderId = o.order_id?.toLowerCase().includes(query);
+            const matchPhone = o.phone_number?.toLowerCase().includes(query);
+            const matchService = o.service_name?.toLowerCase().includes(query);
+            if (!matchName && !matchPlate && !matchOrderId && !matchPhone && !matchService) {
+              return false;
+            }
+          }
+          return true;
+        });
+
+        const displayedKtlOrders = ktlOrders.filter((ktl) => {
+          if (filterStatus) {
+            if (filterStatus === "Attention") {
+              if (!isKtlStuck(ktl)) return false;
+            } else if (ktl.status !== filterStatus) {
+              return false;
+            }
+          }
+          if (query) {
+            const matchName = ktl.customer_name?.toLowerCase().includes(query);
+            const matchPhone = ktl.phone_number?.toLowerCase().includes(query);
+            const matchId = ktl.id?.toLowerCase().includes(query);
+            const matchVehicle = ktl.vehicle_type?.toLowerCase().includes(query);
+            const matchRegion = ktl.region?.toLowerCase().includes(query);
+            const matchRef = ktl.merchant_ref?.toLowerCase().includes(query);
+            if (!matchName && !matchPhone && !matchId && !matchVehicle && !matchRegion && !matchRef) {
+              return false;
+            }
+          }
+          return true;
+        });
+
+        return (
+          <>
+            <div id="recent-orders-section" className="scroll-mt-8">
+              {(filterStatus || searchQuery) && (
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3 px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50">
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-blue-900 dark:text-blue-300">
+                    {filterStatus && (
+                      <span className="flex items-center gap-1.5">
+                        Filter Status:{" "}
+                        <b>
+                          {filterStatus === "Attention"
+                            ? "⚠️ Butuh Perhatian Segera"
+                            : filterStatus === "Pending"
+                            ? "⏳ Menunggu Diproses (Pending)"
+                            : filterStatus === "Processing"
+                            ? "🚀 Pengurusan Kilat (Processing)"
+                            : filterStatus === "Completed"
+                            ? "✅ Selesai (Completed)"
+                            : filterStatus}
+                        </b>
+                      </span>
+                    )}
+                    {searchQuery && (
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200">
+                        Pencarian: &quot;{searchQuery}&quot;
+                      </span>
+                    )}
+                    <span className="text-slate-500 font-normal">
+                      ({displayedOrders.length} pesanan jasa
+                      {displayedKtlOrders.length > 0
+                        ? `, ${displayedKtlOrders.length} KTL`
+                        : ""}
+                      )
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                      >
+                        Reset Cari
+                      </button>
+                    )}
+                    {filterStatus && (
+                      <button
+                        onClick={() => setFilterStatus(null)}
+                        className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                      >
+                        Hapus Filter Status
+                      </button>
+                    )}
+                    {filterStatus && searchQuery && (
+                      <button
+                        onClick={() => {
+                          setFilterStatus(null);
+                          setSearchQuery("");
+                        }}
+                        className="text-xs font-bold text-red-600 dark:text-red-400 hover:underline cursor-pointer"
+                      >
+                        Reset Semua
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <RecentOrdersTable
+                orders={displayedOrders}
+                isLoading={isLoadingOrders}
+                onOrderUpdate={handleDashboardUpdate}
+                meta={ordersMeta}
+                onPageChange={(page) => fetchOrders(page, filterStatus)}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+              />
+            </div>
+
+            {/* RECENT KTL TABLE */}
+            <div id="recent-ktl-section" className="scroll-mt-8 mt-6">
+              <RecentKtlTable
+                orders={displayedKtlOrders}
+                isLoading={isLoadingKtlOrders}
+                onOrderUpdate={handleDashboardUpdate}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+              />
+            </div>
+          </>
+        );
+      })()}
 
       {/* INVOICE TABLE */}
       <div className="pt-6 border-t border-slate-200 dark:border-slate-800 transition-colors">
