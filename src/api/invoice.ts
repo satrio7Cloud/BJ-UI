@@ -1,89 +1,54 @@
-import { API_BASE_URL } from './config';
+import { httpClient } from './httpClient';
 
 export interface InvoiceAPIResponse {
-  data: InvoiceData[];
-  meta: {
-    limit: number;
-    page: number;
-    total: number;
-  };
-  status: string;
+    data: InvoiceData[];
+    meta: {
+        limit: number;
+        page: number;
+        total: number;
+    };
+    status: string;
 }
 
 export interface InvoiceData {
-  invoice_id: string;
-  order_id: string;
-  invoice_number: string;
-  issue_date: string;
-  due_date: string;
-  payment_status: string;
-  payment_token: string | null;
-  payment_url: string | null;
-  qris_payload: string | null;
-  qris_amount: number | null;
-  customer_name: string;
-  customer_email: string;
-  customer_phone: string;
-  vehicle_plate: string;
-  service_name: string;
-  tax_amount: number;
-  service_fee: number;
-  admin_fee: number;
-  physical_check_fee: number;
-  delivery_fee: number;
-  express_fee: number;
-  total_cost: number;
+    invoice_id: string;
+    order_id: string;
+    invoice_number: string;
+    issue_date: string;
+    due_date: string;
+    payment_status: string;
+    payment_token: string | null;
+    payment_url: string | null;
+    qris_payload: string | null;
+    qris_amount: number | null;
+    customer_name: string;
+    customer_email: string;
+    customer_phone: string;
+    vehicle_plate: string;
+    service_name: string;
+    tax_amount: number;
+    service_fee: number;
+    admin_fee: number;
+    physical_check_fee: number;
+    delivery_fee: number;
+    express_fee: number;
+    total_cost: number;
 }
 
 export const getInvoices = async (page: number = 1, limit: number = 10): Promise<InvoiceAPIResponse> => {
-  const token = localStorage.getItem('adminToken');
-  const response = await fetch(`${API_BASE_URL}/invoices?page=${page}&limit=${limit}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || errorData.error || 'Failed to fetch invoices');
-  }
-
-  return response.json();
+    return httpClient.get<InvoiceAPIResponse>('/invoices', {
+        params: { page, limit },
+    });
 };
 
 export const getInvoiceByOrderId = async (orderId: string): Promise<{ data: InvoiceData; status: string }> => {
-  const response = await fetch(`${API_BASE_URL}/invoices/order/${orderId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || errorData.error || 'Failed to fetch invoice for this order');
-  }
-
-  return response.json();
+    return httpClient.get<{ data: InvoiceData; status: string }>(`/invoices/order/${orderId}`, {
+        skipAuth: true,
+    });
 };
 
 export const generateInvoiceApi = async (orderId: string): Promise<{ data: InvoiceData; status: string }> => {
-  const token = localStorage.getItem('adminToken');
-  const response = await fetch(`${API_BASE_URL}/invoices`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-    },
-    body: JSON.stringify({ order_id: orderId }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || errorData.error || 'Failed to generate invoice');
-  }
-
-  return response.json();
+    return httpClient.post<{ data: InvoiceData; status: string }>('/invoices', {
+        order_id: orderId,
+    });
 };

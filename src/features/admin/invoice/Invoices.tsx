@@ -8,9 +8,7 @@ import {
   FileX,
   MoreHorizontal,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getInvoices, type InvoiceData } from "../../../api/invoice";
 import Button from "../../../shared/components/Button";
 import {
   InvoiceDetailPanel,
@@ -18,86 +16,30 @@ import {
   InvoiceStatusBadge,
 } from "./components";
 import { StatCard } from "../dashboard/components/kpi";
+import { useInvoices } from "./hooks";
 
 export default function Invoices() {
   const navigate = useNavigate();
-  const [invoices, setInvoices] = useState<InvoiceData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState("all");
-  const [search, setSearch] = useState("");
-  const [openAction, setOpenAction] = useState<string | null>(null);
-  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(
-    null,
-  );
-
-  const fetchInvoices = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const res = await getInvoices(1, 100);
-      if (res?.data) {
-        setInvoices(res.data);
-      }
-    } catch (err: any) {
-      console.error("Failed to load invoices", err);
-      setError(err.message || "Gagal memuat data tagihan.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchInvoices();
-  }, []);
-
-  const actionRef = useRef<HTMLTableCellElement>(null);
-
-  const totalAmount = invoices.reduce(
-    (sum, inv) => sum + (inv.total_cost || 0),
-    0,
-  );
-  const paidAmount = invoices
-    .filter((inv) => inv.payment_status?.toLowerCase() === "paid")
-    .reduce((sum, inv) => sum + (inv.total_cost || 0), 0);
-  const pendingAmount = invoices
-    .filter((inv) => inv.payment_status?.toLowerCase() === "unpaid")
-    .reduce((sum, inv) => sum + (inv.total_cost || 0), 0);
-  const overdueAmount = invoices
-    .filter((inv) => inv.payment_status?.toLowerCase() === "overdue")
-    .reduce((sum, inv) => sum + (inv.total_cost || 0), 0);
-
-  const filteredInvoices = invoices.filter((invoice) => {
-    const matchSearch =
-      (invoice.invoice_number || "")
-        .toLowerCase()
-        .includes(search.toLowerCase()) ||
-      (invoice.customer_name || "")
-        .toLowerCase()
-        .includes(search.toLowerCase()) ||
-      (invoice.service_name || "").toLowerCase().includes(search.toLowerCase());
-
-    let mappedStatus =
-      invoice.payment_status?.toLowerCase() === "paid" ? "lunas" : "menunggu";
-    const matchStatus = status === "all" ? true : mappedStatus === status;
-
-    return matchSearch && matchStatus;
-  });
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        actionRef.current &&
-        !actionRef.current.contains(event.target as Node)
-      ) {
-        setOpenAction(null);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const {
+    invoices,
+    filteredInvoices,
+    isLoading,
+    error,
+    status,
+    setStatus,
+    search,
+    setSearch,
+    openAction,
+    setOpenAction,
+    selectedInvoice,
+    setSelectedInvoice,
+    actionRef,
+    totalAmount,
+    paidAmount,
+    pendingAmount,
+    overdueAmount,
+    refetch: fetchInvoices,
+  } = useInvoices();
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
@@ -159,7 +101,7 @@ export default function Invoices() {
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
             {error}
           </p>
-          <Button variant="admin" size="sm" onClick={fetchInvoices}>
+          <Button variant="admin" size="sm" onClick={() => fetchInvoices()}>
             Coba Lagi
           </Button>
         </div>

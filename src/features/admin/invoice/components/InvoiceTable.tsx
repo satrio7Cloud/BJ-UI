@@ -1,9 +1,8 @@
 import { MoreHorizontal } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getInvoices, type InvoiceData } from "../../../../api/invoice";
 import Button from "../../../../shared/components/Button";
 import Pagination from "../../../../shared/components/Pagination";
+import { useInvoiceTable } from "../hooks";
 import InvoiceStatusBadge from "./InvoiceStatusBadge";
 
 const formatRupiah = (value: number) => "Rp " + value.toLocaleString("id-ID");
@@ -11,33 +10,16 @@ const ITEMS_PER_PAGE = 5;
 
 export default function InvoiceTable() {
     const navigate = useNavigate();
-    const [invoices, setInvoices] = useState<InvoiceData[]>([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalItems, setTotalItems] = useState(0);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
-
-    const fetchInvoices = async () => {
-        try {
-            setIsLoading(true);
-            setError(null);
-            const res = await getInvoices(currentPage, ITEMS_PER_PAGE);
-            if (res?.data) {
-                setInvoices(res.data);
-                setTotalItems(res.meta.total);
-            }
-        } catch (err: any) {
-            console.error("Failed to fetch invoices", err);
-            setError(err.message || "Gagal memuat invoice");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchInvoices();
-    }, [currentPage]);
+    const {
+        invoices,
+        currentPage,
+        totalItems,
+        totalPages,
+        isLoading,
+        error,
+        setCurrentPage,
+        refetch: fetchInvoices,
+    } = useInvoiceTable(ITEMS_PER_PAGE);
 
     return (
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-transparent dark:border-slate-800 transition-colors">
@@ -76,7 +58,7 @@ export default function InvoiceTable() {
                                     <Button
                                         variant="admin"
                                         size="sm"
-                                        onClick={fetchInvoices}
+                                        onClick={() => fetchInvoices()}
                                         className="mt-2"
                                     >
                                         Coba Lagi
