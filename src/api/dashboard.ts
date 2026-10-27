@@ -1,4 +1,4 @@
-import { API_BASE_URL, getAuthHeaders } from './config';
+import { httpClient } from './httpClient';
 
 export interface DashboardSummary {
     total_pending_orders: number;
@@ -38,16 +38,6 @@ export interface DashboardChartData {
     revenue: number;
 }
 
-
-export const getDashboardSummary = async (): Promise<DashboardSummary> => {
-    const res = await fetch(`${API_BASE_URL}/dashboard/summary`, {
-        headers: getAuthHeaders(),
-    });
-    if (!res.ok) throw new Error('Failed to fetch dashboard summary');
-    const json = await res.json();
-    return json.data;
-};
-
 export interface DashboardOrdersResponse {
     data: DashboardOrder[];
     meta: {
@@ -57,31 +47,30 @@ export interface DashboardOrdersResponse {
     };
 }
 
+export const getDashboardSummary = async (): Promise<DashboardSummary> => {
+    const res = await httpClient.get<{ data: DashboardSummary }>('/dashboard/summary');
+    return res.data;
+};
+
 export const getDashboardOrders = async (
     page = 1,
     limit = 20,
     status?: string
 ): Promise<DashboardOrdersResponse> => {
-    let url = `${API_BASE_URL}/dashboard/orders?page=${page}&limit=${limit}`;
-    if (status) {
-        url += `&status=${encodeURIComponent(status)}`;
-    }
-    const res = await fetch(url, {
-        headers: getAuthHeaders(),
+    const res = await httpClient.get<DashboardOrdersResponse>('/dashboard/orders', {
+        params: {
+            page,
+            limit,
+            status: status || undefined,
+        },
     });
-    if (!res.ok) throw new Error('Failed to fetch dashboard orders');
-    const json = await res.json();
     return {
-        data: json.data || [],
-        meta: json.meta || { page: 1, limit: 20, total_records: 0 }
+        data: res.data || [],
+        meta: res.meta || { page: 1, limit, total_records: 0 },
     };
 };
 
 export const getDashboardChart = async (): Promise<DashboardChartData[]> => {
-    const res = await fetch(`${API_BASE_URL}/dashboard/chart`, {
-        headers: getAuthHeaders(),
-    });
-    if (!res.ok) throw new Error('Failed to fetch dashboard chart');
-    const json = await res.json();
-    return json.data;
+    const res = await httpClient.get<{ data: DashboardChartData[] }>('/dashboard/chart');
+    return res.data;
 };

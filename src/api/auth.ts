@@ -1,55 +1,47 @@
-import { API_BASE_URL } from './config';
+import { httpClient } from './httpClient';
 
-export const loginAdmin = async (email: string, password: string) => {
-  const response = await fetch(`${API_BASE_URL}/admins/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ email, password }),
-  });
+export interface AdminUser {
+    id: string;
+    email: string;
+    role: string;
+    [key: string]: any;
+}
 
-  if (!response.ok) {
-    // Attempt to extract error message from response
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || errorData.error || 'Login failed');
-  }
+export interface LoginResponse {
+    data?: {
+        token: string;
+        admin?: AdminUser;
+    };
+    token?: string;
+    message?: string;
+}
 
-  return response.json();
+export interface AdminProfileResponse {
+    data?: AdminUser;
+    message?: string;
+}
+
+/**
+ * Melakukan proses login admin ke endpoint /admins/login
+ */
+export const loginAdmin = async (email: string, password: string): Promise<LoginResponse> => {
+    return httpClient.post<LoginResponse>(
+        '/admins/login',
+        { email, password },
+        { skipAuth: true }
+    );
 };
 
-export const logoutAdmin = async () => {
-  const token = localStorage.getItem('adminToken');
-  const response = await fetch(`${API_BASE_URL}/admins/logout`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || errorData.error || 'Logout failed');
-  }
-
-  return response.json();
+/**
+ * Melakukan logout admin ke endpoint /admins/logout
+ */
+export const logoutAdmin = async (): Promise<{ message?: string }> => {
+    return httpClient.post<{ message?: string }>('/admins/logout');
 };
 
-export const getAdminProfile = async () => {
-  const token = localStorage.getItem('adminToken');
-  const response = await fetch(`${API_BASE_URL}/admins/me`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || errorData.error || 'Failed to fetch profile');
-  }
-
-  return response.json();
+/**
+ * Mengambil profil admin yang sedang aktif dari endpoint /admins/me
+ */
+export const getAdminProfile = async (): Promise<AdminProfileResponse> => {
+    return httpClient.get<AdminProfileResponse>('/admins/me');
 };

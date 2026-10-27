@@ -1,13 +1,9 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-/**
- * Fetch wrapper dengan penanganan otomatis untuk Server Down / Unreachable
- */
 export const apiFetch = async (url: string, options: RequestInit = {}, retries = 2): Promise<Response> => {
     for (let i = 0; i <= retries; i++) {
         try {
             const response = await fetch(url, options);
-            // Jika server memberikan error 502 (Bad Gateway), 503 (Service Unavailable), atau 504 (Gateway Timeout)
             if (response.status === 502 || response.status === 503 || response.status === 504) {
                 if (i < retries) {
                     await new Promise((res) => setTimeout(res, 1000 * (i + 1)));
@@ -16,7 +12,6 @@ export const apiFetch = async (url: string, options: RequestInit = {}, retries =
             }
             return response;
         } catch (err: any) {
-            // TypeError: Failed to fetch (Server backend mati/down)
             if (i < retries) {
                 await new Promise((res) => setTimeout(res, 1000 * (i + 1)));
                 continue;
@@ -27,9 +22,6 @@ export const apiFetch = async (url: string, options: RequestInit = {}, retries =
     throw new Error('Layanan backend sedang tidak dapat dijangkau. Silakan periksa koneksi atau coba beberapa saat lagi.');
 };
 
-/**
- * Helper untuk menyaring pesan error mentah dari backend agar ramah pengguna
- */
 export const sanitizeErrorMessage = (message: string): string => {
     if (!message) return 'Terjadi kesalahan pada server.';
     const msg = message.toLowerCase();
@@ -45,9 +37,6 @@ export const sanitizeErrorMessage = (message: string): string => {
     return message;
 };
 
-/**
- * Mendapatkan header autentikasi secara umum untuk API requests
- */
 export const getAuthHeaders = (): HeadersInit => {
     const token = localStorage.getItem('adminToken');
     return {

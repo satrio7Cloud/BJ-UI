@@ -12,16 +12,16 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { API_BASE_URL } from "../../../../api/config";
-import type { NotificationItem } from "../../../../api/notification";
+import { API_BASE_URL } from "../../../../../api/config";
+import type { NotificationItem } from "../../../../../api/notification";
 import {
   getOrderKTLByID,
   updateKtlStatus,
   type OrderKTLResponse,
-} from "../../../../api/order";
-import Button from "../../../../shared/components/Button";
-import Modal from "../../../../shared/components/Modal";
-import OrderActivityLog from "./OrderActivityLog";
+} from "../../../../../api/order";
+import Button from "../../../../../shared/components/Button";
+import Modal from "../../../../../shared/components/Modal";
+import OrderActivityLog from "../orders/OrderActivityLog";
 
 interface NotificationActionModalProps {
   isOpen: boolean;

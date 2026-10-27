@@ -12,10 +12,12 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getInvoices, type InvoiceData } from "../../../api/invoice";
 import Button from "../../../shared/components/Button";
-import InvoiceDetailPanel from "../dashboard/components/InvoiceDetailPanel";
-import InvoiceFilter from "../dashboard/components/InvoiceFilter";
-import InvoiceStatusBadge from "../dashboard/components/InvoiceStatusBadge";
-import StatCard from "../dashboard/components/StatCard";
+import {
+  InvoiceDetailPanel,
+  InvoiceFilter,
+  InvoiceStatusBadge,
+} from "./components";
+import { StatCard } from "../dashboard/components/kpi";
 
 export default function Invoices() {
   const navigate = useNavigate();

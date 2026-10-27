@@ -6,7 +6,7 @@ import {
   getUnreadNotifications,
   markNotificationAsRead,
   type NotificationItem,
-} from "../../../../api/notification";
+} from "../../../../../api/notification";
 import NotificationActionModal from "./NotificationActionModal";
 
 interface NotificationDrawerProps {

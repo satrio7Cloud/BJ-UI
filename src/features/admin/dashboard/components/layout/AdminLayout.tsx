@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Menu } from "lucide-react";
-import Button from "../../../../shared/components/Button";
+import Button from "../../../../../shared/components/Button";
 import Sidebar from "./Sidebar";
 
 export default function AdminLayout() {

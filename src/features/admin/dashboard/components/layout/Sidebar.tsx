@@ -3,8 +3,8 @@ import { Bell, ChevronLeft, ChevronRight, Database, FileText, LayoutDashboard, L
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { getAdminProfile, logoutAdmin } from "../../../../api/auth";
-import { getUnreadNotifications } from "../../../../api/notification";
+import { getAdminProfile, logoutAdmin } from "../../../../../api/auth";
+import { getUnreadNotifications } from "../../../../../api/notification";
 import NotificationDrawer from "./NotificationDrawer";
 
 interface SidebarProps {

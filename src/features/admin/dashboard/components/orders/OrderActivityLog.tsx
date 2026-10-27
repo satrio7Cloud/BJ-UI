@@ -1,9 +1,9 @@
 import { AlertCircle, CheckCircle2, Clock, ExternalLink, Image as ImageIcon, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { generateInvoiceApi, getInvoiceByOrderId, type InvoiceData } from "../../../../api/invoice";
-import { getOrderActivity, getOrderDocuments, updateOrderStatus, verifyCustomerDocument, type OrderActivity, type OrderDocument } from "../../../../api/order";
-import Button from "../../../../shared/components/Button";
+import { generateInvoiceApi, getInvoiceByOrderId, type InvoiceData } from "../../../../../api/invoice";
+import { getOrderActivity, getOrderDocuments, updateOrderStatus, verifyCustomerDocument, type OrderActivity, type OrderDocument } from "../../../../../api/order";
+import Button from "../../../../../shared/components/Button";
 
 interface Props {
     orderId: string;

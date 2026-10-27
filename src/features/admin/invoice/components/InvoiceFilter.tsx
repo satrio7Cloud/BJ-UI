@@ -1,4 +1,4 @@
-import { Search, Filter } from "lucide-react";
+import { Filter, Search } from "lucide-react";
 
 type Props = {
   search: string;
@@ -38,10 +38,18 @@ export default function InvoiceFilter({
           onChange={(e) => onStatusChange(e.target.value)}
           className="bg-transparent outline-none text-sm cursor-pointer text-slate-900 dark:text-white"
         >
-          <option value="all" className="dark:bg-slate-900">Semua Status</option>
-          <option value="lunas" className="dark:bg-slate-900">Sudah Dibayar</option>
-          <option value="menunggu" className="dark:bg-slate-900">Menunggu</option>
-          <option value="terlambat" className="dark:bg-slate-900">Terlambat</option>
+          <option value="all" className="dark:bg-slate-900">
+            Semua Status
+          </option>
+          <option value="lunas" className="dark:bg-slate-900">
+            Sudah Dibayar
+          </option>
+          <option value="menunggu" className="dark:bg-slate-900">
+            Menunggu
+          </option>
+          <option value="terlambat" className="dark:bg-slate-900">
+            Terlambat
+          </option>
         </select>
       </div>
     </div>

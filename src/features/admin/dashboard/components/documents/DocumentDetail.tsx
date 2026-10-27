@@ -21,8 +21,12 @@ export default function DocumentDetail({ doc }: any) {
 
   return (
     <>
-      <h2 className="text-xl font-bold text-slate-900 dark:text-white transition-colors">{doc.title}</h2>
-      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 transition-colors">ID: {doc.id}</p>
+      <h2 className="text-xl font-bold text-slate-900 dark:text-white transition-colors">
+        {doc.title}
+      </h2>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 transition-colors">
+        ID: {doc.id}
+      </p>
 
       <div className="mb-6">
         <p className="text-sm font-medium mb-2 text-slate-800 dark:text-white transition-colors">

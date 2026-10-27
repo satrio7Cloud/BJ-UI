@@ -1,20 +1,20 @@
 import {
-    AlertCircle,
-    CheckCircle,
-    Clock,
-    Eye,
-    FileText,
-    RefreshCw,
-    Search,
-    X,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Eye,
+  FileText,
+  RefreshCw,
+  Search,
+  X,
 } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { API_BASE_URL } from "../../../../api/config";
-import type { OrderKTLResponse } from "../../../../api/order";
-import { getOrderKTLByID, updateKtlStatus } from "../../../../api/order";
-import Button from "../../../../shared/components/Button";
-import Modal from "../../../../shared/components/Modal";
+import { API_BASE_URL } from "../../../../../api/config";
+import type { OrderKTLResponse } from "../../../../../api/order";
+import { getOrderKTLByID, updateKtlStatus } from "../../../../../api/order";
+import Button from "../../../../../shared/components/Button";
+import Modal from "../../../../../shared/components/Modal";
 
 interface Props {
   orders: OrderKTLResponse[];
@@ -145,9 +145,13 @@ export default function RecentKtlTable({
                   <div className="flex flex-col items-center gap-2 text-slate-400 dark:text-slate-500">
                     {searchQuery ? (
                       <>
-                        <Search size={32} className="text-slate-300 dark:text-slate-600" />
+                        <Search
+                          size={32}
+                          className="text-slate-300 dark:text-slate-600"
+                        />
                         <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                          Tidak ada pesanan KTL yang cocok dengan &quot;{searchQuery}&quot;
+                          Tidak ada pesanan KTL yang cocok dengan &quot;
+                          {searchQuery}&quot;
                         </p>
                         {onSearchChange && (
                           <button

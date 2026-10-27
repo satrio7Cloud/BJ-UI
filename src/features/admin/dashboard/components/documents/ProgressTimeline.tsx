@@ -1,4 +1,4 @@
-import { Check, Clock, FileText, AlertTriangle } from "lucide-react";
+import { AlertTriangle, Check, Clock, FileText } from "lucide-react";
 
 type Step = {
   title: string;
@@ -71,11 +71,15 @@ export default function ProgressTimeline({ steps }: { steps: Step[] }) {
                   >
                     {step.title}
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 transition-colors">{step.description}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 transition-colors">
+                    {step.description}
+                  </p>
                 </div>
 
                 {step.date && (
-                  <span className="text-xs text-slate-400 dark:text-slate-500 transition-colors">{step.date}</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500 transition-colors">
+                    {step.date}
+                  </span>
                 )}
               </div>
             </div>

@@ -10,7 +10,7 @@ import QrisPaymentPage from "../features/user/invoice/QrisPaymentPage";
 import ServicesPage from "../features/user/services/ServicesPage";
 import MyVehiclesPage from "../features/user/vehicles/MyVehiclesPage";
 
-import AdminLayout from "../features/admin/dashboard/components/AdminLayout";
+import { AdminLayout } from "../features/admin/dashboard/components/layout";
 import UserLayout from "../features/user/layout/UserLayout";
 
 export default function AppRoutes() {
