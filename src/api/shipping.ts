@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiFetch, getAuthHeaders, sanitizeErrorMessage } from './config';
+import { httpClient } from './httpClient';
 
 export interface ShippingItem {
     name: string;
@@ -46,36 +46,18 @@ export const getShippingRates = async (
         },
     ];
 
-    const response = await apiFetch(`${API_BASE_URL}/shipping/rates`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
+    return httpClient.post<{ code: number; data: ShippingRate[]; message: string }>(
+        '/shipping/rates',
+        {
             destination_postal_code: destinationPostalCode,
             items: items || defaultItems,
-        }),
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(sanitizeErrorMessage(errorData.message || errorData.error || 'Gagal menghitung ongkos kirim'));
-    }
-
-    return response.json();
+        }
+    );
 };
 
 /**
  * Mendapatkan daftar kurir yang didukung
  */
 export const getShippingCouriers = async (): Promise<{ code: number; data: ShippingCourier[]; message: string }> => {
-    const response = await apiFetch(`${API_BASE_URL}/shipping/couriers`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(sanitizeErrorMessage(errorData.message || errorData.error || 'Gagal mengambil daftar kurir'));
-    }
-
-    return response.json();
+    return httpClient.get<{ code: number; data: ShippingCourier[]; message: string }>('/shipping/couriers');
 };

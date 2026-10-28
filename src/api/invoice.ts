@@ -48,7 +48,9 @@ export const getInvoiceByOrderId = async (orderId: string): Promise<{ data: Invo
 };
 
 export const generateInvoiceApi = async (orderId: string): Promise<{ data: InvoiceData; status: string }> => {
-    return httpClient.post<{ data: InvoiceData; status: string }>('/invoices', {
-        order_id: orderId,
-    });
+    return httpClient.post<{ data: InvoiceData; status: string }>(
+        '/invoices',
+        { order_id: orderId },
+        { idempotencyKey: true }
+    );
 };

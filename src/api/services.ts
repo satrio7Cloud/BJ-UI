@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiFetch, getAuthHeaders, sanitizeErrorMessage } from './config';
+import { httpClient } from './httpClient';
 
 export interface ApiService {
     id: string;
@@ -21,61 +21,20 @@ export interface CreateServiceRequest {
     description: string;
 }
 
-
 export const getServices = async (): Promise<{ data: ApiService[]; status: string }> => {
-    const response = await apiFetch(`${API_BASE_URL}/services`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(sanitizeErrorMessage(errorData.message || 'Gagal mengambil data layanan'));
-    }
-
-    return response.json();
+    return httpClient.get<{ data: ApiService[]; status: string }>('/services');
 };
 
 export const createService = async (data: CreateServiceRequest): Promise<{ message: string; status: string }> => {
-    const response = await apiFetch(`${API_BASE_URL}/services`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
+    return httpClient.post<{ message: string; status: string }>('/services', data, {
+        idempotencyKey: true,
     });
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(sanitizeErrorMessage(errorData.message || 'Gagal menambahkan layanan baru'));
-    }
-
-    return response.json();
 };
 
 export const updateService = async (id: string, data: CreateServiceRequest): Promise<{ message: string; status: string }> => {
-    const response = await apiFetch(`${API_BASE_URL}/services/${id}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(sanitizeErrorMessage(errorData.message || 'Gagal mengubah layanan'));
-    }
-
-    return response.json();
+    return httpClient.put<{ message: string; status: string }>(`/services/${id}`, data);
 };
 
 export const deleteService = async (id: string): Promise<{ message: string; status: string }> => {
-    const response = await apiFetch(`${API_BASE_URL}/services/${id}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(sanitizeErrorMessage(errorData.message || 'Gagal menghapus layanan'));
-    }
-
-    return response.json();
+    return httpClient.delete<{ message: string; status: string }>(`/services/${id}`);
 };

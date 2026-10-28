@@ -1,4 +1,4 @@
-import { API_BASE_URL, getAuthHeaders } from './config';
+import { httpClient } from './httpClient';
 
 export interface NotificationItem {
   id: string;
@@ -10,20 +10,11 @@ export interface NotificationItem {
   created_at: string;
 }
 
-
 export const getUnreadNotifications = async (): Promise<NotificationItem[]> => {
-  const res = await fetch(`${API_BASE_URL}/notifications/unread`, {
-    headers: getAuthHeaders(),
-  });
-  if (!res.ok) throw new Error('Failed to fetch unread notifications');
-  const json = await res.json();
-  return json.data || [];
+  const res = await httpClient.get<{ data: NotificationItem[] }>('/notifications/unread');
+  return res.data || [];
 };
 
 export const markNotificationAsRead = async (id: string): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
-    method: 'PATCH',
-    headers: getAuthHeaders(),
-  });
-  if (!res.ok) throw new Error('Failed to mark notification as read');
+  await httpClient.patch<void>(`/notifications/${id}/read`);
 };

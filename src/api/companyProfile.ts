@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiFetch, getAuthHeaders, sanitizeErrorMessage } from './config';
+import { httpClient } from './httpClient';
 
 export interface CompanyProfile {
   id?: string;
@@ -29,18 +29,11 @@ export const getCompanyProfile = async (): Promise<{
   message: string;
   status: string;
 }> => {
-  const response = await apiFetch(`${API_BASE_URL}/company-profile`, {
-    method: 'GET',
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      sanitizeErrorMessage(errorData.message || 'Gagal mengambil data profil kantor')
-    );
-  }
-
-  return response.json();
+  return httpClient.get<{
+    data: CompanyProfile;
+    message: string;
+    status: string;
+  }>('/company-profile', { skipAuth: true });
 };
 
 /**
@@ -49,18 +42,8 @@ export const getCompanyProfile = async (): Promise<{
 export const updateCompanyProfile = async (
   data: Partial<CompanyProfile>
 ): Promise<{ data: CompanyProfile; message: string; status: string }> => {
-  const response = await apiFetch(`${API_BASE_URL}/company-profile`, {
-    method: 'PUT',
-    headers: getAuthHeaders(),
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      sanitizeErrorMessage(errorData.message || 'Gagal memperbarui profil kantor')
-    );
-  }
-
-  return response.json();
+  return httpClient.put<{ data: CompanyProfile; message: string; status: string }>(
+    '/company-profile',
+    data
+  );
 };

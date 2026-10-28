@@ -1,4 +1,4 @@
-import { API_BASE_URL, getAuthHeaders } from './config';
+import { httpClient } from './httpClient';
 
 export interface Brand {
     id: string;
@@ -16,53 +16,6 @@ export interface CreateModelRequest {
     vehicle_type: "mobil" | "motor";
 }
 
-
-export const getBrands = async (): Promise<{ data: Brand[]; status: string }> => {
-    const response = await fetch(`${API_BASE_URL}/brands`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Gagal mengambil data merek');
-    }
-
-    return response.json();
-};
-
-export const createBrand = async (data: CreateBrandRequest): Promise<{ message: string; status: string }> => {
-    const response = await fetch(`${API_BASE_URL}/brands`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Gagal menambahkan merek');
-    }
-
-    return response.json();
-};
-
-export const createModel = async (data: CreateModelRequest): Promise<{ message: string; status: string }> => {
-    const response = await fetch(`${API_BASE_URL}/models`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Gagal menambahkan model');
-    }
-
-    return response.json();
-};
-
 export interface VehicleModel {
     id: string;
     brand_id: string;
@@ -71,18 +24,26 @@ export interface VehicleModel {
     vehicle_type: "mobil" | "motor";
 }
 
-export const getModels = async (): Promise<{ data: VehicleModel[]; status: string }> => {
-    const response = await fetch(`${API_BASE_URL}/models`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+export const getBrands = async (): Promise<{ data: Brand[]; status: string }> => {
+    return httpClient.get<{ data: Brand[]; status: string }>('/brands', {
+        skipAuth: true,
     });
+};
 
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Gagal mengambil data model');
-    }
+export const createBrand = async (data: CreateBrandRequest): Promise<{ message: string; status: string }> => {
+    return httpClient.post<{ message: string; status: string }>('/brands', data, {
+        idempotencyKey: true,
+    });
+};
 
-    return response.json();
+export const createModel = async (data: CreateModelRequest): Promise<{ message: string; status: string }> => {
+    return httpClient.post<{ message: string; status: string }>('/models', data, {
+        idempotencyKey: true,
+    });
+};
+
+export const getModels = async (): Promise<{ data: VehicleModel[]; status: string }> => {
+    return httpClient.get<{ data: VehicleModel[]; status: string }>('/models', {
+        skipAuth: true,
+    });
 };
