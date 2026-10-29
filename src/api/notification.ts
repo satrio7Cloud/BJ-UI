@@ -1,14 +1,7 @@
 import { httpClient } from './httpClient';
+import type { NotificationItem } from '../types';
 
-export interface NotificationItem {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  reference_id?: string;
-  is_read: boolean;
-  created_at: string;
-}
+export type { NotificationItem };
 
 export const getUnreadNotifications = async (): Promise<NotificationItem[]> => {
   const res = await httpClient.get<{ data: NotificationItem[] }>('/notifications/unread');

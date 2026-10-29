@@ -1,25 +1,15 @@
 import { httpClient } from './httpClient';
+import type {
+    AdminUser,
+    LoginResponse,
+    AdminProfileResponse,
+} from '../types';
 
-export interface AdminUser {
-    id: string;
-    email: string;
-    role: string;
-    [key: string]: any;
-}
-
-export interface LoginResponse {
-    data?: {
-        token: string;
-        admin?: AdminUser;
-    };
-    token?: string;
-    message?: string;
-}
-
-export interface AdminProfileResponse {
-    data?: AdminUser;
-    message?: string;
-}
+export type {
+    AdminUser,
+    LoginResponse,
+    AdminProfileResponse,
+};
 
 /**
  * Melakukan proses login admin ke endpoint /admins/login

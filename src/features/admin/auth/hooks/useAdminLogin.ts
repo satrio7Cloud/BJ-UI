@@ -1,8 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { loginAdmin } from "../../../../api/auth";
 import { ApiError } from "../../../../api/apiError";
+import { loginAdmin } from "../../../../api/auth";
 
 export function useAdminLogin() {
     const [email, setEmail] = useState("");
@@ -37,7 +37,7 @@ export function useAdminLogin() {
         } catch (error: unknown) {
             if (error instanceof ApiError) {
                 if (error.isNetworkError) {
-                    toast.error("Gagal terhubung ke server backend.");
+                    toast.error("Gagal terhubung ke server.");
                 } else if (error.status === 401 || error.status === 400) {
                     toast.error(error.message || "Email atau kata sandi salah.");
                 } else {

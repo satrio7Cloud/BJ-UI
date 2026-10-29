@@ -1,25 +1,7 @@
 import { httpClient } from './httpClient';
+import type { ApiService, CreateServiceRequest } from '../types';
 
-export interface ApiService {
-    id: string;
-    service_name: string;
-    category: string;
-    service_fee: number;
-    express_fee: number;
-    admin_fee: number;
-    swdkllj_fee: number;
-    physical_check_fee: number;
-    description: string;
-    created_at: string;
-}
-
-export interface CreateServiceRequest {
-    service_name: string;
-    category: string;
-    service_fee: number;
-    express_fee: number;
-    description: string;
-}
+export type { ApiService, CreateServiceRequest };
 
 export const getServices = async (): Promise<{ data: ApiService[]; status: string }> => {
     return httpClient.get<{ data: ApiService[]; status: string }>('/services');

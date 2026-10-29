@@ -1,12 +1,7 @@
 import { httpClient } from './httpClient';
+import type { CreateCustomerRequest } from '../types';
 
-export interface CreateCustomerRequest {
-  fullname: string;
-  email: string;
-  phone_number: string;
-  address: string;
-  nik: string;
-}
+export type { CreateCustomerRequest };
 
 export const createCustomer = async (
   data: CreateCustomerRequest

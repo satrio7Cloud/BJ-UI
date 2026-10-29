@@ -1,19 +1,7 @@
 import { httpClient } from './httpClient';
+import type { CustomerVehicle, CreateCustomerVehicleRequest } from '../types';
 
-export interface CustomerVehicle {
-  id: string;
-  customer_id: string;
-  model_id: string;
-  plate_number: string;
-  year: number;
-}
-
-export interface CreateCustomerVehicleRequest {
-  customer_id: string;
-  model_id: string;
-  plate_number: string;
-  year: number;
-}
+export type { CustomerVehicle, CreateCustomerVehicleRequest };
 
 export const getCustomerVehicles = async (
   customerId?: string

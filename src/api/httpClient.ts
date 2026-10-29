@@ -142,6 +142,8 @@ export class HttpClient {
             }
         }
 
+
+
         // Inject Idempotency-Key jika tersedia dan belum ada di header
         if (idempotencyKey && !headers.has('Idempotency-Key')) {
             headers.set('Idempotency-Key', idempotencyKey);
@@ -332,8 +334,22 @@ export class HttpClient {
                         }
                     }
 
-                    // Jika respons gagal (!ok), lempar ApiError
+                    // Jika respons gagal (!ok), tangani error & token expired
                     if (!response.ok) {
+                        // Jika 401 Unauthorized (token habis/tidak valid), bersihkan session & arahkan ke login
+                        if (response.status === 401 && !options.skipAuth) {
+                            localStorage.removeItem("adminToken");
+
+                            const adminPaths = ["/dashboard", "/invoice", "/vehicles", "/settings"];
+                            const isOnAdminPage = adminPaths.some((path) =>
+                                window.location.pathname.startsWith(path)
+                            );
+
+                            if (isOnAdminPage) {
+                                window.location.href = "/admin";
+                            }
+                        }
+
                         throw ApiError.fromResponse(response, data);
                     }
 

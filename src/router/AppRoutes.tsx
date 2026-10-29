@@ -12,24 +12,27 @@ import MyVehiclesPage from "../features/user/vehicles/MyVehiclesPage";
 
 import { AdminLayout } from "../features/admin/dashboard/components/layout";
 import UserLayout from "../features/user/layout/UserLayout";
+import ProtectedRouter from "./ProtectedRouter";
 
 export default function AppRoutes() {
-    return (
-        <Routes>
-            <Route element={<UserLayout />}>
-                <Route path="/" element={<Home />} />
-                <Route path="/layanan" element={<ServicesPage />} />
-                <Route path="/checkout" element={<CheckoutPage />} />
-                <Route path="/my-vehicles" element={<MyVehiclesPage />} />
-                <Route path="/pay/:orderId" element={<QrisPaymentPage />} />
-            </Route>
-            <Route path="/admin" element={<LoginPage />} />
-            <Route element={<AdminLayout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/invoice" element={<Invoices />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/vehicles" element={<VehiclesPage />} />
-            </Route>
-        </Routes>
-    );
+  return (
+    <Routes>
+      <Route element={<UserLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/layanan" element={<ServicesPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/my-vehicles" element={<MyVehiclesPage />} />
+        <Route path="/pay/:orderId" element={<QrisPaymentPage />} />
+      </Route>
+      <Route path="/admin" element={<LoginPage />} />
+      <Route element={<ProtectedRouter />}>
+        <Route element={<AdminLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/invoice" element={<Invoices />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/vehicles" element={<VehiclesPage />} />
+        </Route>
+      </Route>
+    </Routes>
+  );
 }

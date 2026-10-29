@@ -1,16 +1,7 @@
 import { httpClient } from './httpClient';
+import type { CompanyProfile } from '../types';
 
-export interface CompanyProfile {
-  id?: string;
-  office_name: string;
-  full_address: string;
-  post_code?: string;
-  postal_code?: string;
-  phone_number: string;
-  operational_hours: string;
-  created_at?: string;
-  updated_at?: string;
-}
+export type { CompanyProfile };
 
 export const DEFAULT_OFFICE_PROFILE: CompanyProfile = {
   id: "48f7a65e-c273-4757-8880-8f5de48bc827",
