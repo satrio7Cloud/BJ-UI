@@ -12,10 +12,20 @@ import {
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
-import { getInvoiceByOrderId, type InvoiceData } from "../../../api/invoice";
+import { getPublicAppUrl } from "../../../api/config";
+import {
+  generateInvoiceApi,
+  getInvoiceByOrderId,
+  syncInvoiceStatusApi,
+  type InvoiceData,
+} from "../../../api/invoice";
 import Button from "../../../shared/components/Button";
 import { useCompanyProfile } from "../../../shared/hooks/useCompanyProfile";
-import { WHATSAPP_NUMBER } from "../../../shared/utils/whatsapp";
+import {
+  createWhatsappLink,
+  formatPaymentReceiptMessage,
+  WHATSAPP_NUMBER,
+} from "../../../shared/utils/whatsapp";
 import OrderTracking from "./OrderTracking";
 
 declare global {
@@ -36,15 +46,49 @@ export default function QrisPaymentPage() {
     if (!orderId) return;
     try {
       if (showToast) setIsChecking(true);
-      const res = await getInvoiceByOrderId(orderId);
-      if (res?.data) {
-        setInvoice(res.data);
+      let res;
+      try {
+        res = await syncInvoiceStatusApi(orderId);
+      } catch {
+        res = await getInvoiceByOrderId(orderId);
+      }
+
+      let invoiceData = res?.data;
+
+      // Jika invoice belum ada token pembayaran dan belum PAID, otomatis generate token Midtrans
+      if (
+        invoiceData &&
+        (!invoiceData.payment_token || invoiceData.payment_token.trim() === "") &&
+        invoiceData.payment_status?.toUpperCase() !== "PAID"
+      ) {
+        try {
+          const genRes = await generateInvoiceApi(orderId);
+          if (genRes?.data) {
+            invoiceData = genRes.data;
+          }
+        } catch (genErr) {
+          console.warn("Auto generate token pembayaran gagal:", genErr);
+        }
+      }
+
+      // Jika invoice sama sekali belum ada, coba generate baru
+      if (!invoiceData) {
+        try {
+          const genRes = await generateInvoiceApi(orderId);
+          if (genRes?.data) {
+            invoiceData = genRes.data;
+          }
+        } catch {}
+      }
+
+      if (invoiceData) {
+        setInvoice(invoiceData);
         if (showToast) {
-          if (res.data.payment_status?.toUpperCase() === "PAID") {
+          if (invoiceData.payment_status?.toUpperCase() === "PAID") {
             toast.success("Pembayaran Terdeteksi: LUNAS!");
           } else {
             toast.error(
-              "Pembayaran belum terdeteksi. Silakan lakukan transfer terlebih dahulu.",
+              "Pembayaran belum terdeteksi. Silakan selesaikan pembayaran terlebih dahulu."
             );
           }
         }
@@ -60,31 +104,61 @@ export default function QrisPaymentPage() {
     }
   };
 
-  const handleBayarSekarang = () => {
-    if (!invoice || !invoice.payment_token) {
+  const handleBayarSekarang = async () => {
+    if (!invoice && !orderId) return;
+
+    let token = invoice?.payment_token;
+
+    // Jika token belum ada, siapkan token on-the-fly
+    if (!token && orderId) {
+      try {
+        setIsChecking(true);
+        const genRes = await generateInvoiceApi(orderId);
+        if (genRes?.data?.payment_token) {
+          token = genRes.data.payment_token;
+          setInvoice(genRes.data);
+        } else {
+          toast.error("Gagal menyiapkan token pembayaran. Silakan coba lagi.");
+          return;
+        }
+      } catch (err: any) {
+        toast.error(err.message || "Gagal membuat sesi pembayaran Midtrans.");
+        return;
+      } finally {
+        setIsChecking(false);
+      }
+    }
+
+    if (!token) {
       toast.error("Token pembayaran tidak ditemukan.");
       return;
     }
 
-    window.snap.pay(invoice.payment_token, {
-      onSuccess: function (_result: any) {
-        toast.success("Pembayaran berhasil! Sedang diproses oleh sistem.");
-        fetchInvoiceDetails(true);
-      },
-      onPending: function (_result: any) {
-        toast.success(
-          "Menunggu pembayaran Anda! Silakan selesaikan pembayaran.",
-        );
-        fetchInvoiceDetails(true);
-      },
-      onError: function (_result: any) {
-        toast.error("Pembayaran gagal atau kedaluwarsa!");
-      },
-      onClose: function () {
-        toast.error("Anda menutup pop-up sebelum menyelesaikan pembayaran");
-        fetchInvoiceDetails(false);
-      },
-    });
+    if (typeof window !== "undefined" && window.snap) {
+      window.snap.pay(token, {
+        onSuccess: function (_result: any) {
+          toast.success("Pembayaran berhasil! Sedang diproses oleh sistem.");
+          fetchInvoiceDetails(true);
+        },
+        onPending: function (_result: any) {
+          toast.success(
+            "Menunggu pembayaran Anda! Silakan selesaikan pembayaran."
+          );
+          fetchInvoiceDetails(true);
+        },
+        onError: function (_result: any) {
+          toast.error("Pembayaran gagal atau kedaluwarsa!");
+        },
+        onClose: function () {
+          toast.error("Anda menutup pop-up sebelum menyelesaikan pembayaran");
+          fetchInvoiceDetails(false);
+        },
+      });
+    } else {
+      toast.error(
+        "Sistem pembayaran Midtrans sedang dimuat. Silakan tunggu sebentar atau refresh halaman."
+      );
+    }
   };
 
   useEffect(() => {
@@ -120,6 +194,21 @@ export default function QrisPaymentPage() {
   }
 
   const isPaid = invoice.payment_status?.toUpperCase() === "PAID";
+
+  const receiptMessage = formatPaymentReceiptMessage({
+    customerName: invoice.customer_name || "",
+    invoiceNumber: invoice.invoice_number,
+    orderId: invoice.order_id,
+    serviceName: invoice.service_name || "",
+    plateNumber: invoice.vehicle_plate || "",
+    totalCost: invoice.total_cost || invoice.qris_amount || 0,
+    officeName: officeProfile.office_name,
+    trackingUrl: `${getPublicAppUrl()}/pay/${invoice.order_id}`,
+  });
+
+  const customerWaReceiptLink = invoice.customer_phone
+    ? createWhatsappLink(receiptMessage, invoice.customer_phone)
+    : "";
 
   // Format dates
   const formatDate = (dateStr: string) => {
@@ -188,10 +277,25 @@ export default function QrisPaymentPage() {
                   PEMBAYARAN LUNAS
                 </h3>
                 <p className="text-xs text-green-700 mt-1 max-w-xs">
-                  Transaksi Anda berhasil diverifikasi oleh sistem Midtrans.
+                  Transaksi Anda berhasil diverifikasi oleh sistem secara otomatis.
                   Pesanan sedang diproses oleh admin.
                 </p>
               </div>
+
+              {/* Action WhatsApp Receipt */}
+              {customerWaReceiptLink && (
+                <div className="pt-2 w-full">
+                  <a
+                    href={customerWaReceiptLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <PhoneCall size={16} />
+                    Kirim Bukti Pembayaran ke WhatsApp Saya
+                  </a>
+                </div>
+              )}
             </div>
           ) : (
             <div className="w-full flex flex-col items-center text-center space-y-3 py-2">
@@ -200,7 +304,7 @@ export default function QrisPaymentPage() {
               </div>
               <div>
                 <h3 className="font-bold text-slate-900 text-base">
-                  Pembayaran Online Midtrans
+                  Pembayaran Online Otomatis
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5 max-w-xs">
                   Pilih metode pembayaran aman dan instan dengan QRIS, Virtual
@@ -243,7 +347,7 @@ export default function QrisPaymentPage() {
             <span className="text-3xl font-black text-blue-700">
               Rp{" "}
               {(invoice.qris_amount || invoice.total_cost || 0).toLocaleString(
-                "id-ID",
+                "id-ID"
               )}
             </span>
             <span className="text-[10px] text-slate-400 block">
@@ -254,16 +358,25 @@ export default function QrisPaymentPage() {
           {/* ACTION BUTTONS */}
           {!isPaid && (
             <div className="w-full flex flex-col gap-2.5 pt-1">
-              {/* NATIVE MIDTRANS PAY BUTTON */}
+              {/* NATIVE PAY BUTTON */}
               <Button
                 variant="primary"
                 size="full"
                 onClick={handleBayarSekarang}
-                disabled={!invoice.payment_token || isChecking}
+                disabled={isChecking || isPaid}
                 className="py-3.5 text-sm font-bold bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-all"
               >
-                <Zap size={18} className="fill-current" />
-                Bayar Sekarang via Midtrans
+                {isChecking ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Menyiapkan Pembayaran...
+                  </>
+                ) : (
+                  <>
+                    <Zap size={18} className="fill-current" />
+                    Bayar Sekarang
+                  </>
+                )}
               </Button>
 
               <div className="grid grid-cols-2 gap-2.5 pt-1">
@@ -282,7 +395,7 @@ export default function QrisPaymentPage() {
                 </Button>
                 <a
                   href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-                    `Halo, saya ingin mengonfirmasi pembayaran untuk nomor invoice ${invoice.invoice_number} atas nama ${invoice.customer_name}.`,
+                    `Halo, saya ingin mengonfirmasi pembayaran untuk nomor invoice ${invoice.invoice_number} atas nama ${invoice.customer_name}.`
                   )}`}
                   target="_blank"
                   rel="noreferrer"
@@ -311,7 +424,7 @@ export default function QrisPaymentPage() {
               <span className="text-slate-400 block font-medium">
                 Nomor Invoice
               </span>
-              <span className="font-semibold text-slate-800">
+              <span className="font-semibold text-slate-800 font-mono">
                 {invoice.invoice_number}
               </span>
             </div>
@@ -333,7 +446,7 @@ export default function QrisPaymentPage() {
               <span className="text-slate-400 block font-medium">
                 Plat Kendaraan
               </span>
-              <span className="font-semibold text-slate-800 uppercase">
+              <span className="font-semibold text-slate-800 uppercase font-mono">
                 {invoice.vehicle_plate || "-"}
               </span>
             </div>
@@ -387,25 +500,16 @@ export default function QrisPaymentPage() {
 
             {invoice.admin_fee > 0 && (
               <div className="flex justify-between text-slate-600">
-                <span>Biaya Admin</span>
+                <span>Biaya Administrasi</span>
                 <span className="font-medium text-slate-800">
                   Rp {invoice.admin_fee.toLocaleString("id-ID")}
                 </span>
               </div>
             )}
 
-            {invoice.physical_check_fee > 0 && (
-              <div className="flex justify-between text-slate-600">
-                <span>Biaya Cek Fisik</span>
-                <span className="font-medium text-slate-800">
-                  Rp {invoice.physical_check_fee.toLocaleString("id-ID")}
-                </span>
-              </div>
-            )}
-
             {invoice.delivery_fee > 0 && (
               <div className="flex justify-between text-slate-600">
-                <span>Biaya Pengiriman Berkas</span>
+                <span>Ongkos Kirim Dokumen</span>
                 <span className="font-medium text-slate-800">
                   Rp {invoice.delivery_fee.toLocaleString("id-ID")}
                 </span>
@@ -423,7 +527,7 @@ export default function QrisPaymentPage() {
 
             <div className="border-t border-dashed pt-3 flex justify-between font-bold text-sm text-slate-900 mt-2">
               <span>Total Tagihan</span>
-              <span className="text-blue-700">
+              <span className="text-blue-700 font-black">
                 Rp {invoice.total_cost.toLocaleString("id-ID")}
               </span>
             </div>
@@ -440,7 +544,7 @@ export default function QrisPaymentPage() {
             Dilindungi.
           </p>
           <p className="mt-0.5">
-            Layanan pembayaran online resmi dan aman terintegrasi Midtrans.
+            Layanan pembayaran online resmi, cepat, dan aman.
           </p>
         </div>
       </div>

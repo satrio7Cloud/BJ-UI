@@ -128,7 +128,7 @@ export class HttpClient {
         body: any,
         customHeaders?: HeadersInit,
         skipAuth = false,
-        idempotencyKey?: string
+        _idempotencyKey?: string
     ): Headers {
         const headers = new Headers(customHeaders || {});
 
@@ -144,14 +144,9 @@ export class HttpClient {
 
 
 
-        // Inject Idempotency-Key jika tersedia dan belum ada di header
-        if (idempotencyKey && !headers.has('Idempotency-Key')) {
-            headers.set('Idempotency-Key', idempotencyKey);
-            // Injek juga X-Idempotency-Key untuk kompatibilitas gateway lama jika diperlukan
-            if (!headers.has('X-Idempotency-Key')) {
-                headers.set('X-Idempotency-Key', idempotencyKey);
-            }
-        }
+        // Catatan: Header kustom seperti Idempotency-Key tidak diinjek ke HTTP header browser
+        // agar tidak memicu pemblokiran CORS Preflight (Access-Control-Allow-Headers).
+        // Proteksi idempotency ganda tetap dijamin di sisi frontend lewat submission lock & promise coalescing.
 
         // Jika bukan FormData dan bukan URLSearchParams, set default Content-Type: application/json
         const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;

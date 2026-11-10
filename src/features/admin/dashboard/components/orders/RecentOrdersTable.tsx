@@ -8,7 +8,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { type DashboardOrder } from "../../../../../api/dashboard";
 import Button from "../../../../../shared/components/Button";
 import OrderActivityLog from "./OrderActivityLog";
@@ -195,11 +195,8 @@ export default function RecentOrdersTable({
                 const isExpress = order.service_level === "EXPRESS";
 
                 return (
-                  <>
-                    <tr
-                      key={order.order_id}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                    >
+                  <Fragment key={order.order_id}>
+                    <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="py-3.5 pr-4">
                         <p className="font-medium text-slate-900 dark:text-white">
                           {order.customer_name}
@@ -293,7 +290,7 @@ export default function RecentOrdersTable({
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 );
               })
             )}

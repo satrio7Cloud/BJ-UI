@@ -4,6 +4,7 @@ import Dashboard from "../features/admin/dashboard/DashboardPage";
 import Invoices from "../features/admin/invoice/Invoices";
 import SettingsPage from "../features/admin/settings/SettingsPage";
 import VehiclesPage from "../features/admin/vehicles/VehiclesPage";
+import CreateOrderPage from "../features/admin/orders/CreateOrderPage";
 import CheckoutPage from "../features/user/checkout/CheckoutPage";
 import Home from "../features/user/home/HomePage";
 import QrisPaymentPage from "../features/user/invoice/QrisPaymentPage";
@@ -31,6 +32,7 @@ export default function AppRoutes() {
           <Route path="/invoice" element={<Invoices />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/vehicles" element={<VehiclesPage />} />
+          <Route path="/create-order" element={<CreateOrderPage />} />
         </Route>
       </Route>
     </Routes>

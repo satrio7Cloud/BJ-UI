@@ -31,7 +31,7 @@ export default function Dashboard() {
             <DashboardHeader />
 
             {/* Error Alerts */}
-            <DashboardErrorAlerts errors={errors} />
+            <DashboardErrorAlerts errors={errors} onRetry={handleDashboardUpdate} />
 
             {/* Unified KPI Cards */}
             <DashboardKpiSection

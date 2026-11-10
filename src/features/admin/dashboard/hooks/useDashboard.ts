@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import toast from "react-hot-toast";
 import {
     getDashboardChart,
     getDashboardOrders,
@@ -23,6 +22,22 @@ export interface DashboardErrorState {
     ktlOrders: string | null;
     chart: string | null;
 }
+
+const EMPTY_SUMMARY: DashboardSummary = {
+    total_pending_orders: 0,
+    total_express_orders: 0,
+    total_completed_orders: 0,
+    total_revenue: 0,
+    total_pending_ktls: 0,
+    total_completed_ktls: 0,
+    total_revenue_ktls: 0,
+    pending_actions: {
+        unverified_documents: 0,
+        stuck_orders: 0,
+        stuck_ktls: 0,
+    },
+    top_services: [],
+};
 
 export function useDashboard() {
     const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -58,11 +73,11 @@ export function useDashboard() {
             setLoading((prev) => ({ ...prev, summary: true }));
             setErrors((prev) => ({ ...prev, summary: null }));
             const data = await getDashboardSummary();
-            setSummary(data);
+            setSummary(data || EMPTY_SUMMARY);
         } catch (err: unknown) {
-            toast.error("Gagal mengambil data summary");
             const msg = err instanceof Error ? err.message : "Gagal mengambil ringkasan dashboard";
             setErrors((prev) => ({ ...prev, summary: msg }));
+            setSummary(EMPTY_SUMMARY); // Pastikan UI tetap tampil dengan angka 0
         } finally {
             setLoading((prev) => ({ ...prev, summary: false }));
         }
@@ -79,12 +94,14 @@ export function useDashboard() {
                     ordersMeta.limit,
                     status || undefined
                 );
-                setOrders(response.data);
-                setOrdersMeta(response.meta);
+                setOrders(response?.data || []);
+                if (response?.meta) {
+                    setOrdersMeta(response.meta);
+                }
             } catch (err: unknown) {
-                toast.error("Gagal mengambil data pesanan terkini");
                 const msg = err instanceof Error ? err.message : "Gagal mengambil data pesanan terkini";
                 setErrors((prev) => ({ ...prev, orders: msg }));
+                setOrders([]);
             } finally {
                 setLoading((prev) => ({ ...prev, orders: false }));
             }
@@ -98,11 +115,11 @@ export function useDashboard() {
             setLoading((prev) => ({ ...prev, ktlOrders: true }));
             setErrors((prev) => ({ ...prev, ktlOrders: null }));
             const data = await getKTLOrders();
-            setKtlOrders(data);
+            setKtlOrders(Array.isArray(data) ? data : []);
         } catch (err: unknown) {
-            toast.error("Gagal mengambil data pesanan KTL");
             const msg = err instanceof Error ? err.message : "Gagal mengambil data pesanan KTL";
             setErrors((prev) => ({ ...prev, ktlOrders: msg }));
+            setKtlOrders([]);
         } finally {
             setLoading((prev) => ({ ...prev, ktlOrders: false }));
         }
@@ -114,11 +131,11 @@ export function useDashboard() {
             setLoading((prev) => ({ ...prev, chart: true }));
             setErrors((prev) => ({ ...prev, chart: null }));
             const data = await getDashboardChart();
-            setChartData(data);
+            setChartData(Array.isArray(data) ? data : []);
         } catch (err: unknown) {
-            toast.error("Gagal mengambil data grafik transaksi");
             const msg = err instanceof Error ? err.message : "Gagal mengambil data grafik transaksi";
             setErrors((prev) => ({ ...prev, chart: msg }));
+            setChartData([]);
         } finally {
             setLoading((prev) => ({ ...prev, chart: false }));
         }
@@ -141,7 +158,8 @@ export function useDashboard() {
         fetchOrders(ordersMeta.page, filterStatus);
         fetchKtlOrders();
         fetchSummary();
-    }, [fetchOrders, ordersMeta.page, filterStatus, fetchKtlOrders, fetchSummary]);
+        fetchChart();
+    }, [fetchOrders, ordersMeta.page, filterStatus, fetchKtlOrders, fetchSummary, fetchChart]);
 
     // Global orderUpdated event listener
     useEffect(() => {

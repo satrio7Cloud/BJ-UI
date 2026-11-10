@@ -28,42 +28,45 @@ export default function StatCard({
     <div
       className={`
         rounded-xl
-        p-3 sm:p-4 lg:px-6 lg:py-6
+        p-3 sm:p-4 lg:p-6
         shadow-sm dark:shadow-none
         transition-all
         border
+        h-full flex flex-col justify-between
         ${variantStyle}
         ${onClick ? "cursor-pointer hover:shadow-md hover:scale-[1.02]" : ""}
       `}
       onClick={onClick}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">{title}</p>
+      <div>
+        <div className="flex items-start justify-between gap-1.5 sm:gap-2">
+          <p className="text-[11px] sm:text-xs lg:text-sm font-medium text-slate-500 dark:text-slate-400 line-clamp-1">
+            {title}
+          </p>
 
-          <h2 className="text-base sm:text-xl lg:text-2xl font-bold mt-1 text-slate-800 dark:text-white transition-colors">
-            {value}
-          </h2>
+          {Icon && (
+            <div
+              className={`
+                p-1 sm:p-1.5 lg:p-2.5
+                rounded-lg
+                border shrink-0
+                ${variantStyle}
+              `}
+            >
+              <Icon size={14} className="sm:hidden" />
+              <Icon size={18} className="hidden sm:block lg:hidden" />
+              <Icon size={20} className="hidden lg:block" />
+            </div>
+          )}
         </div>
 
-        {Icon && (
-          <div
-            className={`
-              p-1.5 sm:p-2 lg:p-3
-              rounded-lg
-              border
-              ${variantStyle}
-            `}
-          >
-            <Icon size={16} className="sm:hidden" />
-            <Icon size={18} className="hidden sm:block lg:hidden" />
-            <Icon size={22} className="hidden lg:block" />
-          </div>
-        )}
+        <h2 className="text-sm sm:text-lg lg:text-2xl font-bold mt-1 text-slate-800 dark:text-white transition-colors truncate">
+          {value}
+        </h2>
       </div>
 
       {description && (
-        <p className={`text-xs sm:text-sm mt-2 ${variantStyle.split(" ")[0]}`}>
+        <p className={`text-[10px] sm:text-xs mt-2 line-clamp-1 sm:line-clamp-none ${variantStyle.split(" ")[0]}`}>
           {description}
         </p>
       )}

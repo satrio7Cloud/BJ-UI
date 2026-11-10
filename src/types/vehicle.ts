@@ -28,6 +28,8 @@ export interface CustomerVehicle {
   model_id: string;
   plate_number: string;
   year: number;
+  brand_name?: string;
+  model_name?: string;
 }
 
 export interface CreateCustomerVehicleRequest {

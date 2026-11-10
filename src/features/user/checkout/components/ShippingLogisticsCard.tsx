@@ -1,23 +1,28 @@
 import {
+  AlertCircle,
   Building2,
   Check,
   CheckCircle2,
+  Clock,
   Copy,
   Info,
   Loader2,
   MapPin,
   Package,
-  Send,
+  Phone,
   Truck,
+  UserCheck,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   DEFAULT_OFFICE_PROFILE,
   type CompanyProfile,
 } from "../../../../api/companyProfile";
 import { type ShippingRate } from "../../../../api/shipping";
 import { useCompanyProfile } from "../../../../shared/hooks/useCompanyProfile";
-import { type CheckoutFormData, type ShippingScenario } from "../types";
+import { useDeliveryMethods } from "../../../../shared/hooks/useDeliveryMethods";
+import type { DeliveryMethod } from "../../../../types/deliveryMethod";
+import { type CheckoutFormData, type FormErrors } from "../types";
 
 interface ShippingLogisticsCardProps {
   formData: CheckoutFormData;
@@ -26,10 +31,13 @@ interface ShippingLogisticsCardProps {
   selectedCourierCompany: string;
   setSelectedCourierCompany: (company: string) => void;
   selectedRate: ShippingRate | null;
-  setSelectedRate: (rate: ShippingRate) => void;
+  setSelectedRate: (rate: ShippingRate | null) => void;
   isLoadingRates: boolean;
-  isServiceInherentlyNameTransfer: boolean;
+  ratesErrorMessage?: string | null;
+  isServiceInherentlyNameTransfer?: boolean;
   officeProfile?: CompanyProfile;
+  errors?: FormErrors;
+  onClearError?: (field: keyof FormErrors) => void;
 }
 
 export default function ShippingLogisticsCard({
@@ -41,10 +49,14 @@ export default function ShippingLogisticsCard({
   selectedRate,
   setSelectedRate,
   isLoadingRates,
-  isServiceInherentlyNameTransfer,
+  ratesErrorMessage,
   officeProfile: propOfficeProfile,
+  errors = {},
+  onClearError,
 }: ShippingLogisticsCardProps) {
   const { profile: hookOfficeProfile } = useCompanyProfile();
+  const { deliveryMethods, isLoading: isLoadingMethods } = useDeliveryMethods();
+
   const currentOfficeProfile =
     propOfficeProfile || hookOfficeProfile || DEFAULT_OFFICE_PROFILE;
 
@@ -57,11 +69,57 @@ export default function ShippingLogisticsCard({
       : currentOfficeProfile.full_address
     : DEFAULT_OFFICE_PROFILE.full_address;
 
-  const [isSameAddress, setIsSameAddress] = useState(
-    !formData.return_address ||
-      formData.return_address === formData.pickup_address,
-  );
   const [copied, setCopied] = useState(false);
+
+  // Hanya metode yang aktif dari database
+  const activeMethods = deliveryMethods.filter((m) => m.is_active);
+
+  // Cari SATU metode terpilih (Single Selection)
+  const selectedMethod =
+    activeMethods.find(
+      (m) =>
+        m.method_code === formData.pickup_method ||
+        m.method_code === formData.return_method,
+    ) || activeMethods[0];
+
+  // Inisialisasi default pilihan pertama saat data dimuat
+  useEffect(() => {
+    if (activeMethods.length > 0 && !formData.pickup_method) {
+      const first = activeMethods[0];
+      setFormData((prev) => ({
+        ...prev,
+        pickup_method: first.method_code,
+        return_method:
+          first.direction === "RETURN"
+            ? first.method_code
+            : first.direction === "BOTH"
+              ? first.method_code
+              : "RETURN_SAME_METHOD",
+      }));
+    }
+  }, [activeMethods, formData.pickup_method, setFormData]);
+
+  const handleSelectMethod = (method: DeliveryMethod) => {
+    setFormData((prev) => ({
+      ...prev,
+      pickup_method: method.method_code,
+      return_method:
+        method.direction === "RETURN"
+          ? method.method_code
+          : method.direction === "BOTH"
+            ? method.method_code
+            : prev.return_method || "RETURN_SAME_METHOD",
+    }));
+
+    // Reset kurir & bersihkan error jika beralih ke metode NON-KURIR
+    if (!method.requires_courier) {
+      setSelectedRate(null);
+      if (onClearError) {
+        onClearError("courier");
+        onClearError("postal_code");
+      }
+    }
+  };
 
   const handleCopyOfficeAddress = () => {
     navigator.clipboard.writeText(displayOfficeAddress);
@@ -69,655 +127,407 @@ export default function ShippingLogisticsCard({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const scenarios: {
-    id: ShippingScenario;
-    title: string;
-    badge: string;
-    badgeColor: string;
-    incoming: string;
-    outgoing: string;
-    feeDescription: string;
-    icon: any;
-  }[] = [
-    {
-      id: "A",
-      title: "Door-to-Door",
-      badge: "Paling Praktis",
-      badgeColor: "bg-emerald-600 text-white",
-      incoming: "Dijemput Kurir di Alamat Anda",
-      outgoing: "Diantar Kurir Kembali",
-      feeDescription: "Tarif Kurir 2 Arah (PP)",
-      icon: Truck,
-    },
-    {
-      id: "B",
-      title: "Office Drop-off",
-      badge: "Hemat Ongkir",
-      badgeColor: "bg-blue-600 text-white",
-      incoming: "Diantar Sendiri ke Kantor (Rp 0)",
-      outgoing: "Dikirim Kurir Kembali",
-      feeDescription: "Tarif Kurir 1 Arah Pulang",
-      icon: Package,
-    },
-    {
-      id: "C",
-      title: "Send-in Ekspedisi",
-      badge: "Bisa Luar Kota",
-      badgeColor: "bg-amber-600 text-white",
-      incoming: "Kirim via Ekspedisi Luar (Rp 0 di web)",
-      outgoing: "Dikirim Kurir Kembali",
-      feeDescription: "Tarif Kurir 1 Arah Pulang",
-      icon: Send,
-    },
-    {
-      id: "D",
-      title: "Walk-in Mandiri",
-      badge: "Bebas Ongkir",
-      badgeColor: "bg-purple-600 text-white",
-      incoming: "Datang Sendiri ke Kantor (Rp 0)",
-      outgoing: "Ambil Sendiri di Kantor (Rp 0)",
-      feeDescription: "Rp 0 (Bebas Ongkir)",
-      icon: Building2,
-    },
-  ];
+  const getProviderIcon = (method: DeliveryMethod) => {
+    if (method.provider_type === "INTERNAL") return UserCheck;
+    if (method.provider_type === "SELF") return Building2;
+    return Truck;
+  };
 
-  const currentScenario =
-    scenarios.find((s) => s.id === formData.shipping_scenario) || scenarios[0];
+  const requiresCourier = selectedMethod?.requires_courier;
+  const isSelfOffice = selectedMethod?.provider_type === "SELF";
 
   return (
-    <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-          <Truck className="w-5 h-5 text-emerald-600" />
-          Pengiriman & Catatan
-        </h2>
-      </div>
-
-      {/* 1. Pemilihan 4 Skenario Pengiriman */}
-      <div className="space-y-3">
-        <label className="block text-sm font-bold text-slate-800">
-          Pilih Metode Pengiriman & Penyerahan Dokumen:
-        </label>
-        <div className="grid sm:grid-cols-2 gap-3.5">
-          {scenarios.map((sc) => {
-            const isSelected = formData.shipping_scenario === sc.id;
-            const Icon = sc.icon;
-            return (
-              <div
-                key={sc.id}
-                onClick={() =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    shipping_scenario: sc.id,
-                  }))
-                }
-                className={`p-4 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between ${
-                  isSelected
-                    ? "bg-emerald-50/40 border-emerald-600 shadow-sm ring-2 ring-emerald-500/20"
-                    : "bg-white border-slate-200 hover:border-emerald-300 hover:bg-slate-50/50"
-                }`}
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                          isSelected
-                            ? "bg-emerald-600 text-white"
-                            : "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <span className="font-bold text-slate-900 text-sm">
-                        {sc.title}
-                      </span>
-                    </div>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${sc.badgeColor}`}
-                    >
-                      {sc.badge}
-                    </span>
-                  </div>
-
-                  <div className="text-xs space-y-1 text-slate-600 pl-10 mb-3">
-                    <p>
-                      <b className="text-slate-700">Masuk:</b> {sc.incoming}
-                    </p>
-                    <p>
-                      <b className="text-slate-700">Selesai:</b> {sc.outgoing}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs pl-2">
-                  <span className="font-semibold text-emerald-800">
-                    {sc.feeDescription}
-                  </span>
-                  {isSelected && (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 2. Banner Informasi Skenario Terpilih */}
-      <div className="p-4.5 bg-linear-to-br from-emerald-50/70 via-teal-50/30 to-slate-50 border border-emerald-200/90 rounded-2xl flex items-start gap-3.5">
-        <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
-          <currentScenario.icon className="w-4.5 h-4.5" />
-        </div>
-        <div className="space-y-1 text-xs leading-relaxed text-slate-600">
-          <h4 className="font-bold text-slate-900 text-sm">
-            {currentScenario.title} — {currentScenario.badge}
-          </h4>
-          {formData.shipping_scenario === "A" && (
-            <p>
-              Dokumen fisik kendaraan (STNK/BPKB/KTP) akan{" "}
-              <b>dijemput oleh kurir</b> di alamat Anda ke kantor kami, dan
-              setelah selesai diproses akan <b>diantar kembali</b> ke alamat
-              yang sama. Tarif pengiriman mencakup{" "}
-              <b>total 2 arah perjalanan (PP)</b>.
-            </p>
-          )}
-          {formData.shipping_scenario === "B" && (
-            <p>
-              Anda <b>mengantarkan sendiri</b> berkas fisik kendaraan ke kantor
-              kami (bebas biaya jemput). Setelah berkas selesai diproses di
-              Samsat, dokumen resmi akan <b>dikirimkan oleh kurir</b> ke alamat
-              Anda (hanya dikenakan <b>ongkir 1 arah pulang</b>).
-            </p>
-          )}
-          {formData.shipping_scenario === "C" && (
-            <p>
-              Anda <b>mengirimkan berkas sendiri via ekspedisi luar</b> (seperti
-              JNE, SiCepat, J&T, GoSend) langsung ke alamat kantor kami. Setelah
-              berkas selesai diproses, dokumen resmi akan{" "}
-              <b>dikirimkan kurir</b> ke alamat Anda (hanya dikenakan{" "}
-              <b>ongkir 1 arah pulang</b>).
-            </p>
-          )}
-          {formData.shipping_scenario === "D" && (
-            <p>
-              Seluruh proses penyerahan berkas fisik dan pengambilan dokumen
-              resmi dilakukan <b>langsung di kantor kami oleh Anda sendiri</b>.
-              Anda{" "}
-              <b>
-                tidak dikenakan biaya kurir / ongkos kirim (Rp 0 Bebas Ongkir)
-              </b>
-              .
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Catatan Terkait Cek Fisik / Gesek Nomor Rangka & Mesin */}
-      <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-2xl flex items-start gap-2.5 text-xs text-amber-950">
-        <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-        <p className="leading-relaxed">
-          <b>Catatan Fisik Kendaraan:</b> Layanan kurir di atas hanya bertugas
-          menjemput dan mengantar <b>dokumen fisik</b> (STNK/BPKB/KTP). Khusus
-          layanan yang memerlukan cek fisik (Pajak 5 Tahunan & STNK Hilang),
-          proses gesek nomor rangka & mesin dapat dilakukan di wilayah Depok
-          atau dengan <b>janjian bertemu langsung di Samsat Pusat</b> bersama
-          tim kami.
-        </p>
-      </div>
-
-      {/* 3. Kartu Info Alamat Kantor Biro Jasa (Ditampilkan pada Skenario B, C, dan D) */}
-      {formData.shipping_scenario !== "A" && (
-        <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-              <Building2 className="w-4 h-4 text-emerald-600" />
-              Alamat Kantor{" "}
-              {currentOfficeProfile.office_name
-                ? `(${currentOfficeProfile.office_name})`
-                : "Biro Jasa"}
-              :
-            </span>
-            <button
-              type="button"
-              onClick={handleCopyOfficeAddress}
-              className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold cursor-pointer inline-flex items-center gap-1"
-            >
-              {copied ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Tersalin!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>Salin Alamat</span>
-                </>
-              )}
-            </button>
+    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-7">
+      {/* Header Card */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-5 border-b border-slate-100">
+        <div>
+          <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase tracking-wider mb-1">
+            <Truck className="w-4 h-4" />
+            <span>Alur Logistik & Dokumen</span>
           </div>
-          <div className="p-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 space-y-1">
-            <p className="font-semibold text-slate-900">
-              {displayOfficeAddress}
-            </p>
-            <p className="text-slate-500">
-              🕒 Jam Operasional:{" "}
-              <b>
-                {currentOfficeProfile.operational_hours ||
-                  "Senin – Sabtu (08:00 – 17:00 WIB)"}
-              </b>{" "}
-              | 📞 Kontak:{" "}
-              <b>{currentOfficeProfile.phone_number || "085156419062"}</b>
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* 4. Input Resi Eksternal (Khusus Skenario C) */}
-      {formData.shipping_scenario === "C" && (
-        <div className="p-4 bg-amber-50/60 border border-amber-200 rounded-2xl space-y-2">
-          <label className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
-            <Send className="w-3.5 h-3.5 text-amber-600" />
-            Nomor Resi / Nama Ekspedisi Pengiriman Berkas Masuk (Opsional)
-          </label>
-          <input
-            type="text"
-            placeholder="Contoh: JNE - 0123456789 atau GoSend No. Booking"
-            value={formData.customer_tracking_number || ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                customer_tracking_number: e.target.value,
-              }))
-            }
-            className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
-          />
-          <p className="text-[11px] text-amber-700 leading-relaxed">
-            * Jika paket belum dikirim saat ini, Anda juga dapat mengirimkan
-            nomor resi melalui WhatsApp Admin kami setelah pesanan dibuat.
+          <h2 className="text-xl font-bold text-slate-900">
+            Metode Penyerahan Dokumen
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Pilih satu metode penyerahan berkas fisik (STNK/BPKB/KTP) yang
+            paling nyaman untuk Anda.
           </p>
         </div>
-      )}
+      </div>
 
-      {/* 5. Kurir Ekspedisi Rates Section (Biteship Rates) - Hanya untuk Skenario A, B, C */}
-      {formData.shipping_scenario !== "D" ? (
-        <div className="p-5 bg-linear-to-br from-slate-50 to-emerald-50/40 border border-emerald-200/80 rounded-2xl space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Package className="w-5 h-5 text-emerald-600" />
-              <h3 className="font-bold text-slate-800 text-sm">
-                Pilih Ekspedisi & Layanan Ongkir{" "}
-                {formData.shipping_scenario === "A"
-                  ? "(2 Arah: Jemput & Antar)"
-                  : "(1 Arah Pulang)"}
-              </h3>
-            </div>
-            {isLoadingRates && (
-              <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold animate-pulse">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Menghitung ongkir...
-              </div>
-            )}
-          </div>
-
-          {!formData.postal_code || formData.postal_code.trim().length !== 5 ? (
-            <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2">
-              <span className="text-base">📍</span>
-              <div>
-                <b>Kode Pos Diperlukan:</b> Masukkan 5 digit kode pos Anda di
-                formulir data pemesan di atas untuk menghitung tarif ongkos
-                kirim otomatis.
-              </div>
-            </div>
-          ) : shippingRates.length > 0 ? (
-            <div className="space-y-4">
-              {/* Filter Tab / Pilihan Ekspedisi */}
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-                  Pilih Ekspedisi:
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {Array.from(
-                    new Set(shippingRates.map((r) => r.courier_name)),
-                  ).map((company) => {
-                    const isActive = selectedCourierCompany === company;
-                    const count = shippingRates.filter(
-                      (r) => r.courier_name === company,
-                    ).length;
-                    return (
-                      <button
-                        key={company}
-                        type="button"
-                        onClick={() => {
-                          setSelectedCourierCompany(company);
-                          const firstRateOfCompany = shippingRates.find(
-                            (r) => r.courier_name === company,
-                          );
-                          if (firstRateOfCompany) {
-                            setSelectedRate(firstRateOfCompany);
-                          }
-                        }}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
-                          isActive
-                            ? "bg-emerald-900 text-white border-emerald-900 shadow-sm"
-                            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
-                        }`}
-                      >
-                        <span>{company}</span>
-                        <span
-                          className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
-                            isActive
-                              ? "bg-emerald-800 text-emerald-200"
-                              : "bg-slate-100 text-slate-500"
-                          }`}
-                        >
-                          {count}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Daftar Layanan dari Ekspedisi Terpilih Saja */}
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-                  Pilihan Layanan {selectedCourierCompany}:
-                </label>
-                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {shippingRates
-                    .filter(
-                      (rate) => rate.courier_name === selectedCourierCompany,
-                    )
-                    .map((rate, idx) => {
-                      const isSelected =
-                        selectedRate?.courier_name === rate.courier_name &&
-                        selectedRate?.courier_service_name ===
-                          rate.courier_service_name;
-                      const multiplier =
-                        formData.shipping_scenario === "A" ? 2 : 1;
-                      const calculatedPrice = rate.price * multiplier;
-
-                      return (
-                        <div
-                          key={`${rate.courier_name}-${rate.courier_service_name}-${idx}`}
-                          onClick={() => setSelectedRate(rate)}
-                          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
-                            isSelected
-                              ? "bg-white border-emerald-600 shadow-md ring-2 ring-emerald-500/20"
-                              : "bg-white border-slate-200 hover:border-emerald-300 hover:shadow-xs"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-1 mb-2">
-                            <div>
-                              <div className="inline-block px-2 py-0.5 rounded-md bg-emerald-50 text-[11px] font-bold text-emerald-800 mb-1 border border-emerald-100">
-                                {rate.courier_name}
-                              </div>
-                              <p className="text-xs font-bold text-slate-800 line-clamp-1">
-                                {rate.courier_service_name}
-                              </p>
-                            </div>
-                            {isSelected && (
-                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-extrabold text-emerald-700 text-base">
-                              Rp {calculatedPrice.toLocaleString("id-ID")}
-                            </p>
-                            <p className="text-[10px] text-slate-500 font-medium">
-                              {formData.shipping_scenario === "A"
-                                ? `Rp ${rate.price.toLocaleString("id-ID")} × 2 arah (Jemput & Antar)`
-                                : `Tarif 1 arah pengantaran pulang`}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
-            </div>
-          ) : !isLoadingRates ? (
-            <div className="text-xs text-slate-500 text-center py-4 bg-white rounded-xl border border-slate-200">
-              Tarif ekspedisi tidak ditemukan untuk kode pos{" "}
-              {formData.postal_code}. Pastikan kode pos sudah sesuai.
-            </div>
-          ) : null}
+      {isLoadingMethods ? (
+        <div className="py-12 text-center text-xs text-slate-400 flex flex-col items-center justify-center gap-2.5">
+          <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+          <span>Memuat opsi penyerahan dari sistem...</span>
+        </div>
+      ) : activeMethods.length === 0 ? (
+        <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-500">
+          Belum ada metode penyerahan yang diaktifkan oleh admin.
         </div>
       ) : (
-        <div className="p-4.5 bg-purple-50/70 border border-purple-200 rounded-2xl flex items-center justify-between text-xs text-purple-950">
-          <div className="flex items-center gap-2.5">
-            <CheckCircle2 className="w-5 h-5 text-purple-600 shrink-0" />
-            <div>
-              <p className="font-bold text-sm text-purple-900">
-                Walk-in Mandiri (Bebas Ongkir)
-              </p>
-              <p className="text-purple-700">
-                Tidak membutuhkan kurir pengiriman. Serah terima berkas fisik
-                dan pengambilan dilakukan langsung di kantor.
-              </p>
-            </div>
-          </div>
-          <span className="font-extrabold text-emerald-700 text-sm px-3 py-1 rounded-full bg-white border border-purple-200 shrink-0">
-            Rp 0
-          </span>
-        </div>
-      )}
+        <div className="space-y-6">
+          {/* Pilihan Metode Tunggal (Single Choice - Hanya 1 Ceklis) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {activeMethods.map((method) => {
+              const isSelected = selectedMethod?.id === method.id;
+              const Icon = getProviderIcon(method);
 
-      {/* 6. Form Alamat Penjemputan (Hanya untuk Skenario A) */}
-      {formData.shipping_scenario === "A" && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-emerald-600" />
-              Alamat Penjemputan Dokumen
-            </label>
-            {formData.address &&
-              formData.pickup_address !== formData.address && (
+              return (
+                <div
+                  key={method.id}
+                  onClick={() => handleSelectMethod(method)}
+                  className={`p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between select-none ${
+                    isSelected
+                      ? "bg-emerald-50/40 border-emerald-600 shadow-sm ring-2 ring-emerald-500/20"
+                      : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/60"
+                  }`}
+                >
+                  <div>
+                    {/* Top Bar: Icon + Title + Satu Ceklis */}
+                    <div className="flex items-start justify-between gap-3 mb-2.5">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                            isSelected
+                              ? "bg-emerald-600 text-white shadow-sm shadow-emerald-600/30"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-sm leading-snug">
+                            {method.method_name}
+                          </h4>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border transition-all ${
+                          isSelected
+                            ? "bg-emerald-600 border-emerald-600 text-white"
+                            : "border-slate-300 bg-white"
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3 h-3 stroke-3" />}
+                      </div>
+                    </div>
+
+                    {/* Deskripsi */}
+                    <p className="text-xs text-slate-600 leading-relaxed mb-3">
+                      {method.description || "Tidak ada deskripsi tambahan."}
+                    </p>
+                  </div>
+
+                  {/* Bottom Fee & Requirement Badges */}
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5 font-bold">
+                      <span className="text-slate-400 font-normal">Biaya:</span>
+                      <span
+                        className={
+                          method.flat_fee > 0
+                            ? "text-emerald-700 font-extrabold"
+                            : "text-slate-700"
+                        }
+                      >
+                        {method.flat_fee > 0
+                          ? `Rp ${method.flat_fee.toLocaleString("id-ID")}`
+                          : method.requires_courier
+                            ? "Sesuai Tarif Ekspedisi"
+                            : "Rp 0 (Bebas Biaya)"}
+                      </span>
+                    </div>
+
+                    {method.requires_address && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        <MapPin className="w-3 h-3 text-emerald-600" /> Butuh
+                        Alamat
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Form Alamat Penjemputan (Jika metode yang dipilih butuh alamat) */}
+
+          {/* Titik Lokasi Kantor (Jika metode yang dipilih adalah mandiri ke kantor) */}
+          {isSelfOffice && (
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-emerald-600" />
+                  Titik Lokasi Kantor Penyerahan Berkas
+                </span>
                 <button
                   type="button"
-                  onClick={() => {
-                    const addr = formData.address;
-                    setFormData((prev) => ({
-                      ...prev,
-                      pickup_address: addr,
-                      return_address: isSameAddress
-                        ? addr
-                        : prev.return_address,
-                    }));
-                  }}
-                  className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold cursor-pointer underline"
+                  onClick={handleCopyOfficeAddress}
+                  className="text-xs text-emerald-600 hover:text-emerald-700 font-bold inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  Gunakan Alamat Domisili
+                  {copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Alamat Tersalin</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Salin Alamat</span>
+                    </>
+                  )}
                 </button>
-              )}
-          </div>
-          <p className="text-xs text-slate-500">
-            Lokasi kurir menjemput berkas fisik asli Anda (STNK / BPKB / KTP)
-            untuk diantar ke kantor kami.
-          </p>
-          <textarea
-            placeholder="Detail alamat lengkap penjemputan berkas oleh kurir..."
-            rows={2}
-            value={formData.pickup_address}
-            onChange={(e) => {
-              const val = e.target.value;
-              setFormData((prev) => ({
-                ...prev,
-                pickup_address: val,
-                return_address: isSameAddress ? val : prev.return_address,
-              }));
-            }}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-sm"
-          />
-        </div>
-      )}
+              </div>
 
-      {/* 7. Form Alamat Pengembalian Dokumen (Untuk Skenario A, B, C) */}
-      {formData.shipping_scenario !== "D" ? (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <label className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
-              <Truck className="w-4 h-4 text-emerald-600" />
-              Alamat Pengembalian Dokumen
-            </label>
-            {formData.shipping_scenario === "A" ? (
-              <label className="inline-flex items-center gap-2 text-xs text-slate-600 font-medium cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={isSameAddress}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setIsSameAddress(checked);
-                    if (checked) {
-                      setFormData((prev) => ({
-                        ...prev,
-                        return_address: prev.pickup_address,
-                      }));
-                    }
-                  }}
-                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
-                />
-                Sama dengan alamat penjemputan
-              </label>
-            ) : (
-              formData.address &&
-              formData.return_address !== formData.address && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      return_address: prev.address,
-                    }));
-                  }}
-                  className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold cursor-pointer underline"
-                >
-                  Gunakan Alamat Domisili
-                </button>
-              )
-            )}
-          </div>
-          <p className="text-xs text-slate-500">
-            Lokasi tujuan pengantaran berkas asli setelah selesai diproses di
-            Samsat.
-          </p>
-          {formData.shipping_scenario !== "A" || !isSameAddress ? (
-            <textarea
-              placeholder="Detail alamat pengembalian dokumen oleh kurir..."
-              rows={2}
-              value={formData.return_address || ""}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  return_address: e.target.value,
-                }))
-              }
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-sm"
-            />
-          ) : (
-            <div className="px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-center justify-between">
-              <span>
-                {formData.pickup_address ? (
-                  <>
-                    <b className="text-slate-700">Dikembalikan ke:</b>{" "}
-                    {formData.pickup_address}
-                  </>
-                ) : (
-                  <span className="italic text-slate-400">
-                    Otomatis mengikuti alamat penjemputan dokumen di atas
+              <div className="bg-white p-4 rounded-xl border border-slate-200 text-xs text-slate-700 space-y-2">
+                <p className="font-bold text-slate-900 leading-snug">
+                  {currentOfficeProfile.office_name || "Kantor Pusat Biro Jasa"}
+                </p>
+                <p className="text-slate-600 leading-relaxed">
+                  {displayOfficeAddress}
+                </p>
+                <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-4 text-[11px] text-slate-500">
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    Jam Operasional:{" "}
+                    <b>
+                      {currentOfficeProfile.operational_hours ||
+                        "Senin – Sabtu (08:00 – 17:00 WIB)"}
+                    </b>
                   </span>
-                )}
-              </span>
-              <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full shrink-0">
-                Alamat Sama
-              </span>
+                  <span className="flex items-center gap-1">
+                    <Phone className="w-3.5 h-3.5 text-slate-400" />
+                    CS:{" "}
+                    <b>{currentOfficeProfile.phone_number || "085156419062"}</b>
+                  </span>
+                </div>
+              </div>
             </div>
           )}
-        </div>
-      ) : null}
 
-      {/* 8. Catatan Tambahan */}
-      <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-slate-700">
-          Catatan Tambahan
-        </label>
-        <textarea
-          placeholder="Contoh: Tolong diproses cepat ya mas..."
-          rows={2}
-          value={formData.notes}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, notes: e.target.value }))
-          }
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-sm"
-        />
-      </div>
+          {/* Kurir Ekspedisi Rates (Biteship) - Hanya jika metode aktif butuh kurir */}
+          {requiresCourier && (
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Package className="w-4 h-4 text-emerald-600" />
+                  <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider">
+                    Pilihan Ekspedisi & Tarif Layanan
+                  </h3>
+                </div>
 
-      {/* 9. Balik Nama / Mutasi Checkbox */}
-      <div className="flex items-center gap-3 bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-        <input
-          type="checkbox"
-          id="nameTransfer"
-          checked={
-            formData.is_name_transfer_required ||
-            isServiceInherentlyNameTransfer
-          }
-          disabled={isServiceInherentlyNameTransfer}
-          onChange={(e) =>
-            setFormData((prev) => ({
-              ...prev,
-              is_name_transfer_required: e.target.checked,
-            }))
-          }
-          className="w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 disabled:opacity-50"
-        />
-        <label
-          htmlFor="nameTransfer"
-          className={`text-sm font-semibold text-emerald-900 cursor-pointer ${
-            isServiceInherentlyNameTransfer ? "opacity-50" : ""
-          }`}
-        >
-          Perlu Mutasi / Balik Nama Kendaraan{" "}
-          {isServiceInherentlyNameTransfer && "(Sudah Termasuk)"}
-        </label>
-      </div>
+                {isLoadingRates && (
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold animate-pulse bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl shrink-0">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Menghitung ongkir...
+                  </div>
+                )}
+              </div>
 
-      {(isServiceInherentlyNameTransfer ||
-        formData.is_name_transfer_required) && (
-        <div className="grid sm:grid-cols-2 gap-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">
-              Samsat Asal (Kota Asal Kendaraan)
-            </label>
-            <input
-              type="text"
-              placeholder="Contoh: SAMSAT Jakarta Timur"
-              value={formData.samsat_origin}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  samsat_origin: e.target.value,
-                }))
-              }
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">
-              Samsat Tujuan (Mutasi Ke)
-            </label>
-            <input
-              type="text"
-              placeholder="Contoh: SAMSAT Bandung Barat"
-              value={formData.samsat_destination}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  samsat_destination: e.target.value,
-                }))
-              }
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-sm"
-            />
+              {/* Notifikasi Error Ramah jika Kodepos Tidak Ditemukan / Tidak Valid */}
+              {(errors.postal_code || ratesErrorMessage) && (
+                <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium">
+                  <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                  <span>
+                    {errors.postal_code ||
+                      ratesErrorMessage ||
+                      "Kodepos tidak ditemukan atau tidak valid. Mohon periksa kembali."}
+                  </span>
+                </div>
+              )}
+
+              {!formData.postal_code ||
+              formData.postal_code.trim().length !== 5 ? (
+                /* Langkah: Customer Belum Memasukkan Kodepos 5 Digit di Data Diri */
+                <div className="bg-white/80 border border-dashed border-slate-200 rounded-2xl p-6 text-center space-y-1.5">
+                  <Package className="w-6 h-6 text-slate-400 mx-auto" />
+                  <p className="text-xs font-semibold text-slate-700">
+                    Lengkapi Alamat & Kode Pos pada Data Diri di Atas
+                  </p>
+                  <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
+                    Pilihan kurir ekspedisi dan tarif layanan akan otomatis
+                    muncul setelah alamat & kode pos 5 digit selesai diisi.
+                  </p>
+                </div>
+              ) : isLoadingRates ? (
+                /* Langkah: Sistem Otomatis Hit POST /shipping/rates */
+                <div className="bg-white border border-emerald-200 rounded-2xl p-6 text-center space-y-3">
+                  <div className="flex items-center justify-center gap-2 text-emerald-700 font-bold text-sm">
+                    <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+                    <span>Menghitung Ongkos Kirim Resmi...</span>
+                  </div>
+                  <p className="text-xs text-slate-500 max-w-md mx-auto">
+                    Sedang memeriksa tarif pengantaran dan estimasi waktu ke
+                    Kode Pos <b>{formData.postal_code}</b>.
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+                    {[1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className="h-20 bg-slate-100 rounded-xl animate-pulse"
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : shippingRates.length > 0 ? (
+                /* Langkah: Tampilkan Kartu Pilihan Ekspedisi Lengkap dengan Harga & Estimasi */
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2 pb-1 border-b border-slate-200/80 text-xs">
+                    <div className="flex items-center gap-2 text-slate-700">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      {/* <span>
+                        Tarif resmi untuk Kode Pos:{" "}
+                        <b className="font-mono text-slate-900 font-bold">
+                          {formData.postal_code}
+                        </b>
+                      </span> */}
+                      <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        {shippingRates.length} Layanan Tersedia
+                      </span>
+                    </div>
+
+                    {selectedMethod?.direction === "BOTH" && (
+                      <span className="text-[11px] text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200 font-semibold">
+                        Sudah termasuk tarif jemput & antar balik (2 Arah)
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Tabs Kurir */}
+                  <div className="flex flex-wrap gap-2">
+                    {Array.from(
+                      new Set(shippingRates.map((r) => r.courier_name)),
+                    ).map((company) => {
+                      const isActive = selectedCourierCompany === company;
+                      const count = shippingRates.filter(
+                        (r) => r.courier_name === company,
+                      ).length;
+                      return (
+                        <button
+                          key={company}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCourierCompany(company);
+                            const firstRate = shippingRates.find(
+                              (r) => r.courier_name === company,
+                            );
+                            if (firstRate) {
+                              setSelectedRate(firstRate);
+                              if (onClearError) onClearError("courier");
+                            }
+                          }}
+                          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                            isActive
+                              ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                              : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          <span>{company}</span>
+                          <span
+                            className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
+                              isActive
+                                ? "bg-slate-800 text-slate-300"
+                                : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Cards Layanan Kurir */}
+                  <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {shippingRates
+                      .filter(
+                        (rate) => rate.courier_name === selectedCourierCompany,
+                      )
+                      .map((rate, idx) => {
+                        const isSelected =
+                          selectedRate?.courier_name === rate.courier_name &&
+                          (selectedRate?.courier_service_code ===
+                            rate.courier_service_code ||
+                            selectedRate?.courier_service_name ===
+                              rate.courier_service_name);
+
+                        const displayPrice =
+                          rate.final_price ?? rate.price ?? 0;
+
+                        return (
+                          <div
+                            key={idx}
+                            onClick={() => {
+                              setSelectedRate(rate);
+                              if (onClearError) onClearError("courier");
+                            }}
+                            className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                              isSelected
+                                ? "bg-emerald-600 text-white border-emerald-600 shadow-sm ring-2 ring-emerald-500/20"
+                                : "bg-white text-slate-800 border-slate-200 hover:border-emerald-300"
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-extrabold text-xs uppercase">
+                                  {rate.courier_service_name}
+                                </span>
+                                {isSelected && (
+                                  <CheckCircle2 className="w-4 h-4 text-white" />
+                                )}
+                              </div>
+                              {(rate.duration_range || rate.duration_unit) && (
+                                <p
+                                  className={`text-[11px] mb-2 flex items-center gap-1 ${
+                                    isSelected
+                                      ? "text-emerald-100"
+                                      : "text-slate-500"
+                                  }`}
+                                >
+                                  <Clock className="w-3 h-3" />
+                                  <span>
+                                    Estimasi {rate.duration_range}{" "}
+                                    {rate.duration_unit === "days"
+                                      ? "hari"
+                                      : rate.duration_unit || "hari"}
+                                  </span>
+                                </p>
+                              )}
+                            </div>
+                            <p className="font-bold text-sm mt-1">
+                              Rp {displayPrice.toLocaleString("id-ID")}
+                            </p>
+                          </div>
+                        );
+                      })}
+                  </div>
+
+                  {/* Error jika Kurir belum dipilih */}
+                  {errors.courier && (
+                    <p className="text-xs text-rose-600 font-medium flex items-center gap-1.5 mt-2 bg-rose-50 border border-rose-200 p-2.5 rounded-xl">
+                      <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                      {errors.courier}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="text-xs text-slate-500 text-center py-4 bg-white rounded-xl border border-slate-200">
+                  Tidak ada tarif kurir yang ditemukan untuk kode pos ini.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Catatan Cek Fisik Samsat */}
+          <div className="p-4 bg-amber-50/60 border border-amber-200/80 rounded-2xl flex items-start gap-3 text-xs text-amber-950">
+            <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <p className="leading-relaxed">
+              <b>Catatan Berkas Fisik:</b> Serah terima di atas ditujukan untuk
+              dokumen fisik (STNK/BPKB/KTP). Khusus layanan yang membutuhkan
+              gesek nomor rangka & mesin (Pajak 5 Tahunan & STNK Hilang), cek
+              fisik dapat dilakukan langsung di kantor biro jasa atau janjian
+              bertemu langsung di Samsat bersama tim kami.
+            </p>
           </div>
         </div>
       )}

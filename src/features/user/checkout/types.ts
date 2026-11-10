@@ -33,3 +33,21 @@ export interface CheckoutData {
   pkg: "reguler" | "express";
   price: number;
 }
+
+export interface FormErrors {
+  fullname?: string;
+  email?: string;
+  phone_number?: string;
+  nik?: string;
+  address?: string;
+  postal_code?: string;
+  model_id?: string;
+  plate_number?: string;
+  year?: string;
+  pickup_address?: string;
+  samsat_origin?: string;
+  samsat_destination?: string;
+  courier?: string;
+}
+
+export type CheckoutStep = 1 | 2 | 3;

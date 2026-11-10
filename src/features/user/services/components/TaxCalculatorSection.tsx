@@ -1,59 +1,62 @@
-import {
-  AlertCircle,
-  ArrowRight,
-  Calculator,
-  Car,
-  CheckCircle2,
-  FileText,
-  HelpCircle,
-  Sparkles,
-} from "lucide-react";
-import { useEffect, useState } from "react";
+import { Calculator } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { type ApiService, getServices } from "../../../../api/services";
-import Button from "../../../../shared/components/Button";
+import { getServices, type ApiService } from "../../../../api/services";
+import TaxCalculatorForm, {
+  type CalculatorFormData,
+  type NopolParts,
+} from "./calculator/TaxCalculatorForm";
+import TaxEstimateResult, {
+  type CalculatedResult,
+} from "./calculator/TaxEstimateResult";
 
 export default function TaxCalculatorSection() {
   const navigate = useNavigate();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CalculatorFormData>({
     pajakStnk: "",
     nopol: "",
     tahunKendaraan: new Date().getFullYear().toString(),
     nik: "",
-    jenisKendaraan: "motor" as "motor" | "mobil",
+    jenisKendaraan: "motor",
     serviceId: "",
   });
 
+  const [nopolParts, setNopolParts] = useState<NopolParts>({
+    p1: "",
+    p2: "",
+    p3: "",
+  });
   const [services, setServices] = useState<ApiService[]>([]);
   const [loadingServices, setLoadingServices] = useState(true);
+  const [calculatedResult, setCalculatedResult] =
+    useState<CalculatedResult | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     getServices()
-      .then((res) => setServices(res.data || []))
-      .catch(() => toast.error("Gagal memuat layanan"))
-      .finally(() => setLoadingServices(false));
+      .then((res) => {
+        if (isMounted) setServices(res.data || []);
+      })
+      .catch(() => {
+        if (isMounted) toast.error("Gagal memuat layanan");
+      })
+      .finally(() => {
+        if (isMounted) setLoadingServices(false);
+      });
+
+    return () => {
+      isMounted = false;
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, []);
-
-  const [nopolParts, setNopolParts] = useState({ p1: "", p2: "", p3: "" });
-
-  const [calculatedResult, setCalculatedResult] = useState<{
-    pkb: number;
-    swdkllj: number;
-    biayaJasa: number;
-    adminFee: number;
-    physicalCheckFee: number;
-    totalEstimasi: number;
-    isValidated: boolean;
-  } | null>(null);
-
-  const [isCalculating, setIsCalculating] = useState(false);
 
   const handleCalculate = (e: React.FormEvent) => {
     e.preventDefault();
     if (isCalculating) return;
-    setIsCalculating(true);
 
     // Validasi input
     const pkb = parseFloat(formData.pajakStnk.replace(/\D/g, "")) || 0;
@@ -61,7 +64,6 @@ export default function TaxCalculatorSection() {
       toast.error(
         "Silakan masukkan nominal PKB (Pajak Kendaraan Bermotor) dari STNK Anda",
       );
-      setIsCalculating(false);
       return;
     }
 
@@ -69,16 +71,12 @@ export default function TaxCalculatorSection() {
       !formData.nopol.trim() ||
       !/^[A-Z]{1,2}\s?[0-9]{1,4}\s?[A-Z]{1,3}$/i.test(formData.nopol.trim())
     ) {
-      toast.error(
-        "Format Nomor Polisi (Nopol) tidak valid. Contoh: B 1234 ABC",
-      );
-      setIsCalculating(false);
+      toast.error("Format Nomor Polisi tidak valid. Contoh: B 1234 ABC");
       return;
     }
 
     if (!formData.nik.trim() || formData.nik.trim().length !== 16) {
       toast.error("NIK / Nomor KTP harus 16 digit angka");
-      setIsCalculating(false);
       return;
     }
 
@@ -91,26 +89,24 @@ export default function TaxCalculatorSection() {
       toast.error(
         `Tahun kendaraan harus antara 1990 dan ${new Date().getFullYear()}`,
       );
-      setIsCalculating(false);
       return;
     }
 
     const selectedService = services.find((s) => s.id === formData.serviceId);
     if (!selectedService) {
       toast.error("Silakan pilih Tipe Pengurusan Pajak");
-      setIsCalculating(false);
       return;
     }
 
-    // Simulasi loading/kalkulasi (1.2 detik) agar tidak terjadi spam hit
-    setTimeout(() => {
-      const swdkllj = selectedService.swdkllj_fee;
+    setIsCalculating(true);
 
-      // Menggunakan data dari database
+    // Simulasi loading kalkulasi dengan cleanup timer
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      const swdkllj = selectedService.swdkllj_fee;
       const biayaJasa = selectedService.service_fee;
       const adminFee = selectedService.admin_fee;
       const physicalCheckFee = selectedService.physical_check_fee;
-
       const totalEstimasi =
         pkb + swdkllj + biayaJasa + adminFee + physicalCheckFee;
 
@@ -125,18 +121,27 @@ export default function TaxCalculatorSection() {
       });
 
       setIsCalculating(false);
-      toast.success(
-        "Berhasil dihitung! Yuk, cek estimasi biaya kendaraan Anda.",
-      );
-    }, 1200);
+      toast.success("Berhasil dihitung! Cek estimasi biaya kendaraan Anda.");
+    }, 1000);
   };
 
   const handleProceedToCheckout = () => {
     if (!calculatedResult) return;
 
-    // Navigasi ke halaman layanan dengan membawa state pre-filled data
-    navigate("/layanan", {
+    const selectedService = services.find((s) => s.id === formData.serviceId);
+    if (!selectedService) {
+      toast.error("Layanan tidak ditemukan");
+      return;
+    }
+
+    // Alur langsung menuju ke Formulir Pengisian Data Checkout (Step 1)
+    navigate("/checkout", {
       state: {
+        checkoutData: {
+          service: selectedService,
+          pkg: "reguler",
+          price: calculatedResult.totalEstimasi,
+        },
         prefill: {
           nopol: formData.nopol.toUpperCase(),
           nik: formData.nik,
@@ -152,475 +157,44 @@ export default function TaxCalculatorSection() {
   };
 
   return (
-    <section id="cek-pajak" className="py-16 md:py-24 relative overflow-hidden bg-transparent">
+    <section
+      id="cek-pajak"
+      className="py-12 sm:py-20 md:py-24 relative overflow-hidden bg-transparent"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold uppercase tracking-wider mb-4 shadow-sm">
-            <Calculator className="w-4 h-4 text-emerald-600" />
-            Cek Kendaraan anda
+        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold uppercase tracking-wider mb-3 sm:mb-4 shadow-xs">
+            <Calculator className="w-3.5 h-3.5 text-emerald-600" />
+            Kalkulator Pajak Kendaraan
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
-            Cek Estimasi Pajak & Biaya Layanan
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-3 sm:mb-4 leading-tight">
+            Cek Estimasi Pajak &amp; Biaya Layanan
           </h2>
-          <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
-            Sebelum memilih layanan kami, hitung estimasi total biaya
-            perpanjangan pajak kendaraan Anda berdasarkan data di STNK dan
-            validasi data Anda secara transparan.
+          <p className="text-slate-600 text-sm sm:text-base lg:text-lg leading-relaxed max-w-2xl mx-auto">
+            Hitung estimasi total biaya perpanjangan pajak kendaraan Anda berdasarkan data di STNK secara transparan sebelum memesan.
           </p>
         </div>
 
         <div className="grid lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Form Input Manual STNK & Validasi */}
-          <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xl shadow-slate-200/50 relative">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-5 mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-800 text-lg">
-                    Estimasi Pajak Kendaraan
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Masukkan nilai sesuai dengan lembar pajak STNK Anda
-                  </p>
-                </div>
-              </div>
-              <span className="hidden sm:inline-flex text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                Estimasi Biaya
-              </span>
-            </div>
+          {/* Kolom Kiri: Form Input Data STNK & Validasi */}
+          <TaxCalculatorForm
+            formData={formData}
+            setFormData={setFormData}
+            nopolParts={nopolParts}
+            setNopolParts={setNopolParts}
+            services={services}
+            loadingServices={loadingServices}
+            isCalculating={isCalculating}
+            onSubmit={handleCalculate}
+          />
 
-            <form onSubmit={handleCalculate} className="space-y-5">
-              {/* Jenis Kendaraan Toggle */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
-                  Jenis Kendaraan
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        jenisKendaraan: "motor",
-                        serviceId: "",
-                      })
-                    }
-                    className={`py-3 px-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 border transition-all cursor-pointer ${
-                      formData.jenisKendaraan === "motor"
-                        ? "bg-emerald-900 text-white border-emerald-900 shadow-md shadow-emerald-900/20"
-                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                    }`}
-                  >
-                    <Car className="w-4 h-4" />
-                    Sepeda Motor
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        jenisKendaraan: "mobil",
-                        serviceId: "",
-                      })
-                    }
-                    className={`py-3 px-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 border transition-all cursor-pointer ${
-                      formData.jenisKendaraan === "mobil"
-                        ? "bg-emerald-900 text-white border-emerald-900 shadow-md shadow-emerald-900/20"
-                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                    }`}
-                  >
-                    <Car className="w-4 h-4" />
-                    Mobil / Roda 4
-                  </button>
-                </div>
-              </div>
-
-              {/* Tipe Layanan Dinamis */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
-                  Tipe Pengurusan Pajak
-                </label>
-                {loadingServices ? (
-                  <div className="grid grid-cols-2 gap-2 animate-pulse">
-                    <div className="h-10 bg-slate-200 rounded-xl"></div>
-                    <div className="h-10 bg-slate-200 rounded-xl"></div>
-                    <div className="h-10 bg-slate-200 rounded-xl"></div>
-                    <div className="h-10 bg-slate-200 rounded-xl"></div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    {services
-                      .filter((s) => {
-                        const name = s.service_name.toLowerCase();
-                        // if (name.includes("payment")) return false;
-                        if (formData.jenisKendaraan === "mobil") {
-                          return !name.includes("motor");
-                        } else {
-                          return !name.includes("mobil");
-                        }
-                      })
-                      .map((s) => {
-                        // Bersihkan nama agar lebih ringkas (menghilangkan kata Mobil/Motor karena sudah di filter)
-                        const cleanLabel = s.service_name
-                          .replace(/Mobil/gi, "")
-                          .replace(/Motor/gi, "")
-                          .replace(/\(MOTOR & MOBIL\)/gi, "")
-                          .trim();
-
-                        return (
-                          <button
-                            key={s.id}
-                            type="button"
-                            onClick={() =>
-                              setFormData({ ...formData, serviceId: s.id })
-                            }
-                            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border text-left flex items-center  min-h-11 leading-tight ${
-                              formData.serviceId === s.id
-                                ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                                : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                            }`}
-                          >
-                            {cleanLabel}
-                          </button>
-                        );
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* Info Box untuk Balik Nama / Mutasi (Deteksi dari Service Terpilih) */}
-              {(() => {
-                const sel = services.find((s) => s.id === formData.serviceId);
-                if (!sel) return null;
-                const isMutasiAtauBalikNama =
-                  sel.category.toLowerCase().includes("mutasi") ||
-                  sel.category.toLowerCase().includes("balik nama");
-                if (!isMutasiAtauBalikNama) return null;
-
-                return (
-                  <div className="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-4 mt-3">
-                    <div className="flex gap-3">
-                      <div className="mt-0.5 shrink-0">
-                        <HelpCircle className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-blue-900 mb-1">
-                          Dokumen yang Harus Disiapkan:
-                        </h4>
-                        <ul className="text-xs text-blue-800 space-y-1 list-disc ml-4">
-                          <li>KTP asli & fotokopi pemilik baru.</li>
-                          <li>STNK asli beserta fotokopinya.</li>
-                          <li>BPKB asli beserta fotokopinya.</li>
-                          <li>
-                            Kwitansi pembelian/jual beli kendaraan bermaterai
-                            Rp10.000.
-                          </li>
-                        </ul>
-                        {sel.category.toLowerCase().includes("mutasi") && (
-                          <p className="text-xs text-blue-800 mt-2 font-semibold">
-                            * Untuk proses Mutasi, Anda wajib melakukan proses
-                            cabut berkas di Samsat asal terlebih dahulu.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Main Input: Harga Pajak Tahunan STNK */}
-              <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-amber-900 uppercase tracking-wide">
-                    Harga Pajak Tahunan di STNK (PKB Pokok) *
-                  </label>
-                  <div className="group relative cursor-pointer">
-                    <HelpCircle className="w-4 h-4 text-amber-600" />
-                    <div className="absolute bottom-full right-0 mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30">
-                      Lihat di lembar Pajak STNK pada kolom <b>PKB Pokok</b>{" "}
-                      (biasanya di sisi kanan atas lembar STNK).
-                    </div>
-                  </div>
-                </div>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-4 flex items-center font-bold text-slate-500 text-sm">
-                    Rp
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Contoh: 350.000"
-                    value={formData.pajakStnk}
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/\D/g, "");
-                      const formatted = raw
-                        ? parseInt(raw, 10).toLocaleString("id-ID")
-                        : "";
-                      setFormData({ ...formData, pajakStnk: formatted });
-                    }}
-                    className="w-full pl-12 pr-4 py-3 bg-white border border-amber-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none text-slate-900 font-extrabold text-lg"
-                  />
-                </div>
-              </div>
-
-              {/* Grid 3 Columns: Nopol (span 2) & Tahun (span 1) */}
-              <div className="grid sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                    Nomor Polisi (Nopol) *
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      placeholder="B"
-                      value={nopolParts.p1}
-                      maxLength={2}
-                      onChange={(e) => {
-                        const val = e.target.value
-                          .replace(/[^A-Za-z]/g, "")
-                          .toUpperCase();
-                        const newParts = { ...nopolParts, p1: val };
-                        setNopolParts(newParts);
-                        setFormData({
-                          ...formData,
-                          nopol: `${newParts.p1} ${newParts.p2} ${newParts.p3}`
-                            .trim()
-                            .replace(/\s+/g, " "),
-                        });
-                      }}
-                      className="w-16 px-2 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none text-slate-900 font-bold uppercase text-center text-sm"
-                    />
-                    <span className="text-slate-400 font-bold">-</span>
-                    <input
-                      type="text"
-                      placeholder="1234"
-                      value={nopolParts.p2}
-                      maxLength={4}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9]/g, "");
-                        const newParts = { ...nopolParts, p2: val };
-                        setNopolParts(newParts);
-                        setFormData({
-                          ...formData,
-                          nopol: `${newParts.p1} ${newParts.p2} ${newParts.p3}`
-                            .trim()
-                            .replace(/\s+/g, " "),
-                        });
-                      }}
-                      className="flex-1 px-2 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none text-slate-900 font-bold uppercase text-center text-sm tracking-widest"
-                    />
-                    <span className="text-slate-400 font-bold">-</span>
-                    <input
-                      type="text"
-                      placeholder="ABC"
-                      value={nopolParts.p3}
-                      maxLength={3}
-                      onChange={(e) => {
-                        const val = e.target.value
-                          .replace(/[^A-Za-z]/g, "")
-                          .toUpperCase();
-                        const newParts = { ...nopolParts, p3: val };
-                        setNopolParts(newParts);
-                        setFormData({
-                          ...formData,
-                          nopol: `${newParts.p1} ${newParts.p2} ${newParts.p3}`
-                            .trim()
-                            .replace(/\s+/g, " "),
-                        });
-                      }}
-                      className="w-20 px-2 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none text-slate-900 font-bold uppercase text-center text-sm"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                    Tahun Kendaraan *
-                  </label>
-                  <select
-                    value={formData.tahunKendaraan}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        tahunKendaraan: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none text-slate-900 font-semibold text-sm cursor-pointer"
-                  >
-                    <option value="" disabled>
-                      Pilih Tahun
-                    </option>
-                    {Array.from(
-                      { length: new Date().getFullYear() - 1989 },
-                      (_, i) => new Date().getFullYear() - i,
-                    ).map((year) => (
-                      <option key={year} value={year.toString()}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Validasi Tambahan: NIK */}
-              <div className="pt-2 border-t border-slate-100 space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                    NIK / Nomor KTP Pemilik *
-                  </label>
-                  <input
-                    type="text"
-                    maxLength={16}
-                    placeholder="16 Digit NIK KTP"
-                    value={formData.nik}
-                    onChange={(e) => {
-                      const val = e.target.value
-                        .replace(/\D/g, "")
-                        .slice(0, 16);
-                      setFormData({ ...formData, nik: val });
-                    }}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none text-slate-900 text-sm font-mono"
-                  />
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                variant="primary"
-                size="full"
-                isLoading={isCalculating}
-                className="bg-emerald-900 hover:bg-emerald-800 text-lg mt-4"
-              >
-                <Calculator className="w-5 h-5" />
-                Hitung Estimasi Biaya Pajak
-              </Button>
-            </form>
-          </div>
-
-          {/* Right Column: Calculations Breakdown & Proceed CTA */}
-          <div className="lg:col-span-5">
-            <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-2xl sticky top-24 border border-slate-800">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-5 mb-6">
-                <h3 className="text-xl font-extrabold flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-emerald-400" />
-                  Hasil Estimasi Biaya
-                </h3>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
-                  Transparan
-                </span>
-              </div>
-
-              {calculatedResult ? (
-                <div className="space-y-6">
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-start gap-3 text-emerald-300 text-xs leading-relaxed">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-sm text-emerald-200">
-                        Validasi Data Berhasil!
-                      </p>
-                      <p className="mt-0.5 text-slate-300">
-                        Plat: <b>{formData.nopol}</b> | NIK:{" "}
-                        <b>{formData.nik}</b>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Breakdown List */}
-                  <div className="space-y-3 border-b border-slate-800 pb-5 text-sm">
-                    <div className="flex justify-between items-center text-slate-300">
-                      <span>PKB (Pajak Pokok STNK)</span>
-                      <span className="font-bold text-white">
-                        Rp {calculatedResult.pkb.toLocaleString("id-ID")}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-slate-300">
-                      <div className="flex items-center gap-1.5">
-                        <span>SWDKLLJ</span>
-                        <span className="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">
-                          {formData.jenisKendaraan === "motor"
-                            ? "Motor"
-                            : "Mobil"}
-                        </span>
-                      </div>
-                      <span className="font-bold text-white">
-                        Rp {calculatedResult.swdkllj.toLocaleString("id-ID")}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-slate-300">
-                      <span>Biaya Jasa</span>
-                      <span className="font-bold text-white">
-                        Rp {calculatedResult.biayaJasa.toLocaleString("id-ID")}
-                      </span>
-                    </div>
-
-                    {calculatedResult.adminFee > 0 && (
-                      <div className="flex justify-between items-center text-slate-300">
-                        <span>Biaya Admin</span>
-                        <span className="font-bold text-white">
-                          Rp {calculatedResult.adminFee.toLocaleString("id-ID")}
-                        </span>
-                      </div>
-                    )}
-
-                    {calculatedResult.physicalCheckFee > 0 && (
-                      <div className="flex justify-between items-center text-slate-300">
-                        <span>Biaya Cek Fisik</span>
-                        <span className="font-bold text-white">
-                          Rp{" "}
-                          {calculatedResult.physicalCheckFee.toLocaleString(
-                            "id-ID",
-                          )}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Total Highlight */}
-                  <div className="pt-2">
-                    <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">
-                      Total Estimasi Keseluruhan
-                    </p>
-                    <p className="text-4xl font-extrabold text-emerald-400 tracking-tight">
-                      Rp{" "}
-                      {calculatedResult.totalEstimasi.toLocaleString("id-ID")}
-                    </p>
-                    <p className="text-[11px] text-slate-400 mt-2">
-                      * Estimasi dapat menyesuaikan jika ada denda keterlambatan
-                      pajak dari Samsat.
-                    </p>
-                  </div>
-
-                  <Button
-                    variant="secondary"
-                    size="full"
-                    onClick={handleProceedToCheckout}
-                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20 text-lg"
-                  >
-                    <span>Lanjutkan Pemesanan Layanan</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="py-12 text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-slate-800 text-slate-500 flex items-center justify-center mx-auto">
-                    <AlertCircle className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-300">
-                      Belum Ada Kalkulasi
-                    </h4>
-                    <p className="text-xs text-slate-500 max-w-xs mx-auto mt-1">
-                      Isi form harga pajak STNK, Nopol, Tahun, dan NIK di
-                      sebelah kiri untuk melihat rincian biaya.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Kolom Kanan: Rincian Estimasi Biaya & Tombol Checkout */}
+          <TaxEstimateResult
+            calculatedResult={calculatedResult}
+            formData={formData}
+            onProceedToCheckout={handleProceedToCheckout}
+          />
         </div>
       </div>
     </section>

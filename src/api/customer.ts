@@ -1,7 +1,11 @@
 import { httpClient } from './httpClient';
-import type { CreateCustomerRequest } from '../types';
+import type { Customer, CreateCustomerRequest } from '../types';
 
-export type { CreateCustomerRequest };
+export type { Customer, CreateCustomerRequest };
+
+export const getCustomers = async (): Promise<{ data: Customer[]; status: string }> => {
+  return httpClient.get<{ data: Customer[]; status: string }>('/customers');
+};
 
 export const createCustomer = async (
   data: CreateCustomerRequest

@@ -16,9 +16,25 @@ export const getInvoiceByOrderId = async (orderId: string): Promise<{ data: Invo
 };
 
 export const generateInvoiceApi = async (orderId: string): Promise<{ data: InvoiceData; status: string }> => {
+    try {
+        return await httpClient.post<{ data: InvoiceData; status: string }>(
+            '/invoices/customer',
+            { order_id: orderId },
+            { idempotencyKey: true, skipAuth: true }
+        );
+    } catch {
+        return await httpClient.post<{ data: InvoiceData; status: string }>(
+            '/invoices',
+            { order_id: orderId },
+            { idempotencyKey: true, skipAuth: true }
+        );
+    }
+};
+
+export const syncInvoiceStatusApi = async (id: string): Promise<{ data: InvoiceData; status: string }> => {
     return httpClient.post<{ data: InvoiceData; status: string }>(
-        '/invoices',
-        { order_id: orderId },
-        { idempotencyKey: true }
+        `/invoices/${id}/sync`,
+        {},
+        { skipAuth: true }
     );
 };

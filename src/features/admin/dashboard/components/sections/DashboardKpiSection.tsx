@@ -1,6 +1,6 @@
 import { AlertTriangle, CheckCircle, Clock, TrendingUp } from "lucide-react";
 import type { DashboardSummary } from "../../../../../api/dashboard";
-import ModernStatCard from "../kpi/ModernStatCard";
+import StatCard from "../kpi/StatCard";
 
 interface DashboardKpiSectionProps {
     summary: DashboardSummary | null;
@@ -10,7 +10,7 @@ interface DashboardKpiSectionProps {
 }
 
 const StatSkeleton = () => (
-    <div className="rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 animate-pulse bg-slate-50 dark:bg-slate-800/50 h-24" />
+    <div className="rounded-xl p-3 sm:p-4 lg:p-6 border border-slate-200 dark:border-slate-800 animate-pulse bg-slate-50 dark:bg-slate-800/50 h-24 sm:h-28" />
 );
 
 export default function DashboardKpiSection({
@@ -26,7 +26,7 @@ export default function DashboardKpiSection({
 
     if (isLoading) {
         return (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                 <StatSkeleton />
                 <StatSkeleton />
                 <StatSkeleton />
@@ -44,99 +44,45 @@ export default function DashboardKpiSection({
         (summary?.pending_actions?.stuck_ktls || 0);
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {/* 1. Pendapatan Total */}
-            <ModernStatCard
+            <StatCard
                 title="Total Pendapatan"
                 value={`Rp ${totalRevenue.toLocaleString("id-ID")}`}
+                description="Total dari semua transaksi"
                 variant="info"
                 icon={TrendingUp}
-                breakdowns={[
-                    {
-                        label: "Biro Jasa",
-                        value: `Rp ${(summary?.total_revenue ?? 0).toLocaleString("id-ID")}`,
-                    },
-                    {
-                        label: "Cetak KTL",
-                        value: `Rp ${(summary?.total_revenue_ktls ?? 0).toLocaleString("id-ID")}`,
-                    },
-                ]}
             />
 
             {/* 2. Menunggu Diproses */}
-            <ModernStatCard
+            <StatCard
                 title="Menunggu Diproses"
                 value={totalPending}
+                description="Pesanan baru butuh proses"
                 variant="warning"
                 icon={Clock}
-                breakdowns={[
-                    {
-                        label: "Order Jasa",
-                        value: summary?.total_pending_orders ?? 0,
-                    },
-                    {
-                        label: "Cetak KTL",
-                        value: summary?.total_pending_ktls ?? 0,
-                    },
-                ]}
                 onClick={() => handleCardClick("Pending")}
             />
 
             {/* 3. Selesai */}
-            <ModernStatCard
+            <StatCard
                 title="Order Selesai"
                 value={totalCompleted}
+                description="Pesanan berhasil diselesaikan"
                 variant="success"
                 icon={CheckCircle}
-                breakdowns={[
-                    {
-                        label: "Order Jasa",
-                        value: summary?.total_completed_orders ?? 0,
-                    },
-                    {
-                        label: "Cetak KTL",
-                        value: summary?.total_completed_ktls ?? 0,
-                    },
-                ]}
                 onClick={() => handleCardClick("Completed")}
             />
 
             {/* 4. Butuh Perhatian Segera */}
-            {summary && (
-                <ModernStatCard
-                    title="Butuh Perhatian Segera"
-                    value={totalAttention}
-                    variant="danger"
-                    icon={AlertTriangle}
-                    breakdowns={[
-                        {
-                            label: "Belum Verif",
-                            value: summary.pending_actions?.unverified_documents || 0,
-                            valueClass:
-                                (summary.pending_actions?.unverified_documents || 0) > 0
-                                    ? "text-red-500 font-bold"
-                                    : "",
-                        },
-                        {
-                            label: "Order Stuck",
-                            value: summary.pending_actions?.stuck_orders || 0,
-                            valueClass:
-                                (summary.pending_actions?.stuck_orders || 0) > 0
-                                    ? "text-red-500 font-bold"
-                                    : "",
-                        },
-                        {
-                            label: "KTL Stuck",
-                            value: summary.pending_actions?.stuck_ktls || 0,
-                            valueClass:
-                                (summary.pending_actions?.stuck_ktls || 0) > 0
-                                    ? "text-red-500 font-bold"
-                                    : "",
-                        },
-                    ]}
-                    onClick={() => handleCardClick("Attention")}
-                />
-            )}
+            <StatCard
+                title="Butuh Perhatian Segera"
+                value={totalAttention}
+                description="Dokumen tertahan / belum verifikasi"
+                variant="danger"
+                icon={AlertTriangle}
+                onClick={() => handleCardClick("Attention")}
+            />
         </div>
     );
 }

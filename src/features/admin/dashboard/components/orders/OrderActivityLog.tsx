@@ -1,6 +1,7 @@
 import { AlertCircle, CheckCircle2, Clock, ExternalLink, Image as ImageIcon, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { getPublicAppUrl } from "../../../../../api/config";
 import { generateInvoiceApi, getInvoiceByOrderId, type InvoiceData } from "../../../../../api/invoice";
 import { getOrderActivity, getOrderDocuments, updateOrderStatus, verifyCustomerDocument, type OrderActivity, type OrderDocument } from "../../../../../api/order";
 import Button from "../../../../../shared/components/Button";
@@ -257,7 +258,7 @@ export default function OrderActivityLog({ orderId, onStatusChange }: Props) {
                             const cleanPhone = (invoice.customer_phone || "").replace(/\D/g, "");
                             const targetPhone = cleanPhone.startsWith("0") ? `62${cleanPhone.slice(1)}` : cleanPhone;
                             const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(
-                                `Halo ${invoice.customer_name || ""}, dokumen pesanan Anda telah kami verifikasi dan disetujui.\n\nSilakan selesaikan pembayaran resmi Anda melalui link berikut:\n${window.location.origin}/pay/${orderId}\n\nTerima kasih.`
+                                `Halo ${invoice.customer_name || ""}, dokumen pesanan Anda telah kami verifikasi dan disetujui.\n\nSilakan selesaikan pembayaran resmi Anda melalui link berikut:\n${getPublicAppUrl()}/pay/${orderId}\n\nTerima kasih.`
                             )}`;
 
                             return (

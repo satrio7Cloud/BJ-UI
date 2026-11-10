@@ -86,9 +86,7 @@ export default function CetakKtlSection() {
             setIsLoading(false);
           },
           onClose: function () {
-            toast.error(
-              "Anda menutup pop-up sebelum menyelesaikan pembayaran.",
-            );
+            toast.error("Anda belum menyelesaikan pembayaran.");
             setIsLoading(false);
           },
         });
@@ -129,62 +127,60 @@ export default function CetakKtlSection() {
   }
 
   return (
-    <section className="py-20 relative overflow-hidden bg-transparent">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
-        <div className="flex flex-col lg:flex-row gap-12 items-center">
+    <section id="cetak-ktl" className="py-12 sm:py-20 relative overflow-hidden bg-transparent">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="flex flex-col lg:flex-row gap-10 lg:gap-12 items-center">
           {/* Left Column: Context */}
           <div className="flex-1 text-center lg:text-left">
-            <span className="inline-flex items-center px-3 py-1 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider rounded-lg mb-4">
+            <span className="inline-block text-emerald-800 text-xs font-bold tracking-widest uppercase mb-3 px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100">
               Layanan Khusus
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900  tracking-tight mb-4">
-              Cetak Resi KTL STNK
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-4">
+              Cetak Resi KTL STNK Resmi
             </h2>
-            <p className="text-base text-slate-600 dark:text-slate-400 mb-8 max-w-xl mx-auto lg:mx-0">
-              Bagi Anda yang sudah melakukan pembayaran pajak STNK melalui
-              merchant (seperti Indomaret, Alfamart, dll), kami bantu cetak
-              Kartu Tanda Lunas (KTL) aslinya.
+            <p className="text-sm sm:text-base text-slate-600 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              Bagi Anda yang sudah melakukan pembayaran pajak STNK via online/minimarket (Indomaret, Alfamart, Tokopedia, dll), kami bantu cetak fisik Kartu Tanda Lunas (KTL) aslinya tanpa perlu antre ke Samsat.
             </p>
 
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div className="text-left">
-                <h4 className="font-semibold text-slate-900 dark:text-white text-sm">
-                  Resmi & Aman
-                </h4>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Proses pencetakan dijamin valid dan resmi.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                <div className="text-emerald-600 dark:text-emerald-400 font-bold">
-                  Rp
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 max-w-lg mx-auto lg:mx-0 text-left">
+              <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-white sm:bg-transparent border border-slate-100 sm:border-none shadow-xs sm:shadow-none">
+                <div className="w-11 h-11 rounded-xl bg-emerald-100/80 text-emerald-800 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-5 h-5 text-emerald-800" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">
+                    Resmi & Sah Hukum
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                    Proses pencetakan legal dan langsung divalidasi ke Samsat.
+                  </p>
                 </div>
               </div>
-              <div className="text-left">
-                <h4 className="font-semibold text-slate-900 dark:text-white text-sm">
-                  Biaya Seikhlasnya
-                </h4>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Bayar jasa kami sesuai dengan keikhlasan Anda.
-                </p>
+
+              <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-white sm:bg-transparent border border-slate-100 sm:border-none shadow-xs sm:shadow-none">
+                <div className="w-11 h-11 rounded-xl bg-emerald-100/80 text-emerald-800 flex items-center justify-center shrink-0">
+                  <span className="text-emerald-800 font-extrabold text-base">Rp</span>
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">
+                    Biaya Jasa Seikhlasnya
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                    Tentukan sendiri nilai apresiasi jasa sesuai kenyamanan Anda.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Right Column: Form */}
           <div className="flex-1 w-full max-w-xl">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-slate-200/80 shadow-xl shadow-slate-200/50">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                  <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">
                         Nama Lengkap <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -192,14 +188,14 @@ export default function CetakKtlSection() {
                         name="customer_name"
                         value={formData.customer_name}
                         onChange={handleChange}
-                        placeholder="Sesuai STNK"
-                        className="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400"
+                        placeholder="Sesuai nama STNK"
+                        className="w-full px-3.5 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all placeholder:text-slate-400 font-medium"
                         required
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
-                        <Phone size={14} className="text-slate-400" />
+                      <label className="text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5 uppercase tracking-wide">
+                        <Phone size={13} className="text-slate-400" />
                         Nomor WhatsApp <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -208,23 +204,23 @@ export default function CetakKtlSection() {
                         value={formData.phone_number}
                         onChange={handleChange}
                         placeholder="08123456789"
-                        className="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400"
+                        className="w-full px-3.5 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all placeholder:text-slate-400 font-medium"
                         required
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
-                      <Car size={14} className="text-slate-400" />
-                      Kendaraan <span className="text-red-500">*</span>
+                    <label className="text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5 uppercase tracking-wide">
+                      <Car size={13} className="text-slate-400" />
+                      Jenis Kendaraan <span className="text-red-500">*</span>
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       <label
-                        className={`flex items-center justify-center p-2 rounded-lg border cursor-pointer transition-all ${
+                        className={`flex items-center justify-center py-2.5 px-3 rounded-xl border cursor-pointer transition-all active:scale-95 ${
                           formData.vehicle_type === "Motor"
-                            ? "bg-emerald-50 border-emerald-500 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
-                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+                            ? "bg-emerald-900 border-emerald-900 text-white shadow-xs font-bold"
+                            : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 font-medium"
                         }`}
                       >
                         <input
@@ -235,13 +231,13 @@ export default function CetakKtlSection() {
                           onChange={handleChange}
                           className="sr-only"
                         />
-                        <span className="font-medium text-xs">Motor</span>
+                        <span className="text-xs">Motor</span>
                       </label>
                       <label
-                        className={`flex items-center justify-center p-2 rounded-lg border cursor-pointer transition-all ${
+                        className={`flex items-center justify-center py-2.5 px-3 rounded-xl border cursor-pointer transition-all active:scale-95 ${
                           formData.vehicle_type === "Mobil"
-                            ? "bg-emerald-50 border-emerald-500 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
-                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+                            ? "bg-emerald-900 border-emerald-900 text-white shadow-xs font-bold"
+                            : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 font-medium"
                         }`}
                       >
                         <input
@@ -252,35 +248,35 @@ export default function CetakKtlSection() {
                           onChange={handleChange}
                           className="sr-only"
                         />
-                        <span className="font-medium text-xs">Mobil</span>
+                        <span className="text-xs">Mobil</span>
                       </label>
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
-                      <MapPin size={14} className="text-slate-400" />
-                      Wilayah <span className="text-red-500">*</span>
+                    <label className="text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5 uppercase tracking-wide">
+                      <MapPin size={13} className="text-slate-400" />
+                      Wilayah Samsat <span className="text-red-500">*</span>
                     </label>
                     <select
                       name="region"
                       value={formData.region}
                       onChange={handleChange}
-                      className="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+                      className="w-full px-3.5 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all font-semibold"
                       required
                     >
                       <option value="Jakarta">Jakarta</option>
                       <option value="Tangerang">Tangerang</option>
                       <option value="Depok">Depok</option>
+                      <option value="Bekasi">Bekasi</option>
                     </select>
                   </div>
 
-                  <div className="sm:col-span-2 mt-2">
+                  <div className="sm:col-span-2">
                     <div>
-                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
-                        <Upload size={14} className="text-slate-400" />
-                        Bukti KTL/STNK (Foto){" "}
-                        <span className="text-red-500">*</span>
+                      <label className="text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5 uppercase tracking-wide">
+                        <Upload size={13} className="text-slate-400" />
+                        Bukti Bayar / Foto STNK <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="file"
@@ -288,20 +284,20 @@ export default function CetakKtlSection() {
                         onChange={(e) =>
                           setBuktiKtlFile(e.target.files?.[0] || null)
                         }
-                        className="w-full px-3 py-2.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 dark:file:bg-emerald-900/30 dark:file:text-emerald-400"
+                        className="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200 cursor-pointer"
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="sm:col-span-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-2">
-                      Biaya Jasa (Seikhlasnya){" "}
+                  <div className="sm:col-span-2 pt-3 border-t border-slate-100">
+                    <label className="block text-xs font-bold text-slate-800 mb-1.5 uppercase tracking-wide">
+                      Nominal Biaya Jasa (Seikhlasnya){" "}
                       <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-slate-500 font-semibold text-sm">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <span className="text-slate-400 font-bold text-sm">
                           Rp
                         </span>
                       </div>
@@ -314,22 +310,22 @@ export default function CetakKtlSection() {
                         }
                         onChange={handleFeeChange}
                         placeholder="0"
-                        className="w-full pl-9 pr-3 py-3 rounded-lg border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-900/10 text-slate-900 dark:text-white text-base font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-emerald-300 bg-emerald-50/40 text-slate-900 text-lg font-black focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600 transition-all"
                         required
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-2 mt-2">
+                <div className="pt-2">
                   <Button
                     type="submit"
                     variant="primary"
                     size="lg"
-                    className="w-full py-3 text-sm bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30 text-white"
+                    className="w-full py-3.5 text-sm sm:text-base font-bold bg-emerald-900 hover:bg-emerald-800 shadow-lg shadow-emerald-900/20 text-white rounded-xl sm:rounded-2xl active:scale-[0.98]"
                     isLoading={isLoading}
                   >
-                    Kirim Permintaan
+                    Kirim Permintaan & Bayar
                   </Button>
                 </div>
               </form>

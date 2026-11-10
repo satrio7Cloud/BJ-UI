@@ -8,5 +8,7 @@ export * from './invoice';
 export * from './dashboard';
 export * from './service';
 export * from './shipping';
+export * from './shippingSettings';
 export * from './notification';
+export * from './deliveryMethod';
 

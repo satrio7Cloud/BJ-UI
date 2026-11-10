@@ -4,6 +4,7 @@ import type {
     OrderActivity,
     OrderDocument,
     CreateOrderRequest,
+    CreateOrderAdminRequest,
     CreateOrderKTLRequest,
     OrderKTLResponse,
 } from '../types';
@@ -13,6 +14,7 @@ export type {
     OrderActivity,
     OrderDocument,
     CreateOrderRequest,
+    CreateOrderAdminRequest,
     CreateOrderKTLRequest,
     OrderKTLResponse,
 };
@@ -56,6 +58,16 @@ export const createOrderApi = async (
 ): Promise<{ data: { id: string }; message: string; status: string }> => {
     return httpClient.post<{ data: { id: string }; message: string; status: string }>(
         '/orders/customer',
+        data,
+        { idempotencyKey: true }
+    );
+};
+
+export const createOrderAdminApi = async (
+    data: CreateOrderAdminRequest
+): Promise<{ data: { id: string }; message: string; status: string }> => {
+    return httpClient.post<{ data: { id: string }; message: string; status: string }>(
+        '/orders/admin',
         data,
         { idempotencyKey: true }
     );

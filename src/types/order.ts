@@ -47,11 +47,34 @@ export interface CreateOrderRequest {
   express_fee?: number;
   courier_name?: string;
   courier_service?: string;
+  postal_code?: string;
+  destination_postal_code?: string;
   service_level?: string;
   is_name_transfer_required?: boolean;
   notes?: string;
   samsat_origin?: string;
   samsat_destination?: string;
+}
+
+export interface CreateOrderAdminRequest {
+  customer_id: string;
+  vehicle_id: string;
+  service_id: string;
+  pickup_method?: string;
+  return_method?: string;
+  customer_tracking_number?: string;
+  pickup_address?: string;
+  tax_amount?: number;
+  service_fee?: number;
+  admin_fee?: number;
+  physical_check_fee?: number;
+  delivery_fee?: number;
+  express_fee?: number;
+  service_level?: string;
+  is_name_transfer_required?: boolean;
+  samsat_origin?: string;
+  samsat_destination?: string;
+  notes?: string;
 }
 
 export interface CreateOrderKTLRequest {

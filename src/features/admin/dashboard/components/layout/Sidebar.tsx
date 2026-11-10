@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell, ChevronLeft, ChevronRight, Database, FileText, LayoutDashboard, LogOut, Settings, User } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Database, FileText, LayoutDashboard, LogOut, PlusCircle, Settings, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -69,6 +69,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         { name: "Data Master", path: "/vehicles", icon: Database },
         { name: "Invoices", path: "/invoice", icon: FileText },
         { name: "Settings", path: "/settings", icon: Settings },
+        { name: "Buat Order", path: "/create-order", icon: PlusCircle },
     ];
 
     return (
